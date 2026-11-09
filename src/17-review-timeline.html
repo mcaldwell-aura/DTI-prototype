@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<title>DTI Examiner – Review timeline</title>
+<script src="shared/runtime.js"></script>
+  <link rel="stylesheet" href="shared/styles.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+
+
+</helmet>
+<div style="width: 1280px; height: 800px; position: relative; display: flex; flex-direction: column; font-family: var(--font-sans); color: var(--color-charcoal); background: var(--color-background); overflow: hidden">
+  <header style="height: 64px; flex-shrink: 0; display: flex; align-items: center; gap: var(--space-16); padding: 0 var(--space-24); background: var(--color-white); border-bottom: 1px solid var(--color-line)">
+    <div>
+      <div style="font-weight: 700; font-size: 17px">Review road test · Timeline</div>
+      <div style="font-size: 13px; color: var(--color-slate)">Jordan Reyes · Class D · West Loop A v3 · 9:52–10:16 AM</div>
+    </div>
+    <div style="flex: 1"></div>
+    <span style="display: flex; align-items: center; gap: var(--space-6); height: 30px; padding: 0 var(--space-12); border-radius: 15px; background: var(--color-orange); color: var(--color-charcoal); font-size: 12px; font-weight: 700">
+      <svg width="14" height="14" sc-camel-view-box="0 0 24 24" fill="var(--color-charcoal)" aria-hidden="true"><path d="M12 2l1.8 5.4L19 9l-5.2 1.6L12 16l-1.8-5.4L5 9l5.2-1.6zM19 14l.9 2.6L22 17.5l-2.1.9L19 21l-.9-2.6-2.1-.9 2.1-.9z"></path></svg>AI review · Phase 2</span>
+    <span style="display: flex; align-items: center; gap: var(--space-6); height: 30px; padding: 0 var(--space-12); border-radius: 15px; background: var(--color-off-white-alt); color: var(--color-slate-dark); font-size: 13px; font-weight: 600">Test ended · not yet submitted</span>
+  </header>
+
+  <main style="flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: var(--space-20); padding: var(--space-20) var(--space-24)">
+    <div style="display: flex; flex-direction: column; gap: var(--space-16); min-height: 0">
+      <section aria-label="Test overview" style="background: var(--color-white); border: 1px solid var(--color-line); border-radius: 14px; padding: var(--space-14) var(--space-20) var(--space-12); display: flex; flex-direction: column; gap: var(--space-10)">
+        <div style="display: flex; align-items: center; gap: var(--space-18); font-size: 12px; color: var(--color-slate-dark)">
+          <span style="font-size: 13px; font-weight: 700; color: var(--color-charcoal); flex: 1">Whole test · 23:41</span>
+          <span style="display: flex; align-items: center; gap: var(--space-6)"><span style="width: var(--space-10); height: 10px; border-radius: 50%; background: var(--color-indigo)"></span>Evaluation point</span>
+          <span style="display: flex; align-items: center; gap: var(--space-6)"><span style="width: var(--space-10); height: 10px; transform: rotate(45deg); background: var(--color-orange)"></span>Error</span>
+          <span style="display: flex; align-items: center; gap: var(--space-6)"><svg width="12" height="12" sc-camel-view-box="0 0 24 24" fill="var(--color-amber)" aria-hidden="true"><path d="M12 2l1.8 5.4L19 9l-5.2 1.6L12 16l-1.8-5.4L5 9l5.2-1.6z"></path></svg>AI review</span>
+        </div>
+        <div style="position: relative; height: 54px">
+          <div style="position: absolute; left: 0; right: 0; top: 26px; height: 4px; border-radius: 2px; background: var(--color-line)"></div>
+          <sc-for list="{{strip}}" as="m" hint-placeholder-count="16">
+            <span style="{{m.style}}">{{m.text}}</span>
+          </sc-for>
+        </div>
+        <div style="display: flex; justify-content: space-between; font: 500 11px var(--font-mono); color: var(--color-slate)">
+          <span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>23:41</span>
+        </div>
+      </section>
+
+      <section aria-label="Timeline of events" style="flex: 1; min-height: 0; background: var(--color-white); border: 1px solid var(--color-line); border-radius: 14px; padding: var(--space-14) var(--space-20); display: flex; flex-direction: column; overflow-y: auto">
+        <sc-for list="{{events}}" as="ev" hint-placeholder-count="10">
+          <div style="display: grid; grid-template-columns: 56px 28px minmax(0, 1fr); column-gap: var(--space-12); min-height: 56px">
+            <div style="font: 600 13px var(--font-mono); color: var(--color-slate); padding-top: var(--space-18)">{{ev.time}}</div>
+            <div style="position: relative; display: flex; justify-content: center">
+              <div style="position: absolute; top: 0; bottom: 0; width: 2px; background: #E4E6E1"></div>
+              <span style="{{ev.nodeStyle}}">{{ev.nodeText}}</span>
+            </div>
+            <div style="padding: var(--space-12) 0">
+              <sc-if value="{{ev.isPoint}}" hint-placeholder-val="{{ true }}">
+                <div style="display: flex; align-items: center; gap: var(--space-10); min-height: 32px; font-size: 14px">
+                  <span style="font-weight: 700">{{ev.title}}</span><span style="color: var(--color-slate)">{{ev.detail}}</span>
+                  <sc-if value="{{ev.skipped}}" hint-placeholder-val="{{ false }}">
+                    <span style="font-size: 12px; font-weight: 600; padding: 3px var(--space-9); border-radius: 11px; background: var(--color-off-white-alt); color: var(--color-slate-dark)">Skipped · reason recorded</span>
+                  </sc-if>
+                </div>
+              </sc-if>
+              <sc-if value="{{ev.isError}}" hint-placeholder-val="{{ false }}">
+                <div style="{{ev.boxStyle}}">
+                  <span style="{{ev.sevStyle}}">{{ev.sev}}</span>
+                  <span style="{{ev.titleStyle}}">{{ev.title}}</span>
+                  <span style="font-size: 13px; color: var(--color-slate); flex: 1">{{ev.detail}}</span>
+                  <span style="{{ev.tagStyle}}">{{ev.tag}}</span>
+                </div>
+              </sc-if>
+              <sc-if value="{{ev.isAI}}" hint-placeholder-val="{{ false }}">
+                <button sc-camel-on-click="{{ev.open}}" style="{{ev.aiStyle}}">
+                  <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="var(--color-amber)" aria-hidden="true" style="flex-shrink: 0"><path d="M12 2l1.8 5.4L19 9l-5.2 1.6L12 16l-1.8-5.4L5 9l5.2-1.6zM19 14l.9 2.6L22 17.5l-2.1.9L19 21l-.9-2.6-2.1-.9 2.1-.9z"></path></svg>
+                  <span style="flex: 1; text-align: left">
+                    <span style="display: block; font-size: 14px; font-weight: 700; color: var(--color-charcoal)">{{ev.title}}</span>
+                    <span style="display: block; font-size: 13px; font-weight: 500; color: var(--color-amber-dark)">{{ev.detail}}</span>
+                  </span>
+                  <span style="{{ev.statusStyle}}">{{ev.status}}</span>
+                  <svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-amber-dark)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>
+                </button>
+              </sc-if>
+            </div>
+          </div>
+        </sc-for>
+      </section>
+    </div>
+
+    <aside style="display: flex; flex-direction: column; gap: var(--space-14); min-height: 0">
+      <div style="background: var(--color-white); border: 1px solid var(--color-line); border-radius: 14px; padding: var(--space-18) var(--space-20); display: flex; flex-direction: column; gap: var(--space-14)">
+        <div style="font-size: var(--space-12); font-weight: 600; color: var(--color-slate); text-transform: uppercase; letter-spacing: 0.05em">Calculated result</div>
+        <div style="display: flex; align-items: center; gap: var(--space-12)">
+          <span style="width: 40px; height: 40px; border-radius: 50%; background: var(--color-green); display: flex; align-items: center; justify-content: center"><svg width="22" height="22" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-white)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"></path></svg></span>
+          <span style="font-size: 30px; font-weight: 700; color: var(--color-green-dark)">Pass</span>
+        </div>
+        <dl style="margin: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto; row-gap: var(--space-8); font-size: 14px">
+          <dt style="color: var(--color-slate)">Errors</dt><dd style="margin: 0; font: 600 14px var(--font-mono)">{{errorCount}}</dd>
+          <dt style="color: var(--color-slate)">Score</dt><dd style="margin: 0; font: 600 14px var(--font-mono)">{{score}}</dd>
+          <dt style="color: var(--color-slate)">Automatic failures</dt><dd style="margin: 0; font-weight: 600">None</dd>
+          <dt style="color: var(--color-slate)">Duration</dt><dd style="margin: 0; font: 600 14px var(--font-mono)">23:41</dd>
+        </dl>
+      </div>
+
+      <div style="background: var(--color-amber-light); border: 1px solid var(--color-amber-border); border-radius: 14px; padding: var(--space-16) var(--space-18); display: flex; flex-direction: column; gap: var(--space-10)">
+        <div style="display: flex; align-items: center; gap: var(--space-8)">
+          <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="var(--color-amber)" aria-hidden="true"><path d="M12 2l1.8 5.4L19 9l-5.2 1.6L12 16l-1.8-5.4L5 9l5.2-1.6zM19 14l.9 2.6L22 17.5l-2.1.9L19 21l-.9-2.6-2.1-.9 2.1-.9z"></path></svg>
+          <h2 style="margin: 0; font-size: 15px; font-weight: 700; color: var(--color-amber-dark); flex: 1">AI recommendations</h2>
+          <span style="font: 600 13px var(--font-mono); color: var(--color-amber-dark)">{{decidedCount}}/{{totalCount}}</span>
+        </div>
+        <div style="display: flex; font-size: 13px; color: var(--color-amber-dark)"><span style="flex: 1">Errors added</span><span style="font-weight: 700">{{addedCount}}</span></div>
+        <div style="display: flex; font-size: 13px; color: var(--color-amber-dark)"><span style="flex: 1">Errors removed</span><span style="font-weight: 700">{{removedCount}}</span></div>
+        <div style="display: flex; font-size: 13px; color: var(--color-amber-dark)"><span style="flex: 1">Rejected · logged for audit</span><span style="font-weight: 700">{{rejectedCount}}</span></div>
+      </div>
+
+      <div style="flex: 1"></div>
+      <div style="font-size: 12px; color: var(--color-slate-dark); line-height: 1.45">AI recommends, you decide. Only errors you confirm count toward the score.</div>
+      <sc-if value="{{canSubmit}}" hint-placeholder-val="{{ false }}">
+        <a href="02-start-a-test.html" style="height: 56px; border-radius: 12px; background: var(--color-indigo); color: var(--color-white); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; text-decoration: none">Submit official result</a>
+      </sc-if>
+      <sc-if value="{{blocked}}" hint-placeholder-val="{{ true }}">
+        <button disabled="" style="height: 56px; border-radius: 12px; border: none; background: var(--color-line); color: var(--color-slate-dark); font: 700 15px var(--font-sans)">Resolve {{pendingCount}} AI items to submit</button>
+      </sc-if>
+    </aside>
+  </main>
+
+  <sc-if value="{{showModal}}" hint-placeholder-val="{{ false }}">
+    <div style="position: absolute; inset: 0; background: rgba(20,24,29,0.55); display: flex; align-items: center; justify-content: center; z-index: 20">
+      <div role="dialog" aria-modal="true" aria-label="AI recommendation review" style="width: 460px; background: var(--color-white); border-radius: 16px; box-shadow: 0 8px 28px rgba(20,24,29,0.28); overflow: hidden">
+        <div style="display: flex; align-items: center; gap: var(--space-10); padding: var(--space-12) var(--space-12) var(--space-12) var(--space-16); background: var(--color-amber-light); border-bottom: 1px solid var(--color-amber-border)">
+          <svg width="20" height="20" sc-camel-view-box="0 0 24 24" fill="var(--color-amber)" aria-hidden="true"><path d="M12 2l1.8 5.4L19 9l-5.2 1.6L12 16l-1.8-5.4L5 9l5.2-1.6zM19 14l.9 2.6L22 17.5l-2.1.9L19 21l-.9-2.6-2.1-.9 2.1-.9z"></path></svg>
+          <div style="flex: 1">
+            <div style="font-size: 15px; font-weight: 700; color: var(--color-amber-dark)">{{modal.title}}</div>
+            <div style="font-size: 12px; color: var(--color-amber)">{{modal.sub}}</div>
+          </div>
+          <button sc-camel-on-click="{{close}}" aria-label="Close" style="width: 40px; height: 40px; border-radius: 10px; border: none; background: transparent; display: flex; align-items: center; justify-content: center">
+            <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-amber-dark)" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+          </button>
+        </div>
+        <div style="position: relative; height: 128px; background: linear-gradient(180deg, #3A4552 0%, #222A33 100%); overflow: hidden">
+          <svg sc-camel-view-box="0 0 460 128" style="position: absolute; inset: 0; width: 460px; height: 128px" aria-hidden="true">
+            <path d="M0 128 L190 54 L270 54 L460 128 Z" fill="#4B5561"></path>
+            <path d="M230 60 L230 74 M230 86 L230 104 M230 114 L230 128" stroke="#E8D27A" stroke-width="3"></path>
+            <path d="M0 62 L460 62" stroke="#5D6874" stroke-width="10"></path>
+            <rect x="306" y="46" width="62" height="28" rx="5" fill="#9AA6B2"></rect>
+            <rect x="300" y="40" width="74" height="40" rx="4" fill="none" stroke="var(--color-coral)" stroke-width="2.5"></rect>
+            <rect x="132" y="98" width="196" height="30" rx="8" fill="#1A1F25" fill-opacity="0.65"></rect>
+          </svg>
+          <span style="position: absolute; left: 300px; top: 22px; padding: var(--space-2) var(--space-6); border-radius: 4px; background: var(--color-coral); color: var(--color-charcoal); font-size: 11px; font-weight: 700">{{modal.clipTag}}</span>
+          <button aria-label="Play 8-second clip" style="position: absolute; left: 14px; top: 14px; height: 32px; padding: 0 var(--space-10); border: none; border-radius: 16px; background: rgba(255,255,255,0.92); display: flex; align-items: center; gap: var(--space-6); font: 600 12px var(--font-sans); color: var(--color-charcoal)">
+            <svg width="12" height="12" sc-camel-view-box="0 0 24 24" fill="var(--color-charcoal)" aria-hidden="true"><path d="M7 4.5v15l12-7.5z"></path></svg>Replay 0:08</button>
+          <span style="position: absolute; left: 0; right: 0; bottom: 8px; text-align: center; color: var(--color-white); font: 600 11px var(--font-mono)">{{modal.cam}}</span>
+        </div>
+        <div style="padding: var(--space-6) var(--space-16)">
+          <sc-for list="{{modal.items}}" as="d" hint-placeholder-count="2">
+            <div style="display: flex; flex-direction: column; gap: var(--space-8); padding: var(--space-12) 0; border-bottom: 1px solid var(--color-light-gray)">
+              <div style="display: flex; align-items: center; gap: var(--space-8)">
+                <span style="{{d.sevStyle}}">{{d.sev}}</span>
+                <span style="font-size: 16px; font-weight: 700; flex: 1">{{d.label}}</span>
+                <span style="font: 600 12px var(--font-mono); color: var(--color-slate-dark)">{{d.conf}}% conf.</span>
+              </div>
+              <div style="font-size: 12px; font-weight: 700; color: var(--color-indigo); text-transform: uppercase; letter-spacing: 0.04em">{{d.recLabel}}</div>
+              <div style="font-size: 13px; color: var(--color-slate-dark); line-height: 1.4">{{d.evidence}}</div>
+              <sc-if value="{{d.pending}}" hint-placeholder-val="{{ true }}">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-8)">
+                  <button sc-camel-on-click="{{d.reject}}" style="height: 44px; border-radius: 10px; border: 1px solid var(--color-line-dark); background: var(--color-white); font: 600 14px var(--font-sans); color: var(--color-charcoal)">{{d.rejectLabel}}</button>
+                  <button sc-camel-on-click="{{d.accept}}" style="height: 44px; border-radius: 10px; border: none; background: var(--color-indigo); font: 700 14px var(--font-sans); color: var(--color-white)">{{d.acceptLabel}}</button>
+                </div>
+              </sc-if>
+              <sc-if value="{{d.decided}}" hint-placeholder-val="{{ false }}">
+                <div style="display: flex; align-items: center; gap: var(--space-8)">
+                  <span style="{{d.resultStyle}}">{{d.result}}</span>
+                  <span style="flex: 1"></span>
+                  <button sc-camel-on-click="{{d.undo}}" style="height: 36px; padding: 0 var(--space-10); border: none; background: none; color: var(--color-indigo); font: 600 13px var(--font-sans)">Change</button>
+                </div>
+              </sc-if>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display: flex; align-items: center; gap: var(--space-10); padding: var(--space-10) var(--space-16) var(--space-14)">
+          <span style="flex: 1; font-size: 12px; color: var(--color-slate); line-height: 1.4">AI suggests, you decide. Nothing changes until you confirm.</span>
+          <button sc-camel-on-click="{{close}}" style="height: 40px; padding: 0 var(--space-16); border-radius: 10px; border: none; background: var(--color-charcoal); color: var(--color-white); font: 600 13px var(--font-sans)">Done</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script="" data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:800}}">
+class Component extends DCLogic {
+  renderVals() {
+    const st = this.state || {};
+    const dec = st.dec || {};
+    const openId = st.open || null;
+    const TOTAL = 1421;
+    const toSec = (t) => { const p = t.split(':'); return Number(p[0]) * 60 + Number(p[1]); };
+    const setDec = (id, v) => this.setState({ dec: Object.assign({}, dec, { [id]: v }) });
+
+    const groups = [
+      { id: 'g1', time: '07:58', point: '3', title: 'AI review · Point 3 · Left turn', sub: 'Point 3 · Left turn · camera at 07:52', clipTag: 'Turn signal', cam: 'FRONT CAM · 07:52:10',
+        items: [{ id: 'a1', kind: 'remove', target: 'e2', label: 'Late signal', sev: 'Moderate', conf: 78, evidence: 'Left signal visible about 140 ft before the turn, which meets the 100 ft requirement.' }] },
+      { id: 'g2', time: '12:46', point: '4', title: 'AI review · Point 4 · Stop sign', sub: 'Point 4 · Stop sign · camera at 12:46', clipTag: 'Cross traffic', cam: 'FRONT CAM · 12:46:31',
+        items: [
+          { id: 'a2', kind: 'add', label: 'Fails to yield', sev: 'Severe', conf: 91, evidence: 'Entered the intersection while cross traffic from the right had right-of-way.' },
+          { id: 'a3', kind: 'add', label: 'Signaling', sev: 'Moderate', conf: 84, evidence: 'No turn signal detected in the 100 ft before the right turn.' }
+        ] }
+    ];
+    const allItems = [];
+    groups.forEach((g) => g.items.forEach((it) => allItems.push(Object.assign({ group: g }, it))));
+
+    const removed = {};
+    allItems.forEach((it) => { if (it.kind === 'remove' && dec[it.id] === 'accept') removed[it.target] = true; });
+
+    const pill = 'font-size: 12px; font-weight: 700; padding: 3px var(--space-9); border-radius: 11px; white-space: nowrap; ';
+    const sevStyle = (s) => pill + (s === 'Severe' ? 'background: #FCEDEB; color: var(--color-red);' : (s === 'Moderate' ? 'background: var(--color-amber-light); color: var(--color-amber);' : 'background: var(--color-off-white-alt); color: var(--color-slate-dark);'));
+    const node = (bg, fg, border, extra) => 'position: relative; margin-top: var(--space-14); width: 28px; height: 28px; box-sizing: border-box; border-radius: 50%; display: flex; align-items: center; justify-content: center; font: 600 11px \'IBM Plex Mono\', monospace; background: ' + bg + '; color: ' + fg + '; border: 2px solid ' + border + '; ' + (extra || '');
+
+    const pointRow = (time, n, title, detail, skipped) => ({ time, sort: toSec(time), isPoint: true, isError: false, isAI: false, title, detail, skipped: !!skipped, nodeText: String(n),
+      nodeStyle: skipped ? node('var(--color-white)', 'var(--color-slate)', '#8A9098', 'border-style: dashed;') : node('var(--color-indigo)', 'var(--color-white)', 'var(--color-indigo)') });
+    const errorRow = (time, id, title, detail, sev, source, isRemoved) => ({ time, sort: toSec(time) + 0.1, isPoint: false, isError: true, isAI: false, id, title, detail, sev,
+      sevStyle: sevStyle(sev), nodeText: '!',
+      nodeStyle: node(isRemoved ? 'var(--color-white)' : 'var(--color-orange)', isRemoved ? '#8A9098' : 'var(--color-charcoal)', isRemoved ? 'var(--color-line-dark)' : 'var(--color-orange)', 'border-radius: 6px; transform: rotate(45deg) scale(0.8);'),
+      boxStyle: 'display: flex; align-items: center; gap: var(--space-10); min-height: 36px; padding: var(--space-4) var(--space-12); border-radius: 10px; ' + (isRemoved ? 'background: #F6F7F4; border: 1px dashed var(--color-line-dark);' : 'background: #FFF8EE; border: 1px solid var(--color-amber-border);'),
+      titleStyle: 'font-size: 14px; font-weight: 700; ' + (isRemoved ? 'text-decoration: line-through; color: #6B727A;' : ''),
+      tag: isRemoved ? 'Removed · AI accepted' : source,
+      tagStyle: pill + (isRemoved ? 'background: var(--color-off-white-alt); color: var(--color-slate-dark);' : (source === 'AI · added' ? 'background: var(--color-amber-light); color: var(--color-amber);' : 'background: var(--color-indigo-pale); color: var(--color-indigo-dark);')) });
+
+    const events = [
+      pointRow('00:00', 1, 'Start', ' · leave lot'),
+      pointRow('04:05', 2, 'Right turn', ' · W Thomas Rd'),
+      errorRow('04:12', 'e1', 'Wide turn', 'Point 2', 'Minor', 'Examiner'),
+      pointRow('07:50', 3, 'Left turn', ' · N 43rd Ave'),
+      errorRow('07:55', 'e2', 'Late signal', 'Point 3', 'Moderate', 'Examiner', !!removed.e2),
+      pointRow('12:40', 4, 'Stop sign', ' · W Osborn Rd'),
+      errorRow('12:51', 'e3', 'Exceeded posted limit', 'Reported · N 43rd Ave', 'Severe', 'Examiner'),
+      pointRow('14:20', 5, 'Lane change', ' · W Indian School Rd'),
+      pointRow('16:05', 6, 'School zone', ' · detour, road construction', true),
+      pointRow('17:30', 7, 'Right turn', ' · N 27th Ave'),
+      pointRow('19:10', 8, 'Right turn', ' · W McDowell Rd'),
+      pointRow('20:40', 9, '4-way stop', ' · N 39th Ave'),
+      pointRow('22:05', 10, 'Left turn', ' · W Van Buren St'),
+      pointRow('23:41', 11, 'Return and park', '')
+    ];
+
+    allItems.forEach((it) => {
+      if (it.kind === 'add' && dec[it.id] === 'accept') events.push(errorRow(it.group.time, it.id, it.label, 'Point ' + it.group.point, it.sev, 'AI · added'));
+    });
+
+    groups.forEach((g) => {
+      const pend = g.items.filter((it) => !dec[it.id]).length;
+      const addN = g.items.filter((it) => it.kind === 'add').length;
+      const remN = g.items.filter((it) => it.kind === 'remove').length;
+      const parts = [];
+      if (addN) parts.push(addN + ' possible error' + (addN > 1 ? 's' : '') + ' found');
+      if (remN) parts.push('suggests removing ' + remN + ' recorded error');
+      events.push({ time: g.time, sort: toSec(g.time) + 0.05, isPoint: false, isError: false, isAI: true,
+        title: g.title, detail: parts.join(' · '), nodeText: '',
+        nodeStyle: node('var(--color-amber-light)', 'var(--color-amber)', 'var(--color-orange)'),
+        status: pend ? pend + ' to review' : 'Reviewed',
+        statusStyle: pill + (pend ? 'background: var(--color-orange); color: var(--color-charcoal);' : 'background: var(--color-green-light); color: var(--color-green-dark);'),
+        aiStyle: 'width: 100%; min-height: 56px; padding: var(--space-8) var(--space-12); border-radius: 12px; display: flex; align-items: center; gap: var(--space-12); cursor: pointer; font-family: inherit; background: var(--color-amber-light); border: ' + (pend ? '2px solid var(--color-orange);' : '1px solid var(--color-amber-border);'),
+        open: () => this.setState({ open: g.id }) });
+    });
+    events.sort((a, b) => a.sort - b.sort);
+
+    const strip = [];
+    events.forEach((ev) => {
+      const left = (toSec(ev.time) / TOTAL * 100).toFixed(2);
+      const base = 'position: absolute; left: ' + left + '%; transform: translateX(-50%); ';
+      if (ev.isPoint) strip.push({ text: ev.nodeText, style: base + 'top: 16px; width: 24px; height: 24px; border-radius: 50%; box-sizing: border-box; display: flex; align-items: center; justify-content: center; font: 600 10px \'IBM Plex Mono\', monospace; ' + (ev.skipped ? 'background: var(--color-white); color: var(--color-slate); border: 2px dashed #8A9098;' : 'background: var(--color-indigo); color: var(--color-white); border: 2px solid var(--color-white);') });
+      if (ev.isError && ev.tag.indexOf('Removed') !== 0) strip.push({ text: '', style: base + 'top: 2px; width: 10px; height: 10px; background: var(--color-orange); transform: translateX(-50%) rotate(45deg);' });
+      if (ev.isAI) strip.push({ text: '', style: base + 'top: 44px; width: 10px; height: 10px; border-radius: 50%; background: var(--color-amber);' });
+    });
+
+    const errorCount = events.filter((e) => e.isError && e.tag.indexOf('Removed') !== 0).length;
+    const decidedCount = allItems.filter((it) => !!dec[it.id]).length;
+    const pendingCount = allItems.length - decidedCount;
+
+    let modal = null;
+    const g = groups.find((x) => x.id === openId);
+    if (g) {
+      modal = { title: g.title, sub: g.sub, clipTag: g.clipTag, cam: g.cam,
+        items: g.items.map((it) => {
+          const v = dec[it.id];
+          const isAdd = it.kind === 'add';
+          return Object.assign({}, it, {
+            pending: !v, decided: !!v, sevStyle: sevStyle(it.sev),
+            recLabel: isAdd ? 'Recommends adding this error' : 'Recommends removing your recorded error',
+            acceptLabel: isAdd ? 'Add error' : 'Remove error',
+            rejectLabel: isAdd ? 'Reject' : 'Keep error',
+            result: v === 'accept' ? (isAdd ? 'Added · counts toward score' : 'Removed · no longer scored') : (isAdd ? 'Rejected · logged for audit' : 'Kept · logged for audit'),
+            resultStyle: 'font-size: 13px; font-weight: 600; padding: var(--space-6) var(--space-10); border-radius: 8px; ' + (v === 'accept' ? 'background: var(--color-green-light); color: var(--color-green-dark);' : 'background: var(--color-off-white-alt); color: var(--color-slate-dark);'),
+            accept: () => setDec(it.id, 'accept'),
+            reject: () => setDec(it.id, 'reject'),
+            undo: () => setDec(it.id, null)
+          });
+        }) };
+    }
+
+    return {
+      events, strip, modal,
+      showModal: !!modal,
+      close: () => this.setState({ open: null }),
+      errorCount, score: 100 - errorCount * 2,
+      totalCount: allItems.length, decidedCount, pendingCount,
+      addedCount: allItems.filter((it) => it.kind === 'add' && dec[it.id] === 'accept').length,
+      removedCount: allItems.filter((it) => it.kind === 'remove' && dec[it.id] === 'accept').length,
+      rejectedCount: allItems.filter((it) => dec[it.id] === 'reject').length,
+      canSubmit: pendingCount === 0,
+      blocked: pendingCount > 0
+    };
+  }
+}
+</script>
+
+
+
+<style id="screen-fit-style">html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #e5e7eb; }
+body > x-dc, body > #dc-root { display: block; position: absolute; width: 1280px; height: 800px; transform-origin: top left; }</style>
+<script id="screen-fit-script">
+(() => {
+  function fit() {
+    const root = document.querySelector("body > #dc-root, body > x-dc");
+    if (!root) return;
+    const scale = Math.max(0, Math.min((window.innerWidth - 32) / 1280, (window.innerHeight - 32) / 800));
+    root.style.transform = "scale(" + scale + ")";
+    root.style.left = (window.innerWidth - 1280 * scale) / 2 + "px";
+    root.style.top = (window.innerHeight - 800 * scale) / 2 + "px";
+  }
+  window.addEventListener("resize", fit);
+  new MutationObserver(fit).observe(document.body, { childList: true });
+  fit();
+})();
+</script>
+</body></html>

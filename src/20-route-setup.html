@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<title>DTI Admin – Route setup</title>
+<script src="shared/runtime.js"></script>
+  <link rel="stylesheet" href="shared/styles.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+
+
+</helmet>
+<div style="width: 1440px; height: 900px; display: flex; font-family: var(--font-sans); color: var(--color-charcoal); background: var(--color-background)">
+  <nav aria-label="Admin" style="width: 220px; flex-shrink: 0; background: var(--color-white); border-right: 1px solid var(--color-line); padding: var(--space-20) var(--space-14); display: flex; flex-direction: column; gap: var(--space-4)">
+    <div style="display: flex; align-items: center; gap: var(--space-10); padding: 0 var(--space-8) var(--space-20)">
+      <div style="width: var(--space-32); height: 32px; border-radius: 8px; background: var(--color-indigo); display: flex; align-items: center; justify-content: center">
+        <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-white)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"></path><circle cx="12" cy="9.5" r="2.5"></circle></svg>
+      </div>
+      <div><div style="font-weight: 700; font-size: 15px">DTI Admin</div><div style="font-size: 12px; color: var(--color-slate)">Configuration</div></div>
+    </div>
+    <a href="#" aria-current="page" style="height: 44px; padding: 0 var(--space-12); border-radius: 8px; background: var(--color-indigo-pale); color: var(--color-indigo-dark); display: flex; align-items: center; font-weight: 700; font-size: 15px; text-decoration: none">Routes</a>
+    <a href="#" style="height: 44px; padding: 0 var(--space-12); border-radius: 8px; color: var(--color-charcoal-light); display: flex; align-items: center; font-weight: 500; font-size: 15px; text-decoration: none">Scoring rules</a>
+    <a href="#" style="height: 44px; padding: 0 var(--space-12); border-radius: 8px; color: var(--color-charcoal-light); display: flex; align-items: center; font-weight: 500; font-size: 15px; text-decoration: none">Offices</a>
+    <a href="#" style="height: 44px; padding: 0 var(--space-12); border-radius: 8px; color: var(--color-charcoal-light); display: flex; align-items: center; font-weight: 500; font-size: 15px; text-decoration: none">Audit log</a>
+  </nav>
+
+  <div style="flex: 1; min-width: 0; display: flex; flex-direction: column">
+    <header style="height: 72px; flex-shrink: 0; display: flex; align-items: center; gap: var(--space-12); padding: 0 var(--space-24); background: var(--color-white); border-bottom: 1px solid var(--color-line)">
+      <div style="flex: 1">
+        <div style="font-size: 13px; color: var(--color-slate)">Routes · West Phoenix MVD [placeholder] · Class D</div>
+        <h1 style="margin: var(--space-2) 0 0; font-size: 22px; font-weight: 700">West Loop A</h1>
+      </div>
+      <button style="height: 44px; padding: 0 var(--space-18); border-radius: 10px; border: 1px solid var(--color-line-dark); background: var(--color-white); font: 600 15px var(--font-sans); color: var(--color-charcoal)">Validate route</button>
+      <button style="height: 44px; padding: 0 var(--space-18); border-radius: 10px; border: none; background: var(--color-indigo); font: 600 15px var(--font-sans); color: var(--color-white)">Activate version 4</button>
+    </header>
+    <div style="height: 48px; flex-shrink: 0; display: flex; align-items: center; gap: var(--space-12); padding: 0 var(--space-24); background: var(--color-amber-light); border-bottom: 1px solid var(--color-amber-border); font-size: 14px; color: var(--color-amber-dark)">
+      <span style="font: 600 12px var(--font-mono); padding: 3px var(--space-8); border-radius: 6px; background: var(--color-white); border: 1px solid var(--color-amber-border)">DRAFT v4</span>
+      Version 3 stays active until you activate this draft. Completed tests keep the version they used.
+    </div>
+
+    <main style="flex: 1; min-height: 0; display: flex; gap: var(--space-20); padding: var(--space-24)">
+      <section style="width: 300px; flex-shrink: 0; background: var(--color-white); border: 1px solid var(--color-line); border-radius: 14px; padding: var(--space-16); display: flex; flex-direction: column; gap: var(--space-6)">
+        <div style="display: flex; align-items: baseline; padding: 0 var(--space-4) var(--space-8)"><h2 style="margin: 0; font-size: 16px; font-weight: 700; flex: 1">Evaluation points</h2><span style="font-size: 13px; color: var(--color-slate)">In order</span></div>
+        <sc-for list="{{points}}" as="pt" hint-placeholder-count="11">
+          <div style="{{pt.style}}">
+            <svg width="14" height="14" sc-camel-view-box="0 0 24 24" fill="#8A9098" aria-hidden="true"><circle cx="9" cy="6" r="1.6"></circle><circle cx="15" cy="6" r="1.6"></circle><circle cx="9" cy="12" r="1.6"></circle><circle cx="15" cy="12" r="1.6"></circle><circle cx="9" cy="18" r="1.6"></circle><circle cx="15" cy="18" r="1.6"></circle></svg>
+            <span style="width: 24px; font: 600 12px var(--font-mono); color: var(--color-slate)">{{pt.n}}</span>
+            <span style="flex: 1; min-width: 0; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{pt.label}}</span>
+          </div>
+        </sc-for>
+        <button style="height: 44px; margin-top: var(--space-6); border-radius: 10px; border: 1px dashed #8A9098; background: var(--color-white); font: 600 14px var(--font-sans); color: var(--color-indigo)">+ Add evaluation point</button>
+      </section>
+
+      <section style="flex: 1; min-width: 0; border-radius: 14px; overflow: hidden; border: 1px solid var(--color-line)">
+        <dc-import name="RouteMap" active="1" show-vehicle="{{no}}" w="472" h="730" hint-size="472px,730px"></dc-import>
+      </section>
+
+      <section style="width: 360px; flex-shrink: 0; background: var(--color-white); border: 1px solid var(--color-line); border-radius: 14px; padding: var(--space-20); display: flex; flex-direction: column; gap: var(--space-16)">
+        <div>
+          <div style="font-size: var(--space-13); font-weight: 600; color: var(--color-amber); text-transform: uppercase; letter-spacing: 0.05em">Point 1</div>
+          <h2 style="margin: var(--space-2) 0 0; font-size: 20px; font-weight: 700">Start · leave lot</h2>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: var(--space-6)">
+          <label for="ptname" style="font-size: var(--space-13); font-weight: 600; color: var(--color-slate-dark)">Name shown to examiner</label>
+          <input id="ptname" type="text" value="Start · leave lot" style="height: 44px; border: 1px solid var(--color-line-dark); border-radius: 10px; padding: 0 var(--space-12); font: 500 15px var(--font-sans); color: var(--color-charcoal)">
+        </div>
+        <div style="display: flex; flex-direction: column; gap: var(--space-6)">
+          <label for="mtype" style="font-size: var(--space-13); font-weight: 600; color: var(--color-slate-dark)">Maneuver type</label>
+          <sc-raw-select id="mtype" style="height: 44px; border: 1px solid var(--color-line-dark); border-radius: 10px; padding: 0 var(--space-12); font: 500 15px var(--font-sans); color: var(--color-charcoal); background: var(--color-white)"><option>Start · pull out</option></sc-raw-select>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: var(--space-6)">
+          <div style="font-size: var(--space-13); font-weight: 600; color: var(--color-slate-dark)">Activation trigger</div>
+          <div style="padding: var(--space-10) var(--space-12); border-radius: 10px; background: #F6F7F4; font-size: 13px; line-height: 1.4; color: var(--color-slate-dark)">Set after GPS field testing. Not a fixed distance.</div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: var(--space-8)">
+          <div style="font-size: var(--space-13); font-weight: 600; color: var(--color-slate-dark)">Scoring elements at this point</div>
+          <sc-for list="{{obs}}" as="o" hint-placeholder-count="4">
+            <div style="display: flex; align-items: center; gap: var(--space-10); min-height: 44px; padding: 0 var(--space-6) 0 var(--space-12); border: 1px solid var(--color-line); border-radius: 10px; font-size: 14px; font-weight: 500">
+              <span style="flex: 1">{{o.label}}</span>
+              <button aria-label="Remove {{o.label}}" style="width: 36px; height: 36px; border: none; background: none; display: flex; align-items: center; justify-content: center">
+                <svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-slate)" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+              </button>
+            </div>
+          </sc-for>
+          <button style="height: 44px; border-radius: 10px; border: 1px dashed #8A9098; background: var(--color-white); font: 600 14px var(--font-sans); color: var(--color-indigo)">+ Add scoring element</button>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script="" data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:900}}">
+class Component extends DCLogic {
+  renderVals() {
+    const labels = ['Start · leave lot', 'Right turn · W Thomas Rd', 'Left turn · N 43rd Ave', 'Stop sign · W Osborn Rd', 'Lane change · Indian School', 'School zone · N 35th Ave', 'Right turn · N 27th Ave', 'Right turn · W McDowell Rd', '4-way stop · N 39th Ave', 'Left turn · W Van Buren St', 'Return and park'];
+    const points = labels.map((label, i) => ({
+      n: i + 1, label,
+      style: 'display: flex; align-items: center; gap: var(--space-8); min-height: 44px; padding: 0 var(--space-10); border-radius: 10px; ' + (i === 0 ? 'background: var(--color-amber-light); border: 2px solid var(--color-orange); font-weight: 600;' : 'border: 1px solid transparent;')
+    }));
+    const obs = ['Signals before pulling out', 'Checks mirrors and blind spot', 'Hands on wheel', 'Full stop at lot exit'].map((label) => ({ label }));
+    return { points, obs, no: false };
+  }
+}
+</script>
+
+
+
+<style id="screen-fit-style">html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #e5e7eb; }
+body > x-dc, body > #dc-root { display: block; position: absolute; width: 1440px; height: 900px; transform-origin: top left; }</style>
+<script id="screen-fit-script">
+(() => {
+  function fit() {
+    const root = document.querySelector("body > #dc-root, body > x-dc");
+    if (!root) return;
+    const scale = Math.max(0, Math.min((window.innerWidth - 32) / 1440, (window.innerHeight - 32) / 900));
+    root.style.transform = "scale(" + scale + ")";
+    root.style.left = (window.innerWidth - 1440 * scale) / 2 + "px";
+    root.style.top = (window.innerHeight - 900 * scale) / 2 + "px";
+  }
+  window.addEventListener("resize", fit);
+  new MutationObserver(fit).observe(document.body, { childList: true });
+  fit();
+})();
+</script>
+</body></html>

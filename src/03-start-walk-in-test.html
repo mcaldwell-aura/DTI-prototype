@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<title>DTI Examiner – Start walk-in test</title>
+<script src="shared/runtime.js"></script>
+  <link rel="stylesheet" href="shared/styles.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+
+
+</helmet>
+<div style="width: 1280px; height: 800px; position: relative; overflow: hidden; font-family: var(--font-sans); color: var(--color-charcoal)">
+  <dc-import name="Queue" hint-size="1280px,800px"></dc-import>
+  <div style="position: absolute; inset: 0; background: rgba(20,24,29,0.55)"></div>
+
+  <section role="dialog" aria-modal="true" aria-label="Start walk-in test" style="position: absolute; left: 100px; top: 56px; width: 1080px; height: 688px; box-sizing: border-box; background: var(--color-white); border-radius: 18px; box-shadow: 0 12px 40px rgba(20,24,29,0.3); display: flex; flex-direction: column; overflow: hidden">
+    <div style="height: 72px; flex-shrink: 0; display: flex; align-items: center; gap: var(--space-12); padding: 0 var(--space-16) 0 var(--space-28); border-bottom: 1px solid var(--color-line)">
+      <h1 style="margin: 0; font-size: 22px; font-weight: 700; flex: 1">Start walk-in test</h1>
+      <a href="02-start-a-test.html" aria-label="Close" style="width: 44px; height: 44px; border-radius: 10px; border: 1px solid var(--color-line); display: flex; align-items: center; justify-content: center">
+        <svg width="20" height="20" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-charcoal)" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+      </a>
+    </div>
+
+    <div style="flex: 1; min-height: 0; display: grid; grid-template-columns: 440px minmax(0, 1fr)">
+      <div style="padding: var(--space-24) var(--space-28); border-right: 1px solid var(--color-line); display: flex; flex-direction: column; gap: var(--space-22)">
+        <fieldset style="margin: 0; padding: 0; border: none; display: flex; flex-direction: column; gap: var(--space-10)">
+          <legend style="font-size: var(--space-13); font-weight: 700; color: var(--color-slate-dark); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: var(--space-10)">1 · Test type</legend>
+          <sc-for list="{{types}}" as="t" hint-placeholder-count="3">
+            <button sc-camel-on-click="{{t.pick}}" disabled="{{t.disabled}}" aria-pressed="{{t.selected}}" style="{{t.style}}">
+              <span style="{{t.radioStyle}}"></span>
+              <span style="flex: 1; text-align: left">
+                <span style="display: block; font-size: 15px; font-weight: 700">{{t.label}}</span>
+                <span style="display: block; font-size: 13px; font-weight: 500; color: var(--color-slate)">{{t.note}}</span>
+              </span>
+            </button>
+          </sc-for>
+        </fieldset>
+
+        <div style="display: flex; flex-direction: column; gap: var(--space-12)">
+          <div style="font-size: var(--space-13); font-weight: 700; color: var(--color-slate-dark); text-transform: uppercase; letter-spacing: 0.06em">2 · Find customer in MAX</div>
+          <div role="tablist" aria-label="Lookup method" style="display: grid; grid-template-columns: 1fr 1fr; padding: var(--space-4); border-radius: 10px; background: var(--color-off-white-alt)">
+            <button role="tab" sc-camel-on-click="{{useDl}}" aria-selected="{{isDl}}" style="{{dlTabStyle}}">DL ID + DOB</button>
+            <button role="tab" sc-camel-on-click="{{useSsn}}" aria-selected="{{isSsn}}" style="{{ssnTabStyle}}">SSN last 4 + DOB</button>
+          </div>
+          <sc-if value="{{isDl}}" hint-placeholder-val="{{ true }}">
+            <div style="display: flex; flex-direction: column; gap: var(--space-6)">
+              <label for="dl" style="font-size: var(--space-13); font-weight: 600; color: var(--color-slate-dark)">Driver license / ID number</label>
+              <input id="dl" type="text" value="D08844471" style="height: 48px; border: 1px solid var(--color-line-dark); border-radius: 10px; padding: 0 var(--space-14); font: 500 16px var(--font-mono); color: var(--color-charcoal)">
+            </div>
+          </sc-if>
+          <sc-if value="{{isSsn}}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; flex-direction: column; gap: var(--space-6)">
+              <label for="ssn" style="font-size: var(--space-13); font-weight: 600; color: var(--color-slate-dark)">Last 4 of SSN</label>
+              <input id="ssn" type="password" value="4471" inputmode="numeric" maxlength="4" style="height: 48px; border: 1px solid var(--color-line-dark); border-radius: 10px; padding: 0 var(--space-14); font: 500 16px var(--font-mono); color: var(--color-charcoal)">
+              <span style="font-size: 12px; color: var(--color-slate)">Hidden after entry. Full SSN is never collected.</span>
+            </div>
+          </sc-if>
+          <div style="display: flex; flex-direction: column; gap: var(--space-6)">
+            <label for="dob" style="font-size: var(--space-13); font-weight: 600; color: var(--color-slate-dark)">Date of birth</label>
+            <input id="dob" type="text" value="03/14/2007" style="height: 48px; border: 1px solid var(--color-line-dark); border-radius: 10px; padding: 0 var(--space-14); font: 500 16px var(--font-mono); color: var(--color-charcoal)">
+          </div>
+          <button style="height: 52px; border-radius: 10px; border: none; background: var(--color-charcoal); color: var(--color-white); font: 700 15px var(--font-sans); display: flex; align-items: center; justify-content: center; gap: var(--space-8)">
+            <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-white)" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-4-4"></path></svg>Search MAX</button>
+        </div>
+      </div>
+
+      <div style="padding: var(--space-24) var(--space-28); display: flex; flex-direction: column; gap: var(--space-12); min-height: 0; background: #FAFAF8">
+        <div style="display: flex; align-items: baseline; gap: var(--space-12)">
+          <div style="font-size: var(--space-13); font-weight: 700; color: var(--color-slate-dark); text-transform: uppercase; letter-spacing: 0.06em; flex: 1">3 · Select customer</div>
+          <span style="font-size: 13px; color: var(--color-slate)">2 matches from MAX</span>
+        </div>
+        <sc-for list="{{results}}" as="c" hint-placeholder-count="2">
+          <button sc-camel-on-click="{{c.pick}}" disabled="{{c.blocked}}" aria-pressed="{{c.selected}}" style="{{c.style}}">
+            <span style="{{c.radioStyle}}"></span>
+            <span style="flex: 1; text-align: left; display: flex; flex-direction: column; gap: var(--space-4)">
+              <span style="font-size: 17px; font-weight: 700">{{c.name}}</span>
+              <span style="font: 500 13px var(--font-mono); color: var(--color-slate-dark)">{{c.meta}}</span>
+              <span style="font-size: 13px; color: var(--color-slate-dark)">{{c.cred}}</span>
+              <sc-if value="{{c.blocked}}" hint-placeholder-val="{{ false }}">
+                <span style="display: flex; align-items: center; gap: var(--space-6); margin-top: var(--space-4); font-size: 13px; font-weight: 600; color: var(--color-amber)">
+                  <svg width="14" height="14" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-amber)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l9 16H3z"></path><path d="M12 10v4M12 17h.01"></path></svg>
+                  A non-commercial road test is already in progress for this customer
+                </span>
+              </sc-if>
+            </span>
+          </button>
+        </sc-for>
+        <div style="flex: 1"></div>
+        <div style="display: flex; gap: var(--space-10); padding: var(--space-12) var(--space-14); border-radius: 10px; background: var(--color-white); border: 1px solid var(--color-line); font-size: 13px; line-height: 1.45; color: var(--color-slate-dark)">
+          <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-slate-dark)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0; margin-top: 1px"><circle cx="12" cy="12" r="9"></circle><path d="M12 8h.01M11 12h1v5h1"></path></svg>
+          <span>No match? [TBD] Adding a new customer, for example an out-of-state permit holder, is still an open question for ADOT.</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="height: 84px; flex-shrink: 0; display: flex; align-items: center; gap: var(--space-12); padding: 0 var(--space-28); border-top: 1px solid var(--color-line)">
+      <span style="flex: 1; font-size: 14px; color: var(--color-slate-dark)">{{summary}}</span>
+      <a href="02-start-a-test.html" style="height: 52px; padding: 0 var(--space-22); border-radius: 10px; border: 1px solid var(--color-line-dark); display: flex; align-items: center; color: var(--color-charcoal); font-weight: 600; font-size: 15px; text-decoration: none">Cancel</a>
+      <sc-if value="{{ready}}" hint-placeholder-val="{{ true }}">
+        <a href="04-verify-customer.html" style="height: 52px; padding: 0 26px; border-radius: 10px; background: var(--color-indigo); color: var(--color-white); display: flex; align-items: center; gap: var(--space-8); font-weight: 700; font-size: 16px; text-decoration: none">Create test and check in
+          <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-white)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></a>
+      </sc-if>
+      <sc-if value="{{notReady}}" hint-placeholder-val="{{ false }}">
+        <button disabled="" style="height: 52px; padding: 0 26px; border-radius: 10px; border: none; background: var(--color-line); color: var(--color-slate-dark); font: 700 16px var(--font-sans)">Create test and check in</button>
+      </sc-if>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script="" data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:800}}">
+class Component extends DCLogic {
+  renderVals() {
+    const st = this.state || {};
+    const type = st.type || 'nc';
+    const method = st.method || 'dl';
+    const sel = st.sel === undefined ? 'c1' : st.sel;
+    const radio = (on) => 'width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0; box-sizing: border-box; ' + (on ? 'border: 7px solid var(--color-indigo); background: var(--color-white);' : 'border: 2px solid #8A9098; background: var(--color-white);');
+    const card = 'min-height: 64px; padding: var(--space-12) var(--space-16); border-radius: 12px; display: flex; align-items: center; gap: var(--space-14); font-family: inherit; color: var(--color-charcoal); cursor: pointer; ';
+    const types = [
+      { id: 'nc', label: 'Non-commercial road test', note: 'Release 1' },
+      { id: 'mc', label: 'Motorcycle', note: 'Not available in Release 1', disabled: true },
+      { id: 'cdl', label: 'Commercial', note: 'Not available in Release 1', disabled: true }
+    ].map((t) => ({
+      label: t.label, note: t.note, disabled: !!t.disabled, selected: t.id === type,
+      radioStyle: radio(t.id === type),
+      style: card + (t.disabled ? 'background: var(--color-background); border: 1px dashed var(--color-line-dark); opacity: 0.75; cursor: not-allowed;' : (t.id === type ? 'background: var(--color-indigo-pale); border: 2px solid var(--color-indigo);' : 'background: var(--color-white); border: 1px solid var(--color-line-dark);')),
+      pick: () => { if (!t.disabled) this.setState({ type: t.id }); }
+    }));
+    const tab = (on) => 'height: 44px; border-radius: 8px; border: none; font: 600 14px \'Public Sans\', system-ui, sans-serif; cursor: pointer; ' + (on ? 'background: var(--color-white); color: var(--color-charcoal); box-shadow: 0 1px 3px rgba(20,24,29,0.15);' : 'background: transparent; color: var(--color-slate-dark);');
+    const results = [
+      { id: 'c1', name: 'Jordan A. Reyes', meta: 'DL •••••4471 · DOB 03/14/2007', cred: 'Class G graduated instruction permit · valid' },
+      { id: 'c2', name: 'Jordan M. Reyes', meta: 'DL •••••9120 · DOB 03/14/2007', cred: 'Class G graduated instruction permit · valid', blocked: true }
+    ].map((c) => ({
+      name: c.name, meta: c.meta, cred: c.cred, blocked: !!c.blocked, selected: c.id === sel,
+      radioStyle: radio(c.id === sel) + (c.blocked ? ' opacity: 0.4;' : ''),
+      style: card + 'padding: var(--space-16); align-items: flex-start; ' + (c.blocked ? 'background: var(--color-white); border: 1px solid var(--color-amber-border); cursor: not-allowed;' : (c.id === sel ? 'background: var(--color-white); border: 2px solid var(--color-indigo);' : 'background: var(--color-white); border: 1px solid var(--color-line-dark);')),
+      pick: () => { if (!c.blocked) this.setState({ sel: c.id }); }
+    }));
+    const ready = !!sel;
+    return {
+      types, results, ready, notReady: !ready,
+      isDl: method === 'dl', isSsn: method === 'ssn',
+      dlTabStyle: tab(method === 'dl'), ssnTabStyle: tab(method === 'ssn'),
+      useDl: () => this.setState({ method: 'dl' }),
+      useSsn: () => this.setState({ method: 'ssn' }),
+      summary: ready ? 'Non-commercial road test for Jordan A. Reyes · created as Not started' : 'Select a customer to continue'
+    };
+  }
+}
+</script>
+
+
+
+<style id="screen-fit-style">html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #e5e7eb; }
+body > x-dc, body > #dc-root { display: block; position: absolute; width: 1280px; height: 800px; transform-origin: top left; }</style>
+<script id="screen-fit-script">
+(() => {
+  function fit() {
+    const root = document.querySelector("body > #dc-root, body > x-dc");
+    if (!root) return;
+    const scale = Math.max(0, Math.min((window.innerWidth - 32) / 1280, (window.innerHeight - 32) / 800));
+    root.style.transform = "scale(" + scale + ")";
+    root.style.left = (window.innerWidth - 1280 * scale) / 2 + "px";
+    root.style.top = (window.innerHeight - 800 * scale) / 2 + "px";
+  }
+  window.addEventListener("resize", fit);
+  new MutationObserver(fit).observe(document.body, { childList: true });
+  fit();
+})();
+</script>
+</body></html>

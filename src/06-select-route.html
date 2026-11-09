@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<title>DTI Examiner – Select route</title>
+<script src="shared/runtime.js"></script>
+  <link rel="stylesheet" href="shared/styles.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+
+
+</helmet>
+<div style="width: 1280px; height: 800px; display: flex; flex-direction: column; font-family: var(--font-sans); color: var(--color-charcoal); background: var(--color-background)">
+  <header style="height: 64px; flex-shrink: 0; display: flex; align-items: center; gap: var(--space-16); padding: 0 var(--space-24); background: var(--color-white); border-bottom: 1px solid var(--color-line)">
+    <a href="05-pre-test-checks.html" aria-label="Back to pre-test checks" style="width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--color-line)">
+      <svg width="20" height="20" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-charcoal)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
+    </a>
+    <div>
+      <div style="font-weight: 700; font-size: 17px">Jordan A. Reyes</div>
+      <div style="font-size: 13px; color: var(--color-slate)">Non-commercial road test · DTI-1042</div>
+    </div>
+    <div style="flex: 1"></div>
+    <div style="font-size: 14px; color: var(--color-slate)">M. Alvarez · West Phoenix MVD</div>
+  </header>
+
+  <nav aria-label="Exam steps" style="height: 64px; flex-shrink: 0; display: flex; align-items: center; gap: var(--space-8); padding: 0 var(--space-24); background: var(--color-white); border-bottom: 1px solid var(--color-line); font-size: 14px">
+    <div style="display: flex; align-items: center; gap: var(--space-8); font-weight: 600"><span style="width: 26px; height: 26px; border-radius: 50%; background: var(--color-green); display: flex; align-items: center; justify-content: center"><svg width="14" height="14" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-white)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"></path></svg></span>Verify and acknowledge</div>
+    <div style="width: 32px; height: 2px; background: var(--color-green)"></div>
+    <div style="display: flex; align-items: center; gap: var(--space-8); font-weight: 600"><span style="width: 26px; height: 26px; border-radius: 50%; background: var(--color-green); display: flex; align-items: center; justify-content: center"><svg width="14" height="14" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-white)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"></path></svg></span>Pre-test checks</div>
+    <div style="width: 32px; height: 2px; background: var(--color-green)"></div>
+    <div style="display: flex; align-items: center; gap: var(--space-8); font-weight: 700; color: var(--color-indigo)"><span style="width: 26px; height: 26px; border-radius: 50%; background: var(--color-indigo); color: var(--color-white); display: flex; align-items: center; justify-content: center; font-size: 13px">3</span>Route</div>
+    <div style="width: 32px; height: 2px; background: var(--color-line)"></div>
+    <div style="display: flex; align-items: center; gap: var(--space-8); color: var(--color-slate)"><span style="width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--color-line-dark); box-sizing: border-box; display: flex; align-items: center; justify-content: center; font-size: 13px">4</span>Road test</div>
+    <div style="width: 32px; height: 2px; background: var(--color-line)"></div>
+    <div style="display: flex; align-items: center; gap: var(--space-8); color: var(--color-slate)"><span style="width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--color-line-dark); box-sizing: border-box; display: flex; align-items: center; justify-content: center; font-size: 13px">5</span>Review</div>
+  </nav>
+
+  <main style="flex: 1; display: flex; gap: var(--space-20); padding: var(--space-20) var(--space-24); min-height: 0">
+    <section style="width: 360px; flex-shrink: 0; display: flex; flex-direction: column; gap: var(--space-12)">
+      <div>
+        <h1 style="margin: 0 0 var(--space-4); font-size: 22px; font-weight: 700">Choose a route</h1>
+        <div style="font-size: 14px; color: var(--color-slate)">Enabled non-commercial routes for this office</div>
+      </div>
+      <label style="display: flex; gap: var(--space-14); padding: var(--space-16); background: var(--color-white); border: 2px solid var(--color-indigo); border-radius: 12px; cursor: pointer">
+        <input type="radio" name="route" checked="" style="width: 22px; height: 22px; margin: var(--space-2) 0 0; accent-color: var(--color-indigo); flex-shrink: 0">
+        <span style="display: flex; flex-direction: column; gap: var(--space-4)">
+          <span style="font-weight: 700; font-size: 16px">West Loop A</span>
+          <span style="font-size: 14px; color: var(--color-slate-dark)">11 evaluation points · about 22 min</span>
+          <span style="font-size: 12px; font-family: var(--font-mono); color: var(--color-indigo); font-weight: 600">VERSION 3 · ACTIVE</span>
+        </span>
+      </label>
+      <label style="display: flex; gap: var(--space-14); padding: var(--space-16); background: var(--color-white); border: 1px solid var(--color-line); border-radius: 12px; cursor: pointer">
+        <input type="radio" name="route" style="width: 22px; height: 22px; margin: var(--space-2) 0 0; accent-color: var(--color-indigo); flex-shrink: 0">
+        <span style="display: flex; flex-direction: column; gap: var(--space-4)">
+          <span style="font-weight: 700; font-size: 16px">West Loop B</span>
+          <span style="font-size: 14px; color: var(--color-slate-dark)">9 evaluation points · about 18 min</span>
+          <span style="font-size: 12px; font-family: var(--font-mono); color: var(--color-slate); font-weight: 600">VERSION 2 · ACTIVE</span>
+        </span>
+      </label>
+      <label style="display: flex; gap: var(--space-14); padding: var(--space-16); background: var(--color-white); border: 1px solid var(--color-line); border-radius: 12px; cursor: pointer">
+        <input type="radio" name="route" style="width: 22px; height: 22px; margin: var(--space-2) 0 0; accent-color: var(--color-indigo); flex-shrink: 0">
+        <span style="display: flex; flex-direction: column; gap: var(--space-4)">
+          <span style="font-weight: 700; font-size: 16px">Neighborhood C</span>
+          <span style="font-size: 14px; color: var(--color-slate-dark)">8 evaluation points · about 15 min</span>
+          <span style="font-size: 12px; font-family: var(--font-mono); color: var(--color-slate); font-weight: 600">VERSION 5 · ACTIVE</span>
+        </span>
+      </label>
+      <div style="flex: 1"></div>
+      <div style="display: flex; gap: var(--space-10); padding: var(--space-14) var(--space-16); background: var(--color-indigo-pale); border-radius: 10px; font-size: 13px; line-height: 1.45; color: var(--color-indigo-dark)">
+        <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-indigo-dark)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0; margin-top: 1px"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
+        <span>The route and its version lock when the test starts. Changing it later means restarting the session.</span>
+      </div>
+    </section>
+
+    <section style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--space-12)">
+      <div style="border-radius: var(--space-14); overflow: hidden; border: 1px solid var(--color-line); height: 428px">
+        <dc-import name="RouteMap" active="0" show-vehicle="{{noVehicle}}" w="852" h="428" hint-size="852px,428px"></dc-import>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; gap: var(--space-8)">
+        <sc-for list="{{points}}" as="pt" hint-placeholder-count="6">
+          <div style="flex-shrink: 0; display: flex; align-items: center; gap: var(--space-8); height: 40px; padding: 0 var(--space-12) 0 var(--space-6); background: var(--color-white); border: 1px solid var(--color-line); border-radius: 20px; font-size: 13px; font-weight: 500">
+            <span style="width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--color-indigo); box-sizing: border-box; color: var(--color-indigo); display: flex; align-items: center; justify-content: center; font: 600 12px var(--font-mono)">{{pt.n}}</span>{{pt.label}}
+          </div>
+        </sc-for>
+      </div>
+    </section>
+  </main>
+
+  <footer style="height: 88px; flex-shrink: 0; display: flex; align-items: center; gap: var(--space-16); padding: 0 var(--space-24); background: var(--color-white); border-top: 1px solid var(--color-line)">
+    <div style="font-size: 14px; color: var(--color-slate-dark); display: flex; gap: var(--space-8); align-items: center">
+      <span style="font-weight: 600; color: var(--color-charcoal)">Starting the test begins:</span> timer · GPS and telemetry · video capture
+    </div>
+    <div style="flex: 1"></div>
+    <a href="07-road-test.html" style="height: 56px; padding: 0 var(--space-32); border-radius: 10px; background: var(--color-indigo); color: var(--color-white); display: flex; align-items: center; gap: var(--space-10); font-weight: 700; font-size: 17px; text-decoration: none">
+      <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="var(--color-white)" aria-hidden="true"><path d="M7 4.5v15l12-7.5z"></path></svg>
+      Start road test
+    </a>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script="" data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:800}}">
+class Component extends DCLogic {
+  renderVals() {
+    const labels = ['Start', 'Right turn', 'Left turn', 'Stop sign', 'Lane change', 'School zone', 'Right turn', 'Right turn', '4-way stop', 'Left turn', 'Park'];
+    return {
+      noVehicle: false,
+      points: labels.map((label, i) => ({ n: i + 1, label }))
+    };
+  }
+}
+</script>
+
+
+
+<style id="screen-fit-style">html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #e5e7eb; }
+body > x-dc, body > #dc-root { display: block; position: absolute; width: 1280px; height: 800px; transform-origin: top left; }</style>
+<script id="screen-fit-script">
+(() => {
+  function fit() {
+    const root = document.querySelector("body > #dc-root, body > x-dc");
+    if (!root) return;
+    const scale = Math.max(0, Math.min((window.innerWidth - 32) / 1280, (window.innerHeight - 32) / 800));
+    root.style.transform = "scale(" + scale + ")";
+    root.style.left = (window.innerWidth - 1280 * scale) / 2 + "px";
+    root.style.top = (window.innerHeight - 800 * scale) / 2 + "px";
+  }
+  window.addEventListener("resize", fit);
+  new MutationObserver(fit).observe(document.body, { childList: true });
+  fit();
+})();
+</script>
+</body></html>

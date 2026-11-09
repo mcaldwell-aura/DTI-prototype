@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<title>DTI Examiner – Review and submit</title>
+<script src="shared/runtime.js"></script>
+  <link rel="stylesheet" href="shared/styles.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+
+
+</helmet>
+<div style="width: 1280px; height: 800px; display: flex; flex-direction: column; font-family: var(--font-sans); color: var(--color-charcoal); background: var(--color-background)">
+  <header style="height: 64px; flex-shrink: 0; display: flex; align-items: center; gap: var(--space-16); padding: 0 var(--space-24); background: var(--color-white); border-bottom: 1px solid var(--color-line)">
+    <div>
+      <div style="font-weight: 700; font-size: 17px">Review road test</div>
+      <div style="font-size: 13px; color: var(--color-slate)">Jordan A. Reyes · Non-commercial road test · West Loop A v3 · 9:52–10:16 AM</div>
+    </div>
+    <div style="flex: 1"></div>
+    <span style="display: flex; align-items: center; gap: var(--space-6); height: 30px; padding: 0 var(--space-12); border-radius: 15px; background: var(--color-off-white-alt); color: var(--color-slate-dark); font-size: 13px; font-weight: 600">Test ended · not yet submitted</span>
+  </header>
+
+  <main style="flex: 1; display: grid; grid-template-columns: 330px minmax(0, 1fr) 320px; gap: var(--space-20); padding: var(--space-20) var(--space-24); min-height: 0">
+    <section style="display: flex; flex-direction: column; gap: var(--space-16)">
+      <div style="background: var(--color-white); border: 1px solid var(--color-line); border-radius: 14px; padding: var(--space-22); display: flex; flex-direction: column; gap: var(--space-16)">
+        <div style="font-size: var(--space-13); font-weight: 600; color: var(--color-slate); text-transform: uppercase; letter-spacing: 0.05em">Calculated result</div>
+        <div style="display: flex; align-items: center; gap: var(--space-12)">
+          <span style="width: 48px; height: 48px; border-radius: 50%; background: var(--color-green); display: flex; align-items: center; justify-content: center"><svg width="26" height="26" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-white)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"></path></svg></span>
+          <span style="font-size: 36px; font-weight: 700; color: var(--color-green-dark)">Pass</span>
+        </div>
+        <dl style="margin: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto; row-gap: var(--space-10); font-size: 15px">
+          <dt style="color: var(--color-slate)">Errors</dt><dd style="margin: 0; font: 600 15px var(--font-mono)">3</dd>
+          <dt style="color: var(--color-slate)">Score</dt><dd style="margin: 0; font: 600 15px var(--font-mono)">94</dd>
+          <dt style="color: var(--color-slate)">Automatic failures</dt><dd style="margin: 0; font-weight: 600">None</dd>
+          <dt style="color: var(--color-slate)">Duration</dt><dd style="margin: 0; font: 600 15px var(--font-mono)">23:41</dd>
+          <dt style="color: var(--color-slate)">Scoring rules</dt><dd style="margin: 0; font: 600 13px var(--font-mono)">v[TBD]</dd>
+        </dl>
+      </div>
+      <div style="display: flex; gap: var(--space-10); padding: var(--space-14) var(--space-16); background: var(--color-indigo-pale); border-radius: 12px; font-size: 13px; line-height: 1.45; color: var(--color-indigo-dark)">
+        <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-indigo-dark)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0; margin-top: 1px"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"></path></svg>
+        <span>Calculated from your recorded observations only. No AI or inferred scoring. You confirm the final result.</span>
+      </div>
+    </section>
+
+    <section style="background: var(--color-white); border: 1px solid var(--color-line); border-radius: 14px; padding: var(--space-18) var(--space-20); display: flex; flex-direction: column; gap: var(--space-6); min-height: 0">
+      <div style="display: flex; align-items: baseline; padding-bottom: var(--space-6)">
+        <h1 style="margin: 0; font-size: 19px; font-weight: 700; flex: 1">Evaluation points</h1>
+        <span style="font-size: 13px; color: var(--color-slate)">10 scored · 1 skipped</span>
+      </div>
+      <sc-for list="{{rows}}" as="r" hint-placeholder-count="12">
+        <div style="{{r.rowStyle}}">
+          <span style="{{r.badgeStyle}}">{{r.n}}</span>
+          <span style="flex: 1; min-width: 0; font-size: 14px"><span style="font-weight: 600">{{r.label}}</span><span style="color: var(--color-slate)">{{r.detail}}</span></span>
+          <sc-if value="{{r.hasTag}}" hint-placeholder-val="{{ false }}">
+            <span style="{{r.tagStyle}}">{{r.tag}}</span>
+          </sc-if>
+          <button style="height: 32px; padding: 0 var(--space-10); border: none; background: none; color: var(--color-indigo); font: 600 13px var(--font-sans)">Edit</button>
+        </div>
+      </sc-for>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: var(--space-16)">
+      <div style="background: var(--color-white); border: 1px solid var(--color-line); border-radius: 14px; padding: var(--space-18) var(--space-20); display: flex; flex-direction: column; gap: var(--space-10)">
+        <h2 style="margin: 0 0 var(--space-2); font-size: 16px; font-weight: 700">Before you submit</h2>
+        <div style="display: flex; gap: var(--space-10); font-size: 14px; align-items: center"><svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-green)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"></path></svg>All points scored or explained</div>
+        <div style="display: flex; gap: var(--space-10); font-size: 14px; align-items: center"><svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-green)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"></path></svg>Skipped point has a reason</div>
+        <div style="display: flex; gap: var(--space-10); font-size: 14px; align-items: center"><svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-green)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"></path></svg>Acknowledgment on file</div>
+      </div>
+      <div style="background: var(--color-white); border: 1px solid var(--color-line); border-radius: 14px; padding: var(--space-18) var(--space-20); display: flex; flex-direction: column; gap: var(--space-12)">
+        <h2 style="margin: 0 0 var(--space-2); font-size: 16px; font-weight: 700">Capture and sync</h2>
+        <div style="display: flex; font-size: 14px"><span style="flex: 1; color: var(--color-slate-dark)">Official result</span><span style="font-weight: 600">Ready to submit</span></div>
+        <div style="display: flex; font-size: 14px"><span style="flex: 1; color: var(--color-slate-dark)">Telemetry</span><span style="font-weight: 600; color: var(--color-green)">Synced</span></div>
+        <div style="display: flex; flex-direction: column; gap: var(--space-6); font-size: 14px">
+          <div style="display: flex"><span style="flex: 1; color: var(--color-slate-dark)">Video</span><span style="font-weight: 600; color: var(--color-amber)">Uploading · 64%</span></div>
+          <div style="height: 6px; border-radius: 3px; background: var(--color-off-white-alt)"><div style="width: 64%; height: 6px; border-radius: 3px; background: var(--color-orange)"></div></div>
+        </div>
+        <div style="font-size: 12px; color: var(--color-slate); line-height: 1.4">Local copy stays on this device until every stream syncs.</div>
+      </div>
+      <div style="flex: 1"></div>
+      <a href="02-start-a-test.html" style="height: 60px; border-radius: 12px; background: var(--color-indigo); color: var(--color-white); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 17px; text-decoration: none">Submit official result</a>
+      <div style="font-size: 12px; color: var(--color-slate); text-align: center; margin-top: -var(--space-6)">Scoring locks after submission. Retries never create duplicates.</div>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script="" data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:800}}">
+class Component extends DCLogic {
+  renderVals() {
+    const data = [
+      ['1', 'Start', ' · leave lot', null, 'ok'],
+      ['2', 'Right turn', ' · W Thomas Rd', 'Improper turn', 'err'],
+      ['3', 'Left turn', ' · N 43rd Ave', 'Signaling', 'err'],
+      ['4', 'Stop sign', ' · W Osborn Rd', null, 'ok'],
+      ['5', 'Lane change', ' · Indian School', null, 'ok'],
+      ['6', 'School zone', ' · Detour, road construction', 'Skipped', 'skip'],
+      ['7', 'Right turn', ' · N 27th Ave', null, 'ok'],
+      ['8', 'Right turn', ' · W McDowell Rd', null, 'ok'],
+      ['9', '4-way stop', ' · N 39th Ave', null, 'ok'],
+      ['10', 'Left turn', ' · W Van Buren St', null, 'ok'],
+      ['11', 'Return and park', '', null, 'ok'],
+      ['+', 'Recorded error', ' · 09:20, N 43rd Ave', 'Too slow', 'err']
+    ];
+    const rows = data.map(([n, label, detail, tag, kind]) => ({
+      n, label, detail, tag, hasTag: !!tag,
+      rowStyle: 'display: flex; align-items: center; gap: var(--space-12); padding: var(--space-4) var(--space-8); border-radius: 8px; min-height: 36px; ' + (kind === 'skip' ? 'background: #F6F7F4;' : ''),
+      badgeStyle: 'width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font: 600 11px \'IBM Plex Mono\', monospace; ' + (kind === 'skip' ? 'border: 2px dashed #8A9098; color: var(--color-slate); box-sizing: border-box;' : (n === '+' ? 'background: var(--color-charcoal); color: var(--color-white);' : 'background: var(--color-indigo); color: var(--color-white);')),
+      tagStyle: 'font-size: 12px; font-weight: 600; padding: 3px var(--space-9); border-radius: 11px; white-space: nowrap; ' + (kind === 'skip' ? 'background: var(--color-off-white-alt); color: var(--color-slate-dark);' : 'background: var(--color-amber-light); color: var(--color-amber);')
+    }));
+    return { rows };
+  }
+}
+</script>
+
+
+
+<style id="screen-fit-style">html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #e5e7eb; }
+body > x-dc, body > #dc-root { display: block; position: absolute; width: 1280px; height: 800px; transform-origin: top left; }</style>
+<script id="screen-fit-script">
+(() => {
+  function fit() {
+    const root = document.querySelector("body > #dc-root, body > x-dc");
+    if (!root) return;
+    const scale = Math.max(0, Math.min((window.innerWidth - 32) / 1280, (window.innerHeight - 32) / 800));
+    root.style.transform = "scale(" + scale + ")";
+    root.style.left = (window.innerWidth - 1280 * scale) / 2 + "px";
+    root.style.top = (window.innerHeight - 800 * scale) / 2 + "px";
+  }
+  window.addEventListener("resize", fit);
+  new MutationObserver(fit).observe(document.body, { childList: true });
+  fit();
+})();
+</script>
+</body></html>

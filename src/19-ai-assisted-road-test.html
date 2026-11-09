@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<title>DTI Examiner – AI-assisted road test</title>
+<script src="shared/runtime.js"></script>
+  <link rel="stylesheet" href="shared/styles.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+
+
+</helmet>
+<div style="width: 1280px; height: 800px; display: flex; flex-direction: column; font-family: var(--font-sans); color: var(--color-charcoal); background: var(--color-background)">
+  <header style="height: 72px; flex-shrink: 0; display: flex; align-items: center; gap: var(--space-20); padding: 0 var(--space-24); background: #1A2263; color: var(--color-white)">
+    <div style="display: flex; align-items: center; gap: var(--space-10)">
+      <span style="width: var(--space-12); height: 12px; border-radius: 50%; background: var(--color-coral); box-shadow: 0 0 0 4px rgba(255,107,91,0.3)"></span>
+      <span style="font-weight: 700; font-size: 15px">Road test in progress</span>
+      <span style="font: 600 20px var(--font-mono); margin-left: var(--space-6)">12:48</span>
+    </div>
+    <div style="height: var(--space-32); width: 1px; background: rgba(255,255,255,0.2)"></div>
+    <div style="font-size: 14px"><span style="font-weight: 600">Jordan Reyes</span><span style="color: #C9CEF0"> · Class D · West Loop A v3</span></div>
+    <div style="flex: 1"></div>
+    <span style="display: flex; align-items: center; gap: var(--space-6); height: 30px; padding: 0 var(--space-12); border-radius: 15px; background: var(--color-orange); color: var(--color-charcoal); font-size: 12px; font-weight: 700">
+      <svg width="14" height="14" sc-camel-view-box="0 0 24 24" fill="var(--color-charcoal)" aria-hidden="true"><path d="M12 2l1.8 5.4L19 9l-5.2 1.6L12 16l-1.8-5.4L5 9l5.2-1.6zM19 14l.9 2.6L22 17.5l-2.1.9L19 21l-.9-2.6-2.1-.9 2.1-.9z"></path></svg>AI assist · Phase 2</span>
+    <div style="display: flex; gap: var(--space-8); font-size: 12px; font-weight: 600">
+      <span style="display: flex; align-items: center; gap: var(--space-6); height: 30px; padding: 0 var(--space-10); border-radius: 15px; background: rgba(255,255,255,0.12)">GPS <span style="font-family: var(--font-mono)">±3 m</span></span>
+      <span style="display: flex; align-items: center; gap: var(--space-6); height: 30px; padding: 0 var(--space-10); border-radius: 15px; background: rgba(255,255,255,0.12)"><span style="width: 8px; height: 8px; border-radius: 50%; background: var(--color-coral)"></span>Video</span>
+      <span style="display: flex; align-items: center; gap: var(--space-6); height: 30px; padding: 0 var(--space-10); border-radius: 15px; background: rgba(255,255,255,0.12)">Saved on device</span>
+    </div>
+    <div style="display: flex; gap: var(--space-10)">
+      <div style="min-width: 84px; padding: var(--space-6) var(--space-12); border-radius: 10px; background: var(--color-white); color: var(--color-charcoal); text-align: center">
+        <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-slate)">Errors</div>
+        <div style="font: 600 22px var(--font-mono); line-height: 1.1">{{errors}}</div>
+      </div>
+      <sc-if value="{{showScore}}" hint-placeholder-val="{{ true }}">
+        <div style="min-width: 84px; padding: var(--space-6) var(--space-12); border-radius: 10px; background: var(--color-white); color: var(--color-charcoal); text-align: center">
+          <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-slate)">Score</div>
+          <div style="font: 600 22px var(--font-mono); line-height: 1.1">{{score}}</div>
+        </div>
+      </sc-if>
+    </div>
+  </header>
+
+  <main style="flex: 1; display: flex; min-height: 0">
+    <section style="width: 780px; height: 728px; position: relative; flex-shrink: 0">
+      <dc-import name="RouteMap" active="4" show-vehicle="{{yes}}" w="780" h="728" hint-size="780px,728px"></dc-import>
+      <div style="position: absolute; left: 16px; top: 16px; display: flex; align-items: center; gap: var(--space-12); padding: var(--space-12) var(--space-16); background: var(--color-white); border-radius: 12px; box-shadow: 0 2px 10px rgba(20,24,29,0.18)">
+        <span style="width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--color-indigo); box-sizing: border-box; color: var(--color-indigo); display: flex; align-items: center; justify-content: center; font: 600 12px var(--font-mono)">5</span>
+        <div>
+          <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-slate)">Up next · 0.3 mi</div>
+          <div style="font-size: 15px; font-weight: 700">Lane change · W Indian School Rd</div>
+        </div>
+      </div>
+      <sc-if value="{{showAlert}}" hint-placeholder-val="{{ true }}">
+      <div role="alertdialog" aria-label="AI detected possible errors" style="position: absolute; right: 16px; bottom: 16px; width: 420px; background: var(--color-white); border-radius: 16px; box-shadow: 0 8px 28px rgba(20,24,29,0.28); overflow: hidden; z-index: 10">
+        <div style="display: flex; align-items: center; gap: var(--space-10); padding: var(--space-12) var(--space-16); background: var(--color-amber-light); border-bottom: 1px solid var(--color-amber-border)">
+          <svg width="20" height="20" sc-camel-view-box="0 0 24 24" fill="var(--color-amber)" aria-hidden="true"><path d="M12 2l1.8 5.4L19 9l-5.2 1.6L12 16l-1.8-5.4L5 9l5.2-1.6zM19 14l.9 2.6L22 17.5l-2.1.9L19 21l-.9-2.6-2.1-.9 2.1-.9z"></path></svg>
+          <div style="flex: 1">
+            <div style="font-size: 15px; font-weight: 700; color: var(--color-amber-dark)">{{alertTitle}}</div>
+            <div style="font-size: 12px; color: var(--color-amber)">Point 4 · Stop sign · camera at 12:46</div>
+          </div>
+        </div>
+        <div style="position: relative; height: 128px; background: linear-gradient(180deg, #3A4552 0%, #222A33 100%); overflow: hidden">
+          <svg sc-camel-view-box="0 0 420 128" style="position: absolute; inset: 0; width: 420px; height: 128px" aria-hidden="true">
+            <path d="M0 128 L170 54 L250 54 L420 128 Z" fill="#4B5561"></path>
+            <path d="M210 60 L210 74 M210 86 L210 104 M210 114 L210 128" stroke="#E8D27A" stroke-width="3"></path>
+            <path d="M0 62 L420 62" stroke="#5D6874" stroke-width="10"></path>
+            <rect x="282" y="46" width="62" height="28" rx="5" fill="#9AA6B2"></rect>
+            <rect x="276" y="40" width="74" height="40" rx="4" fill="none" stroke="var(--color-coral)" stroke-width="2.5"></rect>
+            <rect x="112" y="98" width="196" height="30" rx="8" fill="#1A1F25" fill-opacity="0.65"></rect>
+          </svg>
+          <span style="position: absolute; left: 276px; top: 22px; padding: var(--space-2) var(--space-6); border-radius: 4px; background: var(--color-coral); color: var(--color-charcoal); font-size: 11px; font-weight: 700">Cross traffic</span>
+          <button aria-label="Play 8-second clip" style="position: absolute; left: 14px; top: 14px; height: 32px; padding: 0 var(--space-10); border: none; border-radius: 16px; background: rgba(255,255,255,0.92); display: flex; align-items: center; gap: var(--space-6); font: 600 12px var(--font-sans); color: var(--color-charcoal)">
+            <svg width="12" height="12" sc-camel-view-box="0 0 24 24" fill="var(--color-charcoal)" aria-hidden="true"><path d="M7 4.5v15l12-7.5z"></path></svg>Replay 0:08</button>
+          <span style="position: absolute; left: 0; right: 0; bottom: 8px; text-align: center; color: var(--color-white); font: 600 11px var(--font-mono)">FRONT CAM · 12:46:31</span>
+        </div>
+        <div style="padding: var(--space-6) var(--space-16)">
+          <sc-for list="{{detections}}" as="d" hint-placeholder-count="2">
+            <div style="display: flex; flex-direction: column; gap: var(--space-8); padding: var(--space-12) 0; border-bottom: 1px solid var(--color-light-gray)">
+              <div style="display: flex; align-items: center; gap: var(--space-8)">
+                <span style="{{d.sevStyle}}">{{d.sev}}</span>
+                <span style="font-size: 16px; font-weight: 700; flex: 1">{{d.label}}</span>
+                <span style="font: 600 12px var(--font-mono); color: var(--color-slate-dark)">{{d.conf}}% conf.</span>
+              </div>
+              <div style="font-size: 13px; color: var(--color-slate-dark); line-height: 1.4">{{d.evidence}}</div>
+              <sc-if value="{{d.pending}}" hint-placeholder-val="{{ true }}">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-8)">
+                  <button sc-camel-on-click="{{d.reject}}" style="height: 44px; border-radius: 10px; border: 1px solid var(--color-line-dark); background: var(--color-white); font: 600 14px var(--font-sans); color: var(--color-charcoal)">Reject</button>
+                  <button sc-camel-on-click="{{d.accept}}" style="height: 44px; border-radius: 10px; border: none; background: var(--color-indigo); font: 700 14px var(--font-sans); color: var(--color-white)">Accept error</button>
+                </div>
+              </sc-if>
+              <sc-if value="{{d.decided}}" hint-placeholder-val="{{ false }}">
+                <div style="display: flex; align-items: center; gap: var(--space-8)">
+                  <span style="{{d.resultStyle}}">{{d.result}}</span>
+                  <span style="flex: 1"></span>
+                  <button sc-camel-on-click="{{d.undo}}" style="height: 36px; padding: 0 var(--space-10); border: none; background: none; color: var(--color-indigo); font: 600 13px var(--font-sans)">Change</button>
+                </div>
+              </sc-if>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display: flex; align-items: center; gap: var(--space-10); padding: var(--space-10) var(--space-16) var(--space-14)">
+          <span style="flex: 1; font-size: 12px; color: var(--color-slate); line-height: 1.4">AI suggests, you decide. Nothing is scored until you accept.</span>
+          <sc-if value="{{anyPending}}" hint-placeholder-val="{{ true }}">
+            <button sc-camel-on-click="{{defer}}" style="height: 36px; padding: 0 var(--space-10); border: none; background: none; color: var(--color-indigo); font: 600 13px var(--font-sans); white-space: nowrap">Decide at review</button>
+          </sc-if>
+          <sc-if value="{{allDone}}" hint-placeholder-val="{{ false }}">
+            <button sc-camel-on-click="{{dismiss}}" style="height: 40px; padding: 0 var(--space-16); border-radius: 10px; border: none; background: var(--color-charcoal); color: var(--color-white); font: 600 13px var(--font-sans)">Done</button>
+          </sc-if>
+        </div>
+      </div>
+      </sc-if>
+      <sc-if value="{{showReplay}}" hint-placeholder-val="{{ false }}">
+        <button sc-camel-on-click="{{reset}}" style="position: absolute; right: 16px; bottom: 16px; height: 44px; padding: 0 var(--space-16); border: none; border-radius: 22px; background: var(--color-charcoal); color: var(--color-white); font: 600 14px var(--font-sans); box-shadow: 0 2px 10px rgba(20,24,29,0.25); z-index: 10">Replay AI alert demo</button>
+      </sc-if>
+    </section>
+
+    <section style="flex: 1; min-width: 0; background: var(--color-white); border-left: 1px solid var(--color-line); padding: var(--space-20) var(--space-24); display: flex; flex-direction: column; gap: var(--space-16)">
+      <div style="display: flex; align-items: flex-start; gap: var(--space-12)">
+        <div style="flex: 1">
+          <div style="font-size: var(--space-13); font-weight: 600; color: var(--color-amber); text-transform: uppercase; letter-spacing: 0.05em">Point 4 of 11 · active</div>
+          <h1 style="margin: var(--space-4) 0 var(--space-2); font-size: 26px; font-weight: 700">Stop sign</h1>
+          <div style="font-size: 14px; color: var(--color-slate)">N 43rd Ave at W Osborn Rd</div>
+        </div>
+        <span style="display: flex; align-items: center; gap: var(--space-6); height: 28px; padding: 0 var(--space-10); border-radius: 14px; background: var(--color-green-light); color: var(--color-green); font-size: 12px; font-weight: 600">
+          <svg width="12" height="12" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-green)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"></path></svg>GPS matched</span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: var(--space-10)">
+        <div style="font-size: var(--space-13); font-weight: 600; color: var(--color-slate-dark)">Tap to record an error at this point</div>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-10)">
+          <sc-for list="{{elements}}" as="el" hint-placeholder-count="4">
+            <button sc-camel-on-click="{{el.pick}}" style="{{el.style}}">
+              <span style="flex: 1; text-align: left">{{el.label}}</span>
+              <sc-if value="{{el.hasCount}}" hint-placeholder-val="{{ false }}">
+                <span style="min-width: 28px; height: 28px; border-radius: 14px; background: var(--color-charcoal); color: var(--color-white); display: flex; align-items: center; justify-content: center; font: 600 13px var(--font-mono)">{{el.count}}</span>
+              </sc-if>
+            </button>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: var(--space-8); flex: 1; min-height: 0">
+        <div style="display: flex; align-items: center">
+          <div style="font-size: 13px; font-weight: 600; color: var(--color-slate-dark); flex: 1">Recorded this test</div>
+          <button sc-camel-on-click="{{undo}}" style="height: 36px; padding: 0 var(--space-10); border: none; background: none; color: var(--color-indigo); font: 600 14px var(--font-sans); display: flex; align-items: center; gap: var(--space-6)">
+            <svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-indigo)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14L4 9l5-5"></path><path d="M4 9h10a6 6 0 0 1 0 12h-3"></path></svg>Undo last</button>
+        </div>
+        <sc-for list="{{recent}}" as="r" hint-placeholder-count="2">
+          <div style="display: flex; align-items: center; gap: var(--space-12); padding: var(--space-10) var(--space-12); background: #F6F7F4; border-radius: 10px; font-size: 14px">
+            <span style="width: 26px; height: 26px; border-radius: 50%; background: var(--color-indigo); color: var(--color-white); display: flex; align-items: center; justify-content: center; font: 600 11px var(--font-mono); flex-shrink: 0">{{r.p}}</span>
+            <span style="flex: 1"><span style="color: var(--color-slate)">{{r.t}} · </span><span style="font-weight: 600">{{r.e}}</span></span>
+            <sc-if value="{{r.ai}}" hint-placeholder-val="{{ false }}"><span style="font-size: 11px; font-weight: 700; padding: var(--space-2) 7px; border-radius: 9px; background: var(--color-amber-light); color: var(--color-amber)">AI · accepted</span></sc-if>
+            <span style="font: 500 12px var(--font-mono); color: var(--color-slate)">{{r.time}}</span>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-10)">
+        <a href="07-road-test.html" style="height: 56px; border-radius: 10px; border: 2px solid var(--color-indigo); color: var(--color-indigo); display: flex; align-items: center; justify-content: center; gap: var(--space-8); font-weight: 700; font-size: 15px; text-decoration: none">
+          <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-indigo)" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>Report error</a>
+        <button style="height: 56px; border-radius: 10px; border: 1px solid var(--color-line-dark); background: var(--color-white); color: var(--color-charcoal); font: 600 15px var(--font-sans)">Manual takeover</button>
+        <button style="height: 56px; border-radius: 10px; border: none; background: var(--color-red); color: var(--color-white); font: 700 15px var(--font-sans); display: flex; align-items: center; justify-content: center; gap: var(--space-8)">
+          <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-white)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l9 16H3z"></path><path d="M12 10v4M12 17h.01"></path></svg>Automatic failure</button>
+        <a href="08-review-and-submit.html" style="height: 56px; border-radius: 10px; background: var(--color-background); color: var(--color-charcoal); display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 15px; text-decoration: none; border: 1px solid var(--color-line)">End test · review</a>
+      </div>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script="" data-props="{&quot;showScore&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true},&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:800}}">
+class Component extends DCLogic {
+  renderVals() {
+    const defs = [
+      ['forward', 'Forward stop'], ['yield', 'Fails to yield'], ['signal', 'Signaling'], ['brakes', 'Improper use of brakes'],
+      ['lane', 'Choice of proper lane'], ['waits', 'Waits too long'], ['slow', 'Too slow'], ['turn', 'Improper turn']
+    ];
+    const st = this.state || {};
+    const manual = st.log || [
+      { p: '2', t: 'Right turn', e: 'Wide turn', time: '04:12', id: null },
+      { p: '3', t: 'Left turn', e: 'Late signal', time: '07:55', id: null }
+    ];
+    const dec = st.dec || {};
+    const hidden = !!st.hidden;
+    const ai = [
+      { id: 'yield', label: 'Fails to yield', sev: 'Severe', conf: 91, evidence: 'Entered the intersection while cross traffic from the right had right-of-way.' },
+      { id: 'signal', label: 'Signaling', sev: 'Moderate', conf: 84, evidence: 'No turn signal detected in the 100 ft before the right turn.' }
+    ];
+    const setDec = (id, v) => this.setState({ dec: Object.assign({}, dec, { [id]: v }) });
+    const accepted = ai.filter((d) => dec[d.id] === 'accept').map((d) => ({ p: '4', t: 'Stop sign', e: d.label, time: '12:46', id: d.id, ai: true }));
+    const log = manual.concat(accepted);
+    const counts = {};
+    log.forEach((x) => { if (x.id) counts[x.id] = (counts[x.id] || 0) + 1; });
+    const base = 'min-height: 56px; padding: var(--space-8) var(--space-14); border-radius: 12px; display: flex; align-items: center; gap: var(--space-10); font: 600 15px \'Public Sans\', system-ui, sans-serif; color: var(--color-charcoal); cursor: pointer; text-align: left; ';
+    const elements = defs.map(([id, label]) => {
+      const c = counts[id] || 0;
+      return {
+        label, count: c, hasCount: c > 0,
+        style: base + (c > 0 ? 'background: var(--color-amber-light); border: 2px solid var(--color-orange);' : 'background: var(--color-white); border: 1px solid var(--color-line-dark);'),
+        pick: () => this.setState({ log: manual.concat([{ p: '4', t: 'Stop sign', e: label, time: '12:48', id }]) })
+      };
+    });
+    const pill = 'font-size: 12px; font-weight: 700; padding: 3px var(--space-9); border-radius: 11px; ';
+    const detections = ai.map((d) => {
+      const v = dec[d.id];
+      return Object.assign({}, d, {
+        pending: !v, decided: !!v,
+        sevStyle: pill + (d.sev === 'Severe' ? 'background: #FCEDEB; color: var(--color-red);' : 'background: var(--color-amber-light); color: var(--color-amber);'),
+        result: v === 'accept' ? 'Accepted · added to score' : (v === 'reject' ? 'Rejected · logged for audit' : 'Deferred to review'),
+        resultStyle: 'font-size: 13px; font-weight: 600; padding: var(--space-6) var(--space-10); border-radius: 8px; ' + (v === 'accept' ? 'background: var(--color-green-light); color: var(--color-green-dark);' : 'background: var(--color-off-white-alt); color: var(--color-slate-dark);'),
+        accept: () => setDec(d.id, 'accept'),
+        reject: () => setDec(d.id, 'reject'),
+        undo: () => setDec(d.id, null)
+      });
+    });
+    const pendingCount = ai.filter((d) => !dec[d.id]).length;
+    const errors = log.length;
+    return {
+      elements, errors, detections,
+      score: 100 - errors * 2,
+      showScore: this.props.showScore ?? true,
+      yes: true,
+      recent: log.slice(-2).reverse().map((r) => Object.assign({ ai: false }, r)),
+      undo: () => { if (manual.length > 2) this.setState({ log: manual.slice(0, -1) }); },
+      alertTitle: pendingCount > 0 ? 'AI detected ' + pendingCount + ' possible error' + (pendingCount > 1 ? 's' : '') : 'AI detections reviewed',
+      anyPending: pendingCount > 0,
+      allDone: pendingCount === 0,
+      showAlert: !hidden,
+      showReplay: hidden,
+      defer: () => { const d = Object.assign({}, dec); ai.forEach((x) => { if (!d[x.id]) d[x.id] = 'defer'; }); this.setState({ dec: d }); },
+      dismiss: () => this.setState({ hidden: true }),
+      reset: () => this.setState({ hidden: false, dec: {} })
+    };
+  }
+}
+</script>
+
+
+
+<style id="screen-fit-style">html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #e5e7eb; }
+body > x-dc, body > #dc-root { display: block; position: absolute; width: 1280px; height: 800px; transform-origin: top left; }</style>
+<script id="screen-fit-script">
+(() => {
+  function fit() {
+    const root = document.querySelector("body > #dc-root, body > x-dc");
+    if (!root) return;
+    const scale = Math.max(0, Math.min((window.innerWidth - 32) / 1280, (window.innerHeight - 32) / 800));
+    root.style.transform = "scale(" + scale + ")";
+    root.style.left = (window.innerWidth - 1280 * scale) / 2 + "px";
+    root.style.top = (window.innerHeight - 800 * scale) / 2 + "px";
+  }
+  window.addEventListener("resize", fit);
+  new MutationObserver(fit).observe(document.body, { childList: true });
+  fit();
+})();
+</script>
+</body></html>
