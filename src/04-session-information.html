@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DTI Examiner - Session Information</title>
+<link rel="stylesheet" href="shared/styles.css">
+<style>
+  html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: #e5e7eb; }
+  #screen-root { position: absolute; width: 1280px; height: 800px; transform-origin: top left; }
+  .screen { display: flex; width: 1280px; height: 800px; flex-direction: column; background: var(--color-background); color: var(--color-charcoal); font-family: var(--font-sans); }
+  .header { display: flex; height: 64px; flex: 0 0 64px; align-items: center; gap: var(--space-16); padding: 0 var(--space-24); border-bottom: 1px solid var(--color-line); background: var(--color-white); }
+  .brand { font-size: 17px; font-weight: 700; }
+  .header-context { margin-left: auto; color: var(--color-slate); font-size: 14px; }
+  main { display: flex; flex: 1; min-height: 0; flex-direction: column; align-items: center; justify-content: center; padding: var(--space-32); }
+  .session-card { width: 720px; box-sizing: border-box; padding: var(--space-32); border: 1px solid var(--color-line); border-radius: 14px; background: var(--color-white); }
+  h1 { margin: 0 0 var(--space-28); font-size: 28px; line-height: 1.25; }
+  dl { margin: 0; }
+  .detail { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: var(--space-24); padding: var(--space-24) 0; border-top: 1px solid var(--color-line); font-size: 18px; line-height: 1.4; }
+  dt { color: var(--color-slate); font-weight: 600; }
+  dd { margin: 0; font-weight: 600; }
+  #test-date { font-family: var(--font-mono); }
+  #date-error { margin: var(--space-16) 0 0; color: var(--color-red); font-size: 15px; }
+  .prototype-note { margin: var(--space-20) 0 0; color: var(--color-slate); font-size: 13px; }
+  footer { display: flex; height: 88px; flex: 0 0 88px; align-items: center; justify-content: space-between; padding: 0 var(--space-24); border-top: 1px solid var(--color-line); background: var(--color-white); }
+  .action { display: flex; min-width: 160px; min-height: 52px; box-sizing: border-box; align-items: center; justify-content: center; padding: 0 var(--space-24); border: 1px solid var(--color-line-dark); border-radius: 10px; background: var(--color-white); color: var(--color-charcoal); font: 600 16px var(--font-sans); text-decoration: none; }
+  .primary { border-color: var(--color-indigo); background: var(--color-indigo); color: var(--color-white); }
+  .primary:hover { background: var(--color-indigo-dark); color: var(--color-white); }
+  .primary[aria-disabled="true"] { border-color: var(--color-line); background: var(--color-line); color: var(--color-slate-dark); cursor: not-allowed; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div id="screen-root">
+  <div class="screen">
+    <header class="header">
+      <span class="brand">DTI Examiner</span>
+      <span class="header-context">Road test setup</span>
+    </header>
+    <main>
+      <section class="session-card" aria-labelledby="session-title">
+        <h1 id="session-title">Session Information</h1>
+        <dl>
+          <div class="detail"><dt>Location</dt><dd id="session-location"></dd></div>
+          <div class="detail"><dt>Test Date</dt><dd><time id="test-date"></time></dd></div>
+          <div class="detail"><dt>Examiner</dt><dd id="session-examiner"></dd></div>
+        </dl>
+        <p id="date-error" role="alert" hidden>The appointment date is invalid. Return to the test setup and check the date.</p>
+        <p class="prototype-note">Prototype examiner and location details.</p>
+      </section>
+    </main>
+    <footer>
+      <a class="action" id="back-link" href="04-customer-acknowledgement.html">Back</a>
+      <a class="action primary" id="confirm-link" href="05-pre-test-checks.html">Confirm</a>
+    </footer>
+  </div>
+</div>
+<script>
+(() => {
+  const params = new URLSearchParams(window.location.search);
+  const appointmentDate = params.get('appointmentDate');
+  const dateField = document.getElementById('test-date');
+  const confirmLink = document.getElementById('confirm-link');
+  const pad = (value) => String(value).padStart(2, '0');
+  let testDate = new Date();
+
+  document.getElementById('session-location').textContent = params.get('location') || 'West Phoenix MVD';
+  document.getElementById('session-examiner').textContent = [
+    params.get('examinerFirstName') || 'Morgan',
+    params.get('examinerLastName') || 'Alvarez'
+  ].join(' ');
+  document.getElementById('back-link').href += window.location.search;
+  confirmLink.href += window.location.search;
+
+  if (appointmentDate !== null) {
+    const isoParts = appointmentDate.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    const usParts = appointmentDate.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    const parts = isoParts ? [isoParts[1], isoParts[2], isoParts[3]] : usParts ? [usParts[3], usParts[1], usParts[2]] : null;
+    if (parts) {
+      const [year, month, day] = parts.map(Number);
+      testDate = new Date(year, month - 1, day);
+      if (testDate.getFullYear() !== year || testDate.getMonth() !== month - 1 || testDate.getDate() !== day) testDate = null;
+    } else {
+      testDate = null;
+    }
+  }
+
+  if (testDate) {
+    dateField.textContent = pad(testDate.getMonth() + 1) + '/' + pad(testDate.getDate()) + '/' + testDate.getFullYear();
+    dateField.dateTime = testDate.getFullYear() + '-' + pad(testDate.getMonth() + 1) + '-' + pad(testDate.getDate());
+  } else {
+    dateField.textContent = 'Invalid appointment date';
+    document.getElementById('date-error').hidden = false;
+    confirmLink.removeAttribute('href');
+    confirmLink.setAttribute('aria-disabled', 'true');
+  }
+
+  const root = document.getElementById('screen-root');
+  function fit() {
+    const scale = Math.max(0, Math.min((window.innerWidth - 32) / 1280, (window.innerHeight - 32) / 800));
+    root.style.transform = 'scale(' + scale + ')';
+    root.style.left = (window.innerWidth - 1280 * scale) / 2 + 'px';
+    root.style.top = (window.innerHeight - 800 * scale) / 2 + 'px';
+  }
+  window.addEventListener('resize', fit);
+  fit();
+})();
+</script>
+</body>
+</html>

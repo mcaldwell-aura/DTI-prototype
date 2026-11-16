@@ -3,7 +3,54 @@
 <meta charset="utf-8">
 <title>DTI Examiner – Road test</title>
 <script src="shared/runtime.js"></script>
+<script src="shared/route-session.js"></script>
+<script src="shared/road-test-session.js"></script>
   <link rel="stylesheet" href="shared/styles.css">
+<style>
+  .recording-dot { animation: recording-pulse 1.5s ease-in-out infinite; }
+  @keyframes recording-pulse { 50% { opacity: 0.4; } }
+  @media (prefers-reduced-motion: reduce) { .recording-dot { animation: none; } }
+  .safety-panel { flex: 1; min-height: 0; overflow-y: auto; padding: var(--space-16) var(--space-20); }
+  .safety-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-16); }
+  .safety-heading h1 { margin: 0 0 var(--space-4); font-size: 21px; }
+  .safety-heading p { margin: 0; color: var(--color-slate); font-size: 14px; }
+  .safety-note { margin: var(--space-12) 0 var(--space-8); color: var(--color-slate); font-size: 13px; line-height: 1.4; }
+  .safety-row { display: grid; grid-template-columns: minmax(0, 1fr) 64px 64px; align-items: center; gap: var(--space-10); padding: var(--space-6) 0; border-top: 1px solid var(--color-line); }
+  .safety-label { font-size: 15px; line-height: 1.4; }
+  .safety-result { min-height: 44px; border: 1px solid var(--color-line-dark); border-radius: 8px; background: var(--color-white); color: var(--color-slate-dark); font: 600 14px var(--font-sans); cursor: pointer; }
+  .safety-pass[aria-pressed="true"] { border-color: var(--color-green); background: var(--color-green); color: var(--color-white); }
+  .safety-fail[aria-pressed="true"] { border-color: var(--color-red); background: var(--color-red); color: var(--color-white); }
+  .safety-footer { flex-shrink: 0; padding: var(--space-12) var(--space-20); border-top: 1px solid var(--color-line); background: var(--color-off-white); }
+  .safety-progress { margin-bottom: var(--space-10); font-size: 13px; color: var(--color-slate-dark); }
+  .safety-actions { display: flex; gap: var(--space-10); }
+  .safety-actions input { min-width: 0; flex: 1; padding: 0 var(--space-14); border: 1px solid var(--color-line-dark); border-radius: 10px; font: 15px var(--font-sans); }
+  .safety-actions button { min-height: 52px; padding: 0 var(--space-18); border: 1px solid var(--color-line-dark); border-radius: 10px; background: var(--color-white); color: var(--color-charcoal); font: 600 15px var(--font-sans); cursor: pointer; }
+  .safety-actions .save-results { border-color: var(--color-indigo); background: var(--color-indigo); color: var(--color-white); }
+  .safety-actions button:disabled { border-color: var(--color-line); background: var(--color-line); color: var(--color-slate-dark); cursor: default; }
+  .location-caption { position: absolute; bottom: 56px; left: 12px; padding: var(--space-6) var(--space-10); border-radius: 8px; background: var(--color-white); color: var(--color-slate-dark); font-size: 12px; }
+  .exam-error { position: absolute; z-index: 30; right: 20px; bottom: 84px; max-width: 650px; padding: var(--space-16); border-radius: 10px; background: var(--color-red); color: var(--color-white); font-size: 15px; }
+  .exam-load-error { position: absolute; z-index: 40; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-20); background: var(--color-white); }
+  .exam-load-error button { min-height: 52px; padding: 0 var(--space-24); border: none; border-radius: 10px; background: var(--color-indigo); color: var(--color-white); font: 600 16px var(--font-sans); cursor: pointer; }
+  .recorded-header, .recorded-error { display: grid; grid-template-columns: 120px minmax(0, 1fr) 64px 140px 76px; gap: var(--space-10); padding: var(--space-10) var(--space-12); }
+  .recorded-header { color: var(--color-slate); font-size: 12px; font-weight: 600; text-transform: uppercase; }
+  .recorded-error { align-items: center; border: 1px solid var(--color-line); border-radius: 10px; }
+  .recorded-date { display: flex; flex-direction: column; gap: var(--space-4); font: 500 12px var(--font-mono); }
+  .note-button { min-height: 44px; border: 1px solid var(--color-line-dark); border-radius: 8px; background: var(--color-white); color: var(--color-indigo); font: 600 13px var(--font-sans); cursor: pointer; }
+  .exam-notice { margin: var(--space-8) var(--space-20) 0; padding: var(--space-12); border-radius: 8px; background: var(--color-amber-light); color: var(--color-amber-dark); font-size: 13px; line-height: 1.4; }
+  .exam-dialog-overlay { position: absolute; z-index: 20; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(20,24,29,0.6); }
+  .note-dialog { width: 540px; padding: var(--space-24); border-radius: 14px; background: var(--color-white); }
+  .note-dialog h2 { margin: 0 0 var(--space-12); font-size: 22px; }
+  .note-dialog p { margin: 0 0 var(--space-16); font-size: 15px; line-height: 1.5; }
+  .note-dialog textarea { width: 100%; min-height: 120px; box-sizing: border-box; padding: var(--space-12); border: 1px solid var(--color-line-dark); border-radius: 8px; font: 15px var(--font-sans); }
+  .note-dialog-actions { display: flex; justify-content: flex-end; gap: var(--space-12); margin-top: var(--space-20); }
+  .note-dialog-actions button, .end-confirm { min-height: 52px; padding: 0 var(--space-20); border: 1px solid var(--color-line-dark); border-radius: 10px; background: var(--color-white); color: var(--color-charcoal); font: 600 15px var(--font-sans); cursor: pointer; }
+  .note-dialog-actions .save-note { border-color: var(--color-indigo); background: var(--color-indigo); color: var(--color-white); }
+  .end-confirm { border: none; background: var(--color-charcoal); color: var(--color-white); }
+  .end-confirm.failure { background: var(--color-red); }
+  .end-confirm:disabled, .exam-action:disabled { opacity: 0.5; cursor: default; }
+  .ended-overlay { position: absolute; z-index: 15; left: 460px; right: 0; top: 72px; bottom: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-20); background: var(--color-white); }
+  .ended-overlay a, .ended-overlay button { display: flex; min-height: 52px; align-items: center; padding: 0 var(--space-24); border: none; border-radius: 10px; background: var(--color-indigo); color: var(--color-white); text-decoration: none; font: 600 16px var(--font-sans); cursor: pointer; }
+</style>
 </head>
 <body>
 <x-dc>
@@ -12,40 +59,44 @@
 
 </helmet>
 <div style="width: 1280px; height: 800px; position: relative; display: flex; flex-direction: column; overflow: hidden; font-family: var(--font-sans); color: var(--color-charcoal); background: var(--color-background)">
-  <header style="height: 72px; flex-shrink: 0; display: flex; align-items: center; gap: var(--space-18); padding: 0 var(--space-24); background: #1A2263; color: var(--color-white)">
+  <header style="height: 72px; flex-shrink: 0; display: flex; align-items: center; gap: var(--space-18); padding: 0 var(--space-24); background: var(--color-indigo); color: var(--color-white)">
     <div style="display: flex; align-items: center; gap: var(--space-10)">
-      <span style="{{recDotStyle}}"></span>
+      <span class="{{recordingClass}}" role="img" aria-label="{{recordingLabel}}" style="{{recDotStyle}}"></span>
       <div>
         <div style="font-weight: 700; font-size: 14px">{{statusLabel}}</div>
-        <div style="font: 600 20px var(--font-mono); line-height: 1.1">{{timer}}</div>
+        <div id="test-timer" role="timer" aria-label="Elapsed road test time" style="font: 600 20px var(--font-mono); line-height: 1.1">{{timer}}</div>
       </div>
     </div>
     <div style="height: 40px; width: 1px; background: rgba(255,255,255,0.2)"></div>
     <dl style="margin: 0; display: grid; grid-template-columns: repeat(4, auto); column-gap: var(--space-22); row-gap: var(--space-2); font-size: 13px">
       <dt style="color: var(--color-indigo-light)">Customer</dt><dt style="color: var(--color-indigo-light)">Test type</dt><dt style="color: var(--color-indigo-light)">Route</dt><dt style="color: var(--color-indigo-light)">Start time</dt>
-      <dd style="margin: 0; font-weight: 600">Jordan A. Reyes</dd><dd style="margin: 0; font-weight: 600">Non-commercial road test</dd><dd style="margin: 0; font-weight: 600">West Loop A</dd><dd style="margin: 0; font: 600 13px var(--font-mono)">{{startTime}}</dd>
+      <dd id="exam-customer" style="margin: 0; font-weight: 600">{{customerName}}</dd><dd id="exam-type" style="margin: 0; font-weight: 600">{{testTypeLabel}}</dd><dd style="margin: 0; font-weight: 600">{{assignedRouteName}}</dd><dd id="exam-start-time" style="margin: 0; font: 600 13px var(--font-mono)">{{startTime}}</dd>
     </dl>
     <div style="flex: 1"></div>
     <div style="display: flex; gap: var(--space-8); font-size: 12px; font-weight: 600">
-      <span style="display: flex; align-items: center; gap: var(--space-6); height: 30px; padding: 0 var(--space-10); border-radius: 15px; background: rgba(255,255,255,0.12)">GPS <span style="font-family: var(--font-mono)">±3 m</span></span>
-      <span style="display: flex; align-items: center; gap: var(--space-6); height: 30px; padding: 0 var(--space-10); border-radius: 15px; background: rgba(255,255,255,0.12)"><span style="width: 8px; height: 8px; border-radius: 50%; background: var(--color-coral)"></span>Video</span>
+      <span style="display: flex; align-items: center; gap: var(--space-6); height: 30px; padding: 0 var(--space-10); border-radius: 15px; background: rgba(255,255,255,0.12)">GPS <span style="font-family: var(--font-mono)">Demo</span></span>
+      <span style="display: flex; align-items: center; gap: var(--space-6); height: 30px; padding: 0 var(--space-10); border-radius: 15px; background: rgba(255,255,255,0.12)"><span style="width: 8px; height: 8px; border-radius: 50%; background: var(--color-coral)"></span>{{videoLabel}}</span>
     </div>
   </header>
 
   <main style="flex: 1; min-height: 0; display: flex">
     <section aria-label="Route map" style="width: 460px; flex-shrink: 0; position: relative; border-right: 1px solid var(--color-line)">
-      <dc-import name="RouteMap" active="4" show-vehicle="{{yes}}" w="460" h="656" hint-size="460px,656px"></dc-import>
+      <dc-import name="RouteMap" active="4" show-vehicle="{{yes}}" show-device-location="{{yes}}" show-route="{{hasAssignedRoute}}" route-variant="{{assignedMapVariant}}" route-name="{{assignedRouteName}}" site-name="{{siteName}}" fit-route="{{noAssignedRoute}}" w="460" h="656" hint-size="460px,656px"></dc-import>
+      <div class="location-caption">Blue dot: simulated device location</div>
+      <sc-if value="{{showWestLoopGuidance}}">
       <div style="position: absolute; left: 12px; right: 12px; top: 12px; display: flex; align-items: center; gap: var(--space-12); padding: var(--space-10) var(--space-14); background: var(--color-white); border-radius: 12px; box-shadow: 0 2px 10px rgba(20,24,29,0.18)">
         <svg width="26" height="26" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-indigo)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 20V9h10"></path><path d="M13 5l4 4-4 4"></path></svg>
         <div>
-          <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-slate)">In 0.3 mi</div>
+          <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-slate)">Simulated guidance</div>
           <div style="font-size: 15px; font-weight: 700">Right onto W Indian School Rd</div>
         </div>
       </div>
+      </sc-if>
     </section>
 
     <section style="flex: 1; min-width: 0; background: var(--color-white); display: flex; flex-direction: column">
       <div role="tablist" aria-label="Road test panels" style="height: 56px; flex-shrink: 0; display: flex; gap: var(--space-4); padding: 0 var(--space-20); border-bottom: 1px solid var(--color-line)">
+        <button id="safety-tab" role="tab" aria-controls="safety-panel" sc-camel-on-click="{{showSafety}}" aria-selected="{{isSafety}}" style="{{safetyTabStyle}}">Basic Safety <sc-if value="{{safetyConfirmed}}"><span style="color: var(--color-green)" aria-label="Basic Safety complete">&#10003;</span></sc-if></button>
         <button role="tab" sc-camel-on-click="{{showRecord}}" aria-selected="{{isRecord}}" style="{{recordTabStyle}}">Record error</button>
         <button role="tab" sc-camel-on-click="{{showList}}" aria-selected="{{isList}}" style="{{listTabStyle}}">Errors recorded <span style="{{countStyle}}">{{count}}</span></button>
         <span style="flex: 1"></span>
@@ -54,6 +105,32 @@
             <svg width="14" height="14" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-green-dark)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"></path></svg>{{toast}}</span>
         </sc-if>
       </div>
+      <sc-if value="{{hasLegacyErrors}}"><p class="exam-notice" role="status">Earlier prototype errors are preserved. Missing timestamps or rubric values are marked as not captured; they are not invented.</p></sc-if>
+      <sc-if value="{{stopConfirmationRequired}}"><p class="exam-notice" role="alert">Two full-stop failures are recorded. Select Automatic failure to confirm and end the test.</p></sc-if>
+
+      <sc-if value="{{isSafety}}">
+        <section class="safety-panel" id="safety-panel" role="tabpanel" aria-labelledby="safety-tab">
+          <div class="safety-heading">
+            <div><h1>Basic Safety</h1><p>1 point each</p></div>
+          </div>
+          <p class="safety-note">Answer every item. For the emergency-vehicle question, Pass means a correct answer; Fail means an incorrect answer.</p>
+          <sc-for list="{{safetyItems}}" as="item">
+            <div class="safety-row" role="group" aria-label="{{item.label}}">
+              <span class="safety-label">{{item.label}}</span>
+              <button type="button" class="safety-result safety-pass" aria-pressed="{{item.passed}}" sc-camel-on-click="{{item.pass}}">Pass</button>
+              <button type="button" class="safety-result safety-fail" aria-pressed="{{item.failed}}" sc-camel-on-click="{{item.fail}}">Fail</button>
+            </div>
+          </sc-for>
+        </section>
+        <div class="safety-footer">
+          <div class="safety-progress" aria-live="polite">{{safetyProgress}}</div>
+          <div class="safety-actions">
+            <input id="safety-note" type="text" aria-label="Basic Safety optional note" placeholder="Optional note" value="{{safetyNote}}" sc-camel-on-change="{{changeSafetyNote}}">
+            <button type="button" sc-camel-on-click="{{clearSafety}}">Clear</button>
+            <button type="button" class="save-results" id="save-safety" disabled="{{cannotSaveSafety}}" sc-camel-on-click="{{saveSafety}}">Save results</button>
+          </div>
+        </div>
+      </sc-if>
 
       <sc-if value="{{isRecord}}" hint-placeholder-val="{{ true }}">
         <div style="flex: 1; min-height: 0; overflow-y: auto; padding: var(--space-16) var(--space-20); display: flex; flex-direction: column; gap: var(--space-16)">
@@ -65,7 +142,7 @@
               </div>
               <div style="display: flex; flex-wrap: wrap; gap: var(--space-8)">
                 <sc-for list="{{g.items}}" as="it" hint-placeholder-count="6">
-                  <button sc-camel-on-click="{{it.pick}}" aria-pressed="{{it.selected}}" style="{{it.style}}">{{it.label}}</button>
+                  <button sc-camel-on-click="{{it.pick}}" aria-pressed="{{it.selected}}" style="{{it.style}}">{{it.label}} <span style="font-size: 12px; white-space: nowrap">{{it.points}} points</span></button>
                 </sc-for>
               </div>
             </div>
@@ -79,7 +156,7 @@
           </div>
           <div style="display: flex; gap: var(--space-10)">
             <label for="note" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Optional note</label>
-            <input id="note" type="text" placeholder="Optional note" style="flex: 1; height: 52px; border: 1px solid var(--color-line-dark); border-radius: 10px; padding: 0 var(--space-14); font: 500 15px var(--font-sans); color: var(--color-charcoal); background: var(--color-white)">
+            <input id="note" type="text" placeholder="Optional note" value="{{note}}" sc-camel-on-change="{{changeNote}}" style="flex: 1; height: 52px; border: 1px solid var(--color-line-dark); border-radius: 10px; padding: 0 var(--space-14); font: 500 15px var(--font-sans); color: var(--color-charcoal); background: var(--color-white)">
             <button sc-camel-on-click="{{clearSel}}" style="height: 52px; padding: 0 var(--space-18); border-radius: 10px; border: 1px solid var(--color-line-dark); background: var(--color-white); font: 600 15px var(--font-sans); color: var(--color-charcoal)">Clear</button>
             <button sc-camel-on-click="{{save}}" disabled="{{noSel}}" style="{{saveStyle}}">{{saveLabel}}</button>
           </div>
@@ -88,16 +165,18 @@
 
       <sc-if value="{{isList}}" hint-placeholder-val="{{ false }}">
         <div style="flex: 1; min-height: 0; overflow-y: auto; padding: var(--space-12) var(--space-20); display: flex; flex-direction: column; gap: var(--space-8)">
-          <div style="display: grid; grid-template-columns: 70px minmax(0, 1fr) 96px 170px 110px; gap: var(--space-12); padding: var(--space-4) var(--space-12); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-slate)">
-            <span>Time</span><span>Error</span><span>Severity</span><span>Location</span><span></span>
+          <p style="margin: 0; font-size: 14px; color: var(--color-slate-dark)">{{count}} errors recorded. Locations are simulated.</p>
+          <sc-if value="{{noSavedErrors}}"><p>No errors recorded.</p></sc-if>
+          <div class="recorded-header">
+            <span>Saved at</span><span>Error</span><span>Points</span><span>Location</span><span>Note</span>
           </div>
           <sc-for list="{{saved}}" as="e" hint-placeholder-count="3">
-            <div style="display: grid; grid-template-columns: 70px minmax(0, 1fr) 96px 170px 110px; gap: var(--space-12); align-items: center; padding: var(--space-10) var(--space-12); border: 1px solid var(--color-line); border-radius: 10px">
-              <span style="font: 600 14px var(--font-mono)">{{e.time}}</span>
+            <div class="recorded-error">
+              <span class="recorded-date"><span>{{e.date}}</span><span>{{e.savedTime}}</span></span>
               <span style="display: flex; flex-direction: column; gap: var(--space-2)"><span style="font-size: 15px; font-weight: 700">{{e.label}}</span><span style="font-size: 13px; color: var(--color-slate)">{{e.note}}</span></span>
-              <span style="{{e.sevStyle}}">{{e.sev}}</span>
+              <span style="font: 600 14px var(--font-mono)">{{e.points}}</span>
               <span style="font: 500 12px var(--font-mono); color: var(--color-slate-dark)">{{e.loc}}</span>
-              <button style="height: 40px; border-radius: 8px; border: 1px solid var(--color-line-dark); background: var(--color-white); font: 600 13px var(--font-sans); color: var(--color-indigo)">{{e.noteBtn}}</button>
+              <button type="button" class="note-button" sc-camel-on-click="{{e.editNote}}">{{e.noteBtn}}</button>
             </div>
           </sc-for>
         </div>
@@ -106,10 +185,10 @@
   </main>
 
   <footer style="height: 72px; flex-shrink: 0; display: flex; align-items: center; gap: var(--space-12); padding: 0 var(--space-20); background: var(--color-white); border-top: 1px solid var(--color-line)">
-    <button sc-camel-on-click="{{openFail}}" style="height: 52px; padding: 0 var(--space-22); border-radius: 10px; border: none; background: var(--color-red); color: var(--color-white); font: 700 15px var(--font-sans); display: flex; align-items: center; gap: var(--space-8)">
+    <button class="exam-action" disabled="{{inactive}}" sc-camel-on-click="{{openFail}}" style="height: 52px; padding: 0 var(--space-22); border-radius: 10px; border: none; background: var(--color-red); color: var(--color-white); font: 700 15px var(--font-sans); display: flex; align-items: center; gap: var(--space-8)">
       <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-white)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l9 16H3z"></path><path d="M12 10v4M12 17h.01"></path></svg>Automatic failure</button>
-    <span style="flex: 1; text-align: center; font-size: 13px; color: var(--color-slate)">Each saved error records the time and GPS location. Video and GPS keep recording.</span>
-    <button sc-camel-on-click="{{openEnd}}" style="height: 52px; padding: 0 var(--space-24); border-radius: 10px; border: 2px solid var(--color-charcoal); background: var(--color-white); color: var(--color-charcoal); font: 700 15px var(--font-sans); display: flex; align-items: center; gap: var(--space-8)">
+    <span style="flex: 1; text-align: center; font-size: 13px; color: var(--color-slate)">{{recordingNote}}</span>
+    <button class="exam-action" disabled="{{inactive}}" sc-camel-on-click="{{openEnd}}" style="height: 52px; padding: 0 var(--space-24); border-radius: 10px; border: 2px solid var(--color-charcoal); background: var(--color-white); color: var(--color-charcoal); font: 700 15px var(--font-sans); display: flex; align-items: center; gap: var(--space-8)">
       <svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="var(--color-charcoal)" aria-hidden="true"><rect x="5" y="5" width="14" height="14" rx="2"></rect></svg>End test</button>
   </footer>
 
@@ -125,11 +204,15 @@
     </div>
   </sc-if>
 
+  <sc-if value="{{hasEnded}}">
+    <div class="ended-overlay"><h1>Road test ended</h1><p>Review this demo run, or clear it and start again.</p><a href="{{reviewUrl}}">View test review</a><button type="button" sc-camel-on-click="{{restartDemo}}">Start another demo test</button></div>
+  </sc-if>
+
   <sc-if value="{{showFail}}" hint-placeholder-val="{{ false }}">
     <div style="position: absolute; inset: 0; background: rgba(20,24,29,0.6); display: flex; align-items: center; justify-content: center; z-index: 20">
-      <div role="dialog" aria-modal="true" aria-label="Record automatic failure" style="width: 560px; background: var(--color-white); border-radius: 18px; overflow: hidden; box-shadow: 0 12px 40px rgba(20,24,29,0.35)">
+      <div class="exam-dialog" role="dialog" aria-modal="true" aria-label="Record automatic failure" style="width: 560px; background: var(--color-white); border-radius: 18px; overflow: hidden; box-shadow: 0 12px 40px rgba(20,24,29,0.35)">
         <div style="padding: var(--space-20) var(--space-24) var(--space-12); display: flex; flex-direction: column; gap: var(--space-6)">
-          <h2 style="margin: 0; font-size: 21px; font-weight: 700; color: #9A1C12">Record automatic failure</h2>
+          <h2 style="margin: 0; font-size: 21px; font-weight: 700; color: var(--color-red)">Record automatic failure</h2>
           <span style="font-size: 14px; color: var(--color-slate-dark); line-height: 1.45">Saving ends the test immediately and records the end time, GPS location and reason.</span>
         </div>
         <fieldset style="margin: 0; padding: var(--space-6) var(--space-24) var(--space-12); border: none; display: flex; flex-direction: column; gap: var(--space-8)">
@@ -137,11 +220,11 @@
           <sc-for list="{{failReasons}}" as="f" hint-placeholder-count="4">
             <button sc-camel-on-click="{{f.pick}}" aria-pressed="{{f.selected}}" style="{{f.style}}"><span style="{{f.radioStyle}}"></span>{{f.label}}</button>
           </sc-for>
-          <span style="font-size: 12px; color: var(--color-slate)">Reason list comes from the current non-commercial test configuration [TBD]</span>
+          <span style="font-size: 12px; color: var(--color-slate)">Prototype reasons. GPS and DTI handoff are simulated.</span>
         </fieldset>
         <div style="display: flex; gap: var(--space-10); justify-content: flex-end; padding: var(--space-14) var(--space-24) var(--space-20); border-top: 1px solid var(--color-light-gray)">
-          <button sc-camel-on-click="{{closeModal}}" style="height: 52px; padding: 0 var(--space-20); border-radius: 10px; border: 1px solid var(--color-line-dark); background: var(--color-white); font: 600 15px var(--font-sans); color: var(--color-charcoal)">Keep testing</button>
-          <a href="08-review-and-submit.html" style="height: 52px; padding: 0 var(--space-22); border-radius: 10px; background: var(--color-red); color: var(--color-white); display: flex; align-items: center; font-weight: 700; font-size: 15px; text-decoration: none">Save and end test</a>
+          <button class="dialog-cancel" sc-camel-on-click="{{closeModal}}" style="height: 52px; padding: 0 var(--space-20); border-radius: 10px; border: 1px solid var(--color-line-dark); background: var(--color-white); font: 600 15px var(--font-sans); color: var(--color-charcoal)">Keep testing</button>
+          <button type="button" class="end-confirm failure" disabled="{{cannotSaveFailure}}" sc-camel-on-click="{{saveFailure}}">Save and end test</button>
         </div>
       </div>
     </div>
@@ -149,87 +232,203 @@
 
   <sc-if value="{{showEnd}}" hint-placeholder-val="{{ false }}">
     <div style="position: absolute; inset: 0; background: rgba(20,24,29,0.6); display: flex; align-items: center; justify-content: center; z-index: 20">
-      <div role="dialog" aria-modal="true" aria-label="End test" style="width: 520px; background: var(--color-white); border-radius: 18px; overflow: hidden; box-shadow: 0 12px 40px rgba(20,24,29,0.35)">
+      <div class="exam-dialog" role="dialog" aria-modal="true" aria-label="End test" style="width: 520px; background: var(--color-white); border-radius: 18px; overflow: hidden; box-shadow: 0 12px 40px rgba(20,24,29,0.35)">
         <div style="padding: var(--space-20) var(--space-24); display: flex; flex-direction: column; gap: var(--space-12)">
           <h2 style="margin: 0; font-size: 21px; font-weight: 700">End the road test?</h2>
           <div style="display: flex; gap: var(--space-10); padding: var(--space-12) var(--space-14); border-radius: 10px; background: var(--color-amber-light); border: 1px solid var(--color-amber-border); font-size: 14px; line-height: 1.45; color: var(--color-amber-dark)">
             <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-amber)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0; margin-top: 1px"><path d="M12 3l9 16H3z"></path><path d="M12 10v4M12 17h.01"></path></svg>
-            <span>You're <strong>1.4 mi from the end of the route</strong> (point 11 · Return and park). Points 5–11 haven't been driven.</span>
+            <span>{{endRouteMessage}}</span>
           </div>
-          <span style="font-size: var(--space-14); color: var(--color-slate-dark); line-height: 1.45">Ending records the end time and sends the test and recordings to DTI.</span>
+          <span style="font-size: var(--space-14); color: var(--color-slate-dark); line-height: 1.45">Ending records the official end time and prepares a local mock DTI handoff. No data or recordings are uploaded.</span>
+          <sc-if value="{{hasPendingChanges}}"><p style="margin: 0; color: var(--color-amber); font-size: 14px">Unsaved selections, notes, or checklist changes will not be included.</p></sc-if>
         </div>
         <div style="display: flex; gap: var(--space-10); justify-content: flex-end; padding: var(--space-14) var(--space-24) var(--space-20); border-top: 1px solid var(--color-light-gray)">
-          <button sc-camel-on-click="{{closeModal}}" style="height: 52px; padding: 0 var(--space-20); border-radius: 10px; border: 1px solid var(--color-line-dark); background: var(--color-white); font: 600 15px var(--font-sans); color: var(--color-charcoal)">Keep testing</button>
-          <a href="08-review-and-submit.html" style="height: 52px; padding: 0 var(--space-22); border-radius: 10px; background: var(--color-charcoal); color: var(--color-white); display: flex; align-items: center; font-weight: 700; font-size: 15px; text-decoration: none">End test</a>
+          <button class="dialog-cancel" sc-camel-on-click="{{closeModal}}" style="height: 52px; padding: 0 var(--space-20); border-radius: 10px; border: 1px solid var(--color-line-dark); background: var(--color-white); font: 600 15px var(--font-sans); color: var(--color-charcoal)">Keep testing</button>
+          <button type="button" class="end-confirm" sc-camel-on-click="{{endTest}}">End test</button>
         </div>
       </div>
     </div>
   </sc-if>
+  <sc-if value="{{showNoteDialog}}">
+    <div class="exam-dialog-overlay">
+      <section class="exam-dialog note-dialog" role="dialog" aria-modal="true" aria-labelledby="edit-note-title" aria-describedby="edit-note-error">
+        <h2 id="edit-note-title">Edit error note</h2><p id="edit-note-error">{{editingErrorLabel}}</p>
+        <textarea id="edit-error-note" aria-label="Optional error note" value="{{editingNote}}" sc-camel-on-change="{{changeEditingNote}}"></textarea>
+        <div class="note-dialog-actions"><button type="button" class="dialog-cancel" sc-camel-on-click="{{closeModal}}">Cancel</button><button type="button" class="save-note" sc-camel-on-click="{{saveEditedNote}}">Save note</button></div>
+      </section>
+    </div>
+  </sc-if>
+  <sc-if value="{{showSaveError}}"><div class="exam-error" role="alert">{{saveError}}</div></sc-if>
+  <sc-if value="{{showLoadError}}">
+    <div class="exam-load-error" role="alert"><strong>Unable to load the current road test. Reload to try again.</strong><button type="button" sc-camel-on-click="{{reloadExam}}">Reload</button></div>
+  </sc-if>
 </div>
 </x-dc>
 <script type="text/x-dc" data-dc-script="" data-props="{&quot;started&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true},&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:800}}">
+const roadTest = window.DTIRoadTest;
+const safetyLabels = roadTest.safetyLabels;
 class Component extends DCLogic {
+  componentDidMount() {
+    this.clock = window.setInterval(() => this.forceUpdate(), 1000);
+  }
+  componentWillUnmount() {
+    window.clearInterval(this.clock);
+  }
+  initializeExam() {
+    this.examInitialized = true;
+    try {
+      const session = window.DTIRouteSession;
+      this.exam = roadTest.read() || roadTest.write(roadTest.create(this.props.started ?? true));
+      this.assignedRoute = session.eligibleRoutes.find((route) => route.id === this.exam.routeId);
+    } catch (error) {
+      this.loadError = true;
+    }
+  }
+  persistExam(patch) {
+    try {
+      if (this.exam.endedAt !== null) throw new Error('The road test has already ended.');
+      const record = roadTest.write({ ...this.exam, ...patch });
+      this.exam = record;
+    } catch (error) {
+      this.setState({ saveError: this.exam.endedAt !== null ? 'The road test has already ended.' : 'An error occurred while saving, please try again.' });
+      return false;
+    }
+    this.setState({ saveError: '' });
+    return true;
+  }
+  elapsedTime() {
+    return roadTest.elapsed(this.exam.startedAt, this.exam.endedAt ?? Date.now());
+  }
+  finishExam(reason = null) {
+    try {
+      const record = roadTest.end(this.exam, reason);
+      if (this.persistExam(record)) window.location.assign(window.DTIRouteSession.url('08-review-and-submit.html'));
+    } catch (error) {
+      this.setState({ saveError: error.message });
+    }
+  }
   renderVals() {
+    if (!this.examInitialized) this.initializeExam();
+    if (this.loadError) return { showLoadError: true, reloadExam: () => window.location.reload() };
     const st = this.state || {};
-    const started = st.started !== undefined ? st.started : (this.props.started ?? true);
-    const tab = st.tab || 'record';
-    const sel = st.sel || ['Fails to yield'];
+    const routeSession = window.DTIRouteSession;
+    const assignedRoute = this.assignedRoute;
+    const started = this.exam.startedAt !== null;
+    const hasEnded = this.exam.endedAt !== null;
+    const timer = this.elapsedTime();
+    const tab = st.tab || 'safety';
+    const sel = st.sel || [];
+    const note = st.note || '';
     const modal = st.modal || null;
     const failSel = st.failSel || null;
-    const sevOf = {};
-    const defs = [
-      ['Severe', 'var(--color-red)', ['Forward stop', 'Fails to yield', 'Following distance', 'Crowding center line', 'Impeding flow of traffic', 'Speeding']],
-      ['Moderate', 'var(--color-amber)', ['Not wearing seatbelt', 'Signaling', 'Improper use of brakes', 'Choice of proper lane', 'Improper lane change', 'Jump or hit curb', 'Parked too far from curb', 'Vehicle outside of parking space']],
-      ['Minor', 'var(--color-slate-dark)', ['Operation of motor vehicle', 'Position after stopping', 'Waits too long', 'Too slow', 'Steering', 'Improper turn', 'Vehicle not parallel with curb']]
-    ];
-    defs.forEach(([name, , items]) => items.forEach((l) => { sevOf[l] = name; }));
-    const saved = st.saved || [
-      { time: '04:12', label: 'Improper turn', note: 'Point 2 · wide right turn', loc: '33.4931, -112.1690' },
-      { time: '07:55', label: 'Signaling', note: '', loc: '33.4902, -112.1494' },
-      { time: '09:20', label: 'Too slow', note: '', loc: '33.4887, -112.1494' }
-    ];
+    const safetyResults = st.safetyResults === undefined ? this.exam.safetyResults : st.safetyResults;
+    const safetyNote = st.safetyNote === undefined ? this.exam.safetyNote : st.safetyNote;
+    const answered = safetyLabels.filter((label, index) => safetyResults[index] === 'pass' || safetyResults[index] === 'fail').length;
+    const safetyDirty = safetyLabels.some((label, index) => safetyResults[index] !== this.exam.safetyResults[index]) || safetyNote !== this.exam.safetyNote;
+    const safetyConfirmed = answered === safetyLabels.length && !safetyDirty;
+    const setSafetyResult = (index, value) => {
+      const results = { ...safetyResults };
+      if (results[index] === value) delete results[index];
+      else results[index] = value;
+      this.setState({ safetyResults: results, toast: null, saveError: '' });
+    };
+    const safetyItems = safetyLabels.map((label, index) => ({
+      label, passed: safetyResults[index] === 'pass', failed: safetyResults[index] === 'fail',
+      pass: () => setSafetyResult(index, 'pass'), fail: () => setSafetyResult(index, 'fail')
+    }));
+    const saved = this.exam.saved;
     const toggle = (l) => {
       const has = sel.indexOf(l) >= 0;
       this.setState({ sel: has ? sel.filter((x) => x !== l) : sel.concat([l]), toast: null });
     };
-    const chip = 'min-height: 44px; padding: 0 var(--space-16); border-radius: 22px; font: 600 14px \'Public Sans\', system-ui, sans-serif; cursor: pointer; display: flex; align-items: center; gap: var(--space-6); ';
-    const groups = defs.map(([name, color, items]) => ({
+    const chip = 'min-height: 44px; max-width: 100%; padding: var(--space-8) var(--space-16); border-radius: 22px; font: 600 14px var(--font-sans); text-align: left; cursor: pointer; display: flex; align-items: center; gap: var(--space-8); ';
+    const groups = roadTest.rubric.map(({ name, items }) => ({
       name,
-      dotStyle: 'width: 10px; height: 10px; border-radius: 50%; background: ' + color,
-      headStyle: 'margin: 0; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: ' + color,
-      items: items.map((label) => {
-        const on = sel.indexOf(label) >= 0;
-        return { label, selected: on,
+      dotStyle: 'width: 10px; height: 10px; border-radius: 50%; background: var(--color-indigo)',
+      headStyle: 'margin: 0; font-size: 14px; font-weight: 700; color: var(--color-indigo)',
+      items: items.map((element) => {
+        const on = sel.includes(element.id);
+        return { label: element.label, points: element.points, selected: on,
           style: chip + (on ? 'background: var(--color-indigo); color: var(--color-white); border: 2px solid var(--color-indigo);' : 'background: var(--color-white); color: var(--color-charcoal); border: 1px solid var(--color-line-dark);'),
-          pick: () => toggle(label) };
+          pick: () => toggle(element.id) };
       })
     }));
-    const pill = 'font-size: 12px; font-weight: 700; padding: 3px var(--space-9); border-radius: 11px; justify-self: start; ';
-    const sevStyle = (s) => pill + (s === 'Severe' ? 'background: #FCEDEB; color: var(--color-red);' : (s === 'Moderate' ? 'background: var(--color-amber-light); color: var(--color-amber);' : 'background: var(--color-off-white-alt); color: var(--color-slate-dark);'));
     const list = saved.slice().reverse().map((e) => ({
-      time: e.time, label: e.label, note: e.note || 'No note', loc: e.loc,
-      sev: sevOf[e.label] || 'Minor', sevStyle: sevStyle(sevOf[e.label] || 'Minor'),
-      noteBtn: e.note ? 'Edit note' : 'Add note'
+      date: roadTest.formatDate(e.savedAt), savedTime: roadTest.formatTime(e.savedAt),
+      label: (e.source === 'safety' ? 'Basic Safety · ' : '') + e.label, note: e.note || 'No note', loc: e.loc,
+      points: e.points === null ? 'Not captured' : e.points,
+      noteBtn: e.note ? 'Edit note' : 'Add note',
+      editNote: () => this.setState({ modal: 'note', editErrorId: e.id, editingNote: e.note, toast: null })
     }));
     const n = sel.length;
     const tabStyle = (on) => 'height: 56px; padding: 0 var(--space-16); border: none; background: none; border-bottom: 3px solid ' + (on ? 'var(--color-indigo)' : 'transparent') + '; font: ' + (on ? 700 : 500) + ' 16px \'Public Sans\', system-ui, sans-serif; color: ' + (on ? 'var(--color-charcoal)' : 'var(--color-slate-dark)') + '; display: flex; align-items: center; gap: var(--space-8); cursor: pointer;';
-    const reasons = ['Dangerous action', 'Collision or striking an object', 'Examiner had to intervene', 'Disobeyed traffic signal or sign'];
+    const needsStopConfirmation = roadTest.stopConfirmationRequired(this.exam);
+    const reasons = roadTest.manualFailureReasons.concat(needsStopConfirmation ? [roadTest.stopFailureReason] : []);
+    const selectedReason = failSel || (needsStopConfirmation ? roadTest.stopFailureReason : null);
     const radio = (on) => 'width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0; box-sizing: border-box; ' + (on ? 'border: 6px solid var(--color-red);' : 'border: 2px solid #8A9098;');
     const failReasons = reasons.map((r) => ({
-      label: r, selected: r === failSel, radioStyle: radio(r === failSel),
-      style: 'min-height: 52px; padding: 0 var(--space-14); border-radius: 10px; display: flex; align-items: center; gap: var(--space-12); font: 600 15px \'Public Sans\', system-ui, sans-serif; color: var(--color-charcoal); text-align: left; cursor: pointer; ' + (r === failSel ? 'background: #FCEDEB; border: 2px solid var(--color-red);' : 'background: var(--color-white); border: 1px solid var(--color-line-dark);'),
+      label: r, selected: r === selectedReason, radioStyle: radio(r === selectedReason),
+      style: 'min-height: 52px; padding: 0 var(--space-14); border-radius: 10px; display: flex; align-items: center; gap: var(--space-12); font: 600 15px var(--font-sans); color: var(--color-charcoal); text-align: left; cursor: pointer; ' + (r === selectedReason ? 'background: var(--color-amber-light); border: 2px solid var(--color-red);' : 'background: var(--color-white); border: 1px solid var(--color-line-dark);'),
       pick: () => this.setState({ failSel: r })
     }));
+    const editingError = saved.find((error) => error.id === st.editErrorId);
     return {
+      customerName: this.exam.customerName,
+      testTypeLabel: this.exam.testTypeLabel,
+      siteName: routeSession.context.siteName,
+      assignedRouteName: assignedRoute ? assignedRoute.name : 'No assigned route',
+      assignedMapVariant: assignedRoute ? assignedRoute.variant : 'a',
+      hasAssignedRoute: !!assignedRoute,
+      noAssignedRoute: !assignedRoute,
+      showWestLoopGuidance: !!assignedRoute && assignedRoute.id === 'west-loop-a',
+      videoLabel: hasEnded ? 'Stopped' : routeSession.cameraConnected ? 'Video' : 'No camera',
+      recordingNote: 'Each saved error records the time and simulated GPS location. ' + (routeSession.cameraConnected ? 'Video capture is mocked.' : 'No camera is connected.'),
       groups, saved: list, count: saved.length,
-      timer: started ? '12:48' : '00:00',
-      startTime: started ? '9:52 AM' : 'Not started',
-      statusLabel: started ? 'Road test in progress' : 'Ready to start',
-      recDotStyle: 'width: 12px; height: 12px; border-radius: 50%; background: ' + (started ? 'var(--color-coral); box-shadow: 0 0 0 4px rgba(255,107,91,0.3)' : '#8A90B8'),
+      hasLegacyErrors: saved.some((error) => error.legacy),
+      stopConfirmationRequired: needsStopConfirmation,
+      hasEnded, inactive: !started || hasEnded,
+      reviewUrl: routeSession.url('08-review-and-submit.html'),
+      restartDemo: () => {
+        try {
+          roadTest.discard();
+          window.location.assign(routeSession.url('02-start-a-test.html'));
+        } catch (error) {
+          this.setState({ saveError: 'Unable to clear this demo run. Please try again.' });
+        }
+      },
+      noSavedErrors: saved.length === 0,
+      timer,
+      startTime: started ? new Date(this.exam.startedAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : 'Not started',
+      statusLabel: hasEnded ? 'Road test ended' : started ? 'Road test in progress' : 'Ready to start',
+      recordingClass: started && !hasEnded ? 'recording-dot' : '',
+      recordingLabel: hasEnded ? 'Recording stopped' : started ? 'Simulated recording in progress' : 'Recording not started',
+      recDotStyle: 'width: 12px; height: 12px; border-radius: 50%; background: ' + (started && !hasEnded ? 'var(--color-coral); box-shadow: 0 0 0 4px rgba(255,107,91,0.3)' : 'var(--color-indigo-light)'),
       notStarted: !started,
-      start: () => this.setState({ started: true }),
+      start: () => this.persistExam({ startedAt: Date.now() }),
       yes: true,
       isRecord: tab === 'record', isList: tab === 'list',
+      isSafety: tab === 'safety',
+      safetyTabStyle: tabStyle(tab === 'safety'),
+      showSafety: () => this.setState({ tab: 'safety', toast: null }),
+      safetyItems, safetyNote, safetyConfirmed,
+      safetyProgress: answered + ' of ' + safetyLabels.length + ' answered · ' + (safetyConfirmed ? 'Saved — Basic Safety complete.' : answered === safetyLabels.length ? 'Save results to confirm Basic Safety.' : 'All eight answers are required to save.'),
+      cannotSaveSafety: answered !== safetyLabels.length || safetyConfirmed,
+      changeSafetyNote: (event) => this.setState({ safetyNote: event.currentTarget.value, toast: null }),
+      clearSafety: () => this.setState({ safetyResults: {}, safetyNote: '', toast: null }),
+      saveSafety: () => {
+        if (answered !== safetyLabels.length) {
+          this.setState({ saveError: 'Answer all eight Basic Safety items before saving.' });
+          return;
+        }
+        const failed = safetyLabels.flatMap((label, index) => safetyResults[index] === 'fail' ? [{ source: 'safety', id: 'safety-' + index, points: 1, label }] : []);
+        const failures = roadTest.makeLines(this.exam, failed, safetyNote).map((line) => {
+          const existing = saved.find((error) => error.source === 'safety' && error.elementId === line.elementId);
+          return existing ? { ...existing, note: safetyNote === this.exam.safetyNote ? existing.note : safetyNote } : line;
+        });
+        if (this.persistExam({ safetyResults: { ...safetyResults }, safetyNote, saved: saved.filter((error) => error.source !== 'safety').concat(failures) })) {
+          this.setState({ toast: 'Basic Safety saved' });
+        }
+      },
       recordTabStyle: tabStyle(tab === 'record'), listTabStyle: tabStyle(tab === 'list'),
       countStyle: 'min-width: 26px; height: 26px; padding: 0 var(--space-6); box-sizing: border-box; border-radius: 13px; background: var(--color-charcoal); color: var(--color-white); display: inline-flex; align-items: center; justify-content: center; font: 600 13px \'IBM Plex Mono\', monospace',
       showRecord: () => this.setState({ tab: 'record' }),
@@ -238,19 +437,83 @@ class Component extends DCLogic {
       noSel: n === 0,
       saveLabel: n > 1 ? 'Save ' + n + ' errors' : 'Save error',
       saveStyle: 'height: 52px; padding: 0 26px; border-radius: 10px; border: none; font: 700 16px \'Public Sans\', system-ui, sans-serif; ' + (n ? 'background: var(--color-indigo); color: var(--color-white); cursor: pointer;' : 'background: var(--color-line); color: var(--color-slate-dark);'),
-      clearSel: () => this.setState({ sel: [] }),
-      save: () => { if (!n) return; this.setState({ saved: saved.concat(sel.map((l) => ({ time: '12:48', label: l, note: '', loc: '33.4884, -112.1494' }))), sel: [], toast: (n > 1 ? n + ' errors' : sel[0]) + ' saved at 12:48' }); },
+      note,
+      changeNote: (event) => this.setState({ note: event.currentTarget.value }),
+      clearSel: () => this.setState({ sel: [], note: '' }),
+      save: () => {
+        if (!n) {
+          this.setState({ saveError: 'Select an error before saving.' });
+          return;
+        }
+        const lines = roadTest.makeLines(this.exam, roadTest.elements.filter((element) => sel.includes(element.id)), note);
+        if (this.persistExam({ saved: saved.concat(lines) })) {
+          const stopConfirmation = roadTest.stopConfirmationRequired(this.exam);
+          this.setState({ sel: [], note: '', toast: n + (n === 1 ? ' error saved' : ' errors saved'), modal: stopConfirmation ? 'fail' : null, failSel: stopConfirmation ? roadTest.stopFailureReason : null });
+        }
+      },
+      endRouteMessage: assignedRoute ? 'The assigned route is ' + assignedRoute.name + '. Confirm you are ready to finish the test.' : 'No route is assigned. Confirm you are ready to finish the test.',
+      showSaveError: !!st.saveError, saveError: st.saveError || '',
       showToast: !!st.toast, toast: st.toast || '',
       showFail: modal === 'fail', showEnd: modal === 'end',
-      failReasons,
-      openFail: () => this.setState({ modal: 'fail' }),
-      openEnd: () => this.setState({ modal: 'end' }),
-      closeModal: () => this.setState({ modal: null })
+      failReasons, cannotSaveFailure: !selectedReason,
+      saveFailure: () => {
+        if (!selectedReason) {
+          this.setState({ saveError: 'Select an automatic-failure reason.' });
+          return;
+        }
+        this.finishExam(selectedReason);
+      },
+      endTest: () => this.finishExam(),
+      hasPendingChanges: n > 0 || !!note || safetyDirty,
+      showNoteDialog: modal === 'note' && !!editingError,
+      editingErrorLabel: editingError ? editingError.label : '',
+      editingNote: st.editingNote || '',
+      changeEditingNote: (event) => this.setState({ editingNote: event.currentTarget.value }),
+      saveEditedNote: () => {
+        if (!editingError) {
+          this.setState({ saveError: 'The selected error could not be found.' });
+          return;
+        }
+        if (this.persistExam({ saved: saved.map((error) => error.id === editingError.id ? { ...error, note: st.editingNote || '' } : error) })) {
+          this.setState({ modal: null, editErrorId: null, toast: 'Note saved' });
+        }
+      },
+      openFail: () => this.setState({ modal: 'fail', failSel: needsStopConfirmation ? roadTest.stopFailureReason : null }),
+      openEnd: () => this.setState({ modal: needsStopConfirmation ? 'fail' : 'end', failSel: needsStopConfirmation ? roadTest.stopFailureReason : null }),
+      closeModal: () => this.setState({ modal: null, editErrorId: null })
     };
   }
 }
 </script>
 
+<script id="exam-dialog-focus">
+(() => {
+  let activeDialog = null;
+  let previousFocus = null;
+  document.addEventListener('keydown', (event) => {
+    const dialog = document.querySelector('.exam-dialog');
+    if (!dialog) return;
+    if (event.key === 'Escape') dialog.querySelector('.dialog-cancel').click();
+    if (event.key === 'Tab') {
+      const controls = Array.from(dialog.querySelectorAll('button:not(:disabled), textarea'));
+      const first = controls[0], last = controls[controls.length - 1];
+      if (!dialog.contains(document.activeElement) || (!event.shiftKey && document.activeElement === last) || (event.shiftKey && document.activeElement === first)) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+      }
+    }
+  });
+  new MutationObserver(() => {
+    const dialog = document.querySelector('.exam-dialog');
+    if (dialog && dialog !== activeDialog) {
+      previousFocus = document.activeElement;
+      dialog.querySelector('textarea, button:not(:disabled)').focus();
+    }
+    if (!dialog && activeDialog && previousFocus?.isConnected) previousFocus.focus();
+    activeDialog = dialog;
+  }).observe(document.body, { childList: true, subtree: true });
+})();
+</script>
 
 
 <style id="screen-fit-style">html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #e5e7eb; }

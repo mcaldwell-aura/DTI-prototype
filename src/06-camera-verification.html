@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DTI Examiner - Camera Verification</title>
+<script src="shared/route-session.js"></script>
+<link rel="stylesheet" href="shared/styles.css">
+<style>
+  html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #e5e7eb; }
+  #screen-root { position: absolute; width: 1280px; height: 800px; transform-origin: top left; font-family: var(--font-sans); color: var(--color-charcoal); }
+  .camera-screen { display: flex; width: 1280px; height: 800px; flex-direction: column; background: var(--color-background); }
+  .camera-header { display: flex; height: 64px; flex: 0 0 64px; align-items: center; gap: var(--space-16); padding: 0 var(--space-24); border-bottom: 1px solid var(--color-line); background: var(--color-white); }
+  .back-icon { display: flex; width: 44px; height: 44px; align-items: center; justify-content: center; border: 1px solid var(--color-line); border-radius: 10px; color: var(--color-charcoal); }
+  .header-title { font-size: 17px; font-weight: 700; }
+  .site-name { margin-left: auto; font-size: 14px; color: var(--color-slate); }
+  .camera-body { display: grid; min-height: 0; flex: 1; grid-template-columns: 440px minmax(0, 1fr); gap: var(--space-24); padding: var(--space-24); }
+  .instructions { min-height: 0; overflow-y: auto; padding: var(--space-24); border: 1px solid var(--color-line); border-radius: 14px; background: var(--color-white); }
+  h1 { margin: 0 0 var(--space-20); font-size: 25px; }
+  h2 { margin: 0 0 var(--space-12); font-size: 19px; }
+  .mounting { margin: 0 0 var(--space-20); padding-left: var(--space-20); font-size: 16px; line-height: 1.5; }
+  .mounting li { margin-bottom: var(--space-8); }
+  .check-list { display: flex; flex-direction: column; gap: var(--space-12); margin: 0; padding: 0; list-style: none; }
+  .check { display: grid; grid-template-columns: 28px minmax(0, 1fr); column-gap: var(--space-10); align-items: center; min-height: 56px; padding: var(--space-8) 0; border-top: 1px solid var(--color-line); }
+  .check-icon { display: flex; width: 26px; height: 26px; align-items: center; justify-content: center; border-radius: 50%; color: var(--color-amber); font-size: 20px; font-weight: 700; }
+  .check-label { font-size: 15px; line-height: 1.4; }
+  .check-status { grid-column: 2; margin-top: var(--space-4); font-size: 13px; font-weight: 700; color: var(--color-amber); }
+  .check[data-status="passed"] .check-icon, .check[data-status="passed"] .check-status { color: var(--color-green); }
+  .check[data-status="failed"] .check-icon, .check[data-status="failed"] .check-status { color: var(--color-red); }
+  .feed-section { display: flex; min-width: 0; min-height: 0; flex-direction: column; gap: var(--space-12); }
+  .mock-feed { display: flex; min-height: 0; flex: 1; flex-direction: column; overflow: hidden; border: 1px solid var(--color-line); border-radius: 14px; background: var(--color-off-white-alt); }
+  .feed-header { display: flex; justify-content: space-between; gap: var(--space-12); padding: var(--space-16); background: var(--color-charcoal); color: var(--color-white); font-size: 15px; font-weight: 600; }
+  .feed-preview { display: flex; min-height: 0; flex: 1; align-items: center; justify-content: center; padding: var(--space-24); }
+  .feed-preview svg { width: 100%; height: 100%; max-height: 300px; color: var(--color-slate); }
+  .feed-footer { display: flex; justify-content: space-around; padding: var(--space-16); border-top: 1px solid var(--color-line-dark); color: var(--color-slate-dark); font-size: 16px; font-weight: 600; }
+  .mock-note { margin: 0; color: var(--color-slate); font-size: 13px; line-height: 1.5; }
+  .demo-controls { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-12); padding: var(--space-14) var(--space-16); border: 1px solid var(--color-line); border-radius: 12px; background: var(--color-white); font-size: 14px; }
+  select { min-height: 44px; padding: 0 var(--space-12); border: 1px solid var(--color-line-dark); border-radius: 8px; background: var(--color-white); color: var(--color-charcoal); font: 14px var(--font-sans); }
+  .camera-footer { display: flex; height: 88px; flex: 0 0 88px; align-items: center; justify-content: flex-end; gap: var(--space-12); padding: 0 var(--space-24); border-top: 1px solid var(--color-line); background: var(--color-white); }
+  .action { display: flex; min-width: 130px; min-height: 52px; box-sizing: border-box; align-items: center; justify-content: center; padding: 0 var(--space-24); border: 1px solid var(--color-line-dark); border-radius: 10px; background: var(--color-white); color: var(--color-charcoal); font: 700 16px var(--font-sans); text-decoration: none; cursor: pointer; }
+  .primary { border-color: var(--color-indigo); background: var(--color-indigo); color: var(--color-white); }
+  .primary:hover { color: var(--color-white); background: var(--color-indigo-dark); }
+  .cancel { margin-right: auto; }
+  #recheck { min-width: auto; min-height: 44px; font-size: 14px; }
+  .warning-overlay { position: absolute; z-index: 20; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(20,24,29,0.55); }
+  .warning-dialog { width: 620px; box-sizing: border-box; padding: var(--space-32); border-radius: 14px; background: var(--color-white); box-shadow: 0 12px 40px rgba(20,24,29,0.18); }
+  .warning-dialog h2 { color: var(--color-amber-dark); font-size: 24px; }
+  .warning-dialog p { margin: var(--space-16) 0 var(--space-24); font-size: 17px; line-height: 1.5; }
+  .warning-actions { display: flex; justify-content: flex-end; gap: var(--space-12); }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div id="screen-root">
+  <div class="camera-screen" id="camera-content">
+    <header class="camera-header">
+      <a class="back-icon route-back" href="06-select-route.html" aria-label="Back to route selection"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg></a>
+      <span class="header-title">Camera Verification</span>
+      <span class="site-name" id="site-name"></span>
+    </header>
+    <main class="camera-body">
+      <section class="instructions" aria-labelledby="camera-title">
+        <h1 id="camera-title">Check Camera</h1>
+        <h2>Mount your camera</h2>
+        <ul class="mounting">
+          <li>Hang the camera over the rearview mirror.</li>
+          <li>Plug it into the USB port or cigarette lighter.</li>
+          <li>Confirm all three checks below turn green before you begin.</li>
+        </ul>
+        <h2>Automatic checks</h2>
+        <ul class="check-list" aria-live="polite">
+          <li class="check" data-status="pending"><span class="check-icon" aria-hidden="true">&#9888;</span><span class="check-label">The camera can see the road.</span><span class="check-status">Pending</span></li>
+          <li class="check" data-status="pending"><span class="check-icon" aria-hidden="true">&#9888;</span><span class="check-label">The driver's hands are visible.</span><span class="check-status">Pending</span></li>
+          <li class="check" data-status="pending"><span class="check-icon" aria-hidden="true">&#9888;</span><span class="check-label">The driver's face is visible.</span><span class="check-status">Pending</span></li>
+        </ul>
+      </section>
+      <section class="feed-section" aria-label="Combined camera preview">
+        <div class="mock-feed" role="img" aria-label="Mock combined camera video feed showing road and driver views. No real video is captured.">
+          <div class="feed-header"><span>Combined camera feed</span><span>PROTOTYPE</span></div>
+          <div class="feed-preview">
+            <svg viewBox="0 0 720 300" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M280 250L235 65H125L80 250M180 235v-35m0-45v-30m0-30V75"></path>
+              <path d="M360 25v250" stroke="var(--color-line-dark)"></path>
+              <circle cx="540" cy="90" r="44"></circle>
+              <path d="M460 225v-25c0-40 35-65 80-65s80 25 80 65v25"></path>
+              <circle cx="540" cy="220" r="52"></circle>
+              <path d="M490 206l26 15m74-15l-26 15"></path>
+              <rect x="484" y="34" width="112" height="112" rx="8" stroke="var(--color-green)" stroke-dasharray="10 8"></rect>
+            </svg>
+          </div>
+          <div class="feed-footer"><span>Road view</span><span>Driver view</span></div>
+        </div>
+        <p class="mock-note">Simulated feed and checks only. No camera, video recording, or automated image analysis is running.</p>
+        <div class="demo-controls">
+          <label for="camera-position">Camera position (mock)</label>
+          <select id="camera-position"><option value="aligned">Aligned</option><option value="obstructed">Needs adjustment</option></select>
+          <button type="button" class="action" id="recheck">Recheck</button>
+        </div>
+      </section>
+    </main>
+    <footer class="camera-footer">
+      <a class="action cancel" href="02-start-a-test.html">Cancel</a>
+      <a class="action route-back" href="06-select-route.html">Back</a>
+      <button type="button" class="action primary" id="camera-next">Next</button>
+    </footer>
+  </div>
+  <div class="warning-overlay" id="camera-warning" hidden>
+    <section class="warning-dialog" role="alertdialog" aria-modal="true" aria-labelledby="warning-title" aria-describedby="warning-message">
+      <h2 id="warning-title">Some camera checks haven't passed</h2>
+      <p id="warning-message">The camera may not fully capture the road and driver. Adjust the camera to resolve the failed checks, or continue if you're ready to begin.</p>
+      <div class="warning-actions">
+        <button type="button" class="action" id="warning-back">Back</button>
+        <button type="button" class="action primary" id="continue-anyway">Continue Anyway</button>
+      </div>
+    </section>
+  </div>
+</div>
+<script>
+(() => {
+  const session = window.DTIRouteSession;
+  if (!session.cameraConnected) {
+    window.location.replace(session.url('07-road-test.html'));
+    return;
+  }
+  document.getElementById('site-name').textContent = session.context.siteName;
+  document.querySelectorAll('.route-back').forEach((link) => { link.href = session.url('06-select-route.html'); });
+  const content = document.getElementById('camera-content');
+  const warning = document.getElementById('camera-warning');
+  const next = document.getElementById('camera-next');
+  const warningBack = document.getElementById('warning-back');
+  const continueAnyway = document.getElementById('continue-anyway');
+  const checks = Array.from(document.querySelectorAll('.check'));
+  const position = document.getElementById('camera-position');
+  let timers = [];
+  function setStatus(check, status) {
+    check.dataset.status = status;
+    check.querySelector('.check-status').textContent = status.charAt(0).toUpperCase() + status.slice(1);
+    check.querySelector('.check-icon').textContent = status === 'passed' ? '\u2713' : status === 'failed' ? '\u00d7' : '\u26a0';
+  }
+  function evaluateCamera() {
+    timers.forEach(clearTimeout);
+    checks.forEach((check) => setStatus(check, 'pending'));
+    const results = position.value === 'aligned' ? ['passed', 'passed', 'passed'] : ['passed', 'failed', 'failed'];
+    timers = checks.map((check, index) => setTimeout(() => setStatus(check, results[index]), 400 * (index + 1)));
+  }
+  function closeWarning() {
+    warning.hidden = true;
+    content.inert = false;
+    next.focus();
+  }
+  next.addEventListener('click', () => {
+    if (checks.every((check) => check.dataset.status === 'passed')) {
+      window.location.assign(session.url('07-road-test.html'));
+      return;
+    }
+    warning.hidden = false;
+    content.inert = true;
+    warningBack.focus();
+  });
+  warningBack.addEventListener('click', closeWarning);
+  continueAnyway.addEventListener('click', () => window.location.assign(session.url('07-road-test.html')));
+  warning.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') closeWarning();
+    if (event.key === 'Tab' && ((!event.shiftKey && document.activeElement === continueAnyway) || (event.shiftKey && document.activeElement === warningBack))) {
+      event.preventDefault();
+      (event.shiftKey ? continueAnyway : warningBack).focus();
+    }
+  });
+  position.addEventListener('change', evaluateCamera);
+  document.getElementById('recheck').addEventListener('click', evaluateCamera);
+  window.addEventListener('pagehide', () => timers.forEach(clearTimeout));
+  evaluateCamera();
+})();
+</script>
+<script>
+(() => {
+  const root = document.getElementById('screen-root');
+  function fit() {
+    const scale = Math.max(0, Math.min((window.innerWidth - 32) / 1280, (window.innerHeight - 32) / 800));
+    root.style.transform = 'scale(' + scale + ')';
+    root.style.left = (window.innerWidth - 1280 * scale) / 2 + 'px';
+    root.style.top = (window.innerHeight - 800 * scale) / 2 + 'px';
+  }
+  window.addEventListener('resize', fit);
+  fit();
+})();
+</script>
+</body>
+</html>

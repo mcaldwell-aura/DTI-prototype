@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DTI Examiner - Customer acknowledgement</title>
+<link rel="stylesheet" href="shared/styles.css">
+<style>
+  html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: #e5e7eb; }
+  #screen-root { position: absolute; width: 1280px; height: 800px; transform-origin: top left; }
+  .stage { position: relative; display: flex; width: 1280px; height: 800px; align-items: center; justify-content: center; overflow: hidden; color: var(--color-charcoal); font-family: var(--font-sans); }
+  .background-screen { position: absolute; inset: 0; width: 1280px; height: 800px; border: 0; pointer-events: none; }
+  .backdrop { position: absolute; inset: 0; background: rgba(20,24,29,0.55); }
+  .dialog { position: relative; z-index: 1; display: flex; width: 1160px; height: 720px; flex-direction: column; overflow: hidden; border-radius: 12px; background: var(--color-white); box-shadow: 0 12px 40px rgba(20,24,29,0.18); }
+  .columns { display: grid; min-height: 0; flex: 1; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: 30px; padding: 28px 32px 20px; }
+  .acknowledgement, .signature { display: flex; min-width: 0; min-height: 0; flex-direction: column; }
+  .acknowledgement { overflow: hidden; border: 1px solid var(--color-line); border-radius: 12px; }
+  .panel-title { flex: 0 0 auto; margin: 0 0 14px; font-size: 24px; line-height: 1.25; font-weight: 700; }
+  .acknowledgement .panel-title { margin: 0; padding: var(--space-16); }
+  .statement { min-height: 0; flex: 1; overflow-y: auto; padding: 0 var(--space-16) var(--space-8); font-size: 17px; line-height: 1.5; }
+  .statement h2 { margin: 18px 0 10px; font-size: 20px; line-height: 1.3; }
+  .statement h2:first-of-type { margin-top: 0; }
+  .statement p { margin: 0 0 10px; }
+  .statement .speaker-label { margin: 0 0 10px; color: var(--color-slate); font-size: 14px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+  .statement ul { margin: 0 0 16px; padding-left: 22px; }
+  .statement li { margin: 0 0 9px; }
+  .statement .applicant-question { margin: 16px 0 20px; padding: 14px 16px; border-radius: 12px; background: var(--color-indigo-pale); }
+  .applicant-question strong { color: var(--color-indigo-dark); }
+  .checkboxes { display: flex; flex: 0 0 auto; flex-direction: column; gap: var(--space-8); padding: var(--space-16); border-top: 1px solid var(--color-line); background: #FAFBFC; }
+  .checkbox-row { position: relative; display: flex; min-height: 44px; align-items: center; gap: var(--space-16); cursor: pointer; font-size: 15px; line-height: 1.4; }
+  .checkbox-row.opt-in { align-items: flex-start; }
+  .checkbox-row input { position: absolute; width: 44px; height: 44px; margin: 0; opacity: 0; cursor: pointer; }
+  .checkmark { display: flex; width: 22px; height: 22px; flex: 0 0 22px; align-items: center; justify-content: center; box-sizing: border-box; border: 2px solid var(--color-gray-dark); border-radius: 3px; background: var(--color-white); color: var(--color-white); }
+  .checkbox-row input:checked + .checkmark { border-color: var(--color-green); background: var(--color-green); }
+  .checkbox-row input:focus-visible + .checkmark { outline: 3px solid var(--color-indigo-pale); outline-offset: 2px; }
+  .checkmark svg { width: 16px; height: 16px; }
+  .checkbox-label { color: var(--color-slate); }
+  .opt-in .checkbox-label { color: var(--color-charcoal); }
+  .required-asterisk { color: var(--color-red); }
+  .signature-label { margin: -4px 0 8px; font-size: 15px; font-weight: 600; }
+  .signature-required { margin-left: 8px; color: var(--color-slate); font-size: 12px; font-weight: 400; }
+  .signature-pad { position: relative; min-height: 0; flex: 1; overflow: hidden; border: 1px solid var(--color-line); border-radius: 8px; background: var(--color-white); box-shadow: 0 3px 12px rgba(20,24,29,0.18); }
+  #signature-canvas { position: absolute; inset: 0 0 50px; width: 100%; height: calc(100% - 50px); touch-action: none; cursor: crosshair; }
+  .signature-line { position: absolute; right: 16px; bottom: 50px; left: 16px; border-top: 1px solid var(--color-line-dark); pointer-events: none; }
+  .signature-meta { position: absolute; right: 16px; bottom: 0; left: 16px; display: flex; height: 50px; align-items: center; justify-content: space-between; gap: 12px; font-size: 13px; }
+  #signed-by { overflow: hidden; color: var(--color-slate-dark); text-overflow: ellipsis; white-space: nowrap; }
+  #signed-at { flex: 0 0 auto; color: var(--color-slate-dark); }
+  .signature-actions { display: flex; min-height: 48px; align-items: center; justify-content: space-between; gap: 16px; padding-top: 10px; }
+  .signature-hint { color: var(--color-slate); font-size: 13px; }
+  #clear-signature { min-height: 44px; padding: 0 10px; border: 0; background: transparent; color: var(--color-indigo); font: 600 14px var(--font-sans); cursor: pointer; }
+  #clear-signature:focus-visible { outline: 3px solid var(--color-indigo-pale); outline-offset: 2px; }
+  .footer { display: flex; height: 84px; flex: 0 0 84px; align-items: center; gap: 14px; padding: 0 32px; border-top: 1px solid var(--color-line); }
+  .footer-spacer { flex: 1; }
+  .cancel, #continue-button { display: flex; height: 52px; box-sizing: border-box; align-items: center; justify-content: center; border-radius: 10px; font: 700 15px var(--font-sans); text-decoration: none; }
+  .cancel { min-width: 160px; border: 1px solid var(--color-line-dark); background: var(--color-white); color: var(--color-charcoal); }
+  #required-message { color: var(--color-red); font-size: 13px; text-align: right; }
+  #continue-button { min-width: 300px; padding: 0 18px; border: 0; background: var(--color-indigo); color: var(--color-white); cursor: pointer; }
+  #continue-button:disabled { background: var(--color-line); color: var(--color-slate-dark); cursor: not-allowed; }
+  #save-toast { position: absolute; z-index: 3; right: 50%; bottom: 100px; transform: translateX(50%); padding: 13px 18px; border: 1px solid #EBB8B2; border-radius: 10px; background: #FCEDEB; color: #7A1A12; box-shadow: 0 8px 24px rgba(20,24,29,0.18); font-size: 14px; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div id="screen-root">
+  <div class="stage">
+    <iframe class="background-screen" title="Start a test screen" src="02-start-a-test.html" aria-hidden="true" tabindex="-1"></iframe>
+    <div class="backdrop" aria-hidden="true"></div>
+    <main class="dialog" role="dialog" aria-modal="true" aria-labelledby="acknowledgement-title">
+      <div class="columns">
+        <section class="acknowledgement" aria-labelledby="acknowledgement-title">
+          <h1 class="panel-title" id="acknowledgement-title">Read test instructions to applicant</h1>
+          <div class="statement" id="statement-content">
+            <h2>Safety First</h2>
+            <p class="speaker-label">State to your applicant</p>
+            <ul>
+              <li>Returning back to the office safely is our #1 goal</li>
+              <li>When I provide directions, that is not a command to make an immediate maneuver</li>
+              <li>You must take my directions and make a maneuver when it is safe to do so</li>
+              <li>You need to pay close attention to the road, traffic and pedestrians at all times</li>
+              <li>Left turns are the riskiest maneuvers during the test</li>
+              <li>When preparing to turn left, you must yield the right-of-way to oncoming vehicles, bicycles, or pedestrians</li>
+              <li>I ask that you use extreme caution and your best judgement while making a left turn</li>
+            </ul>
+            <p class="applicant-question"><strong>Ask your applicant:</strong> Do you understand the importance of what I just explained?</p>
+            <h2>Road Test Maneuvers</h2>
+            <p class="applicant-question"><strong>Ask your applicant:</strong> When active emergency vehicles approach you, what side of the road must you yield to?</p>
+            <p class="speaker-label">State to your applicant</p>
+            <ul>
+              <li>If any driver-assist feature activates during the road test - allowing the vehicle to take over steering, braking, or acceleration - points will be assessed</li>
+              <li>During the road test you will demonstrate a parking maneuver</li>
+              <li>I will also observe your ability to safely operate a motor vehicle in most road situations</li>
+              <li>During the road test, continue driving straight unless I tell you otherwise</li>
+              <li>I will give you directions as far in advance as possible</li>
+              <li>If you do not understand my directions, please let me know</li>
+              <li>I will not ask you to do anything that is unsafe or illegal</li>
+              <li>You are responsible for the safe operation of this vehicle at all times</li>
+              <li>Your cell phone should be on vibrate and the radio off</li>
+              <li>Distracted actions such as eating, drinking, or smoking are not permitted</li>
+              <li>Our conversation will be kept at a minimum and will be limited to road testing only</li>
+            </ul>
+            <p class="applicant-question"><strong>Ask your applicant:</strong> Do you have any questions?</p>
+          </div>
+          <div class="checkboxes">
+            <label class="checkbox-row">
+              <input id="instructions-provided" type="checkbox" required aria-label="Instructions provided to applicant">
+              <span class="checkmark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"></path></svg></span>
+              <span class="checkbox-label">Instructions provided to applicant <span class="required-asterisk" aria-hidden="true">*</span></span>
+            </label>
+            <label class="checkbox-row opt-in">
+              <input id="recording-opt-in" type="checkbox" aria-label="Applicant authorizes video and GPS recording for training">
+              <span class="checkmark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"></path></svg></span>
+              <span class="checkbox-label">The applicant authorizes that this test may be recorded by video and GPS and used for training purposes.</span>
+            </label>
+          </div>
+        </section>
+
+        <section class="signature" aria-labelledby="signature-title">
+          <h2 class="panel-title" id="signature-title">Signature</h2>
+          <div class="signature-label">Applicant acknowledgement <span class="signature-required">* Required</span></div>
+          <div class="signature-pad">
+            <canvas id="signature-canvas" aria-label="Applicant acknowledgement signature field. Draw signature here." role="img"></canvas>
+            <div class="signature-line" aria-hidden="true"></div>
+            <div class="signature-meta">
+              <span id="signed-by">Signed by</span>
+              <time id="signed-at"></time>
+            </div>
+          </div>
+          <div class="signature-actions">
+            <span class="signature-hint">Sign above using the touchscreen.</span>
+            <button type="button" id="clear-signature">Clear</button>
+          </div>
+        </section>
+      </div>
+
+      <footer class="footer">
+        <a class="cancel" id="cancel-link" href="04-verify-customer.html">Cancel</a>
+        <div class="footer-spacer"></div>
+        <span id="required-message">Required fields must be complete to continue.</span>
+        <button type="button" id="continue-button" disabled>Continue to session information</button>
+      </footer>
+      <div id="save-toast" role="alert" aria-live="assertive" hidden>An error occurred while saving, please try again.</div>
+    </main>
+  </div>
+</div>
+<script>
+(() => {
+  const params = new URLSearchParams(window.location.search);
+  const firstName = params.get('firstName') || 'Jordan';
+  const middleName = params.get('middleName') || 'Morgan';
+  const lastName = params.get('lastName') || 'Reyes';
+  const applicantName = [firstName, middleName, lastName].map((part) => part.trim()).filter(Boolean).join(' ');
+  const canvas = document.getElementById('signature-canvas');
+  const context = canvas.getContext('2d');
+  const instructionsCheckbox = document.getElementById('instructions-provided');
+  const optInCheckbox = document.getElementById('recording-opt-in');
+  const continueButton = document.getElementById('continue-button');
+  const requiredMessage = document.getElementById('required-message');
+  const signedBy = document.getElementById('signed-by');
+  const signedAt = document.getElementById('signed-at');
+  const toast = document.getElementById('save-toast');
+  let hasSignature = false;
+  let isDrawing = false;
+  let signatureTimestamp = '';
+
+  function resizeCanvas() {
+    const ratio = window.devicePixelRatio || 1;
+    const width = canvas.clientWidth;
+    const height = canvas.clientHeight;
+    if (!width || !height) return;
+    canvas.width = Math.round(width * ratio);
+    canvas.height = Math.round(height * ratio);
+    context.setTransform(ratio, 0, 0, ratio, 0, 0);
+    context.fillStyle = '#FFFFFF';
+    context.fillRect(0, 0, width, height);
+    context.strokeStyle = '#202938';
+    context.lineWidth = 2.5;
+    context.lineCap = 'round';
+    context.lineJoin = 'round';
+    hasSignature = false;
+    updateContinue();
+  }
+
+  function formatTimestamp(date) {
+    const pad = (value) => String(value).padStart(2, '0');
+    const hours = date.getHours();
+    return pad(date.getMonth() + 1) + '/' + pad(date.getDate()) + '/' + date.getFullYear() + ' ' +
+      pad(hours % 12 || 12) + ':' + pad(date.getMinutes()) + ' ' + (hours >= 12 ? 'PM' : 'AM');
+  }
+
+  function updateContinue() {
+    const isComplete = instructionsCheckbox.checked && hasSignature;
+    continueButton.disabled = !isComplete;
+    requiredMessage.hidden = isComplete;
+  }
+
+  function pointFromEvent(event) {
+    const rect = canvas.getBoundingClientRect();
+    return {
+      x: (event.clientX - rect.left) * canvas.clientWidth / rect.width,
+      y: (event.clientY - rect.top) * canvas.clientHeight / rect.height
+    };
+  }
+
+  canvas.addEventListener('pointerdown', (event) => {
+    event.preventDefault();
+    isDrawing = true;
+    canvas.setPointerCapture(event.pointerId);
+    const point = pointFromEvent(event);
+    context.beginPath();
+    context.moveTo(point.x, point.y);
+    context.lineTo(point.x + 0.1, point.y + 0.1);
+    context.stroke();
+  });
+
+  canvas.addEventListener('pointermove', (event) => {
+    if (!isDrawing) return;
+    const point = pointFromEvent(event);
+    context.lineTo(point.x, point.y);
+    context.stroke();
+  });
+
+  function finishSignature() {
+    if (!isDrawing) return;
+    isDrawing = false;
+    hasSignature = true;
+    signatureTimestamp = formatTimestamp(new Date());
+    signedBy.textContent = 'Signed by ' + applicantName;
+    signedAt.textContent = signatureTimestamp;
+    updateContinue();
+  }
+
+  canvas.addEventListener('pointerup', finishSignature);
+  canvas.addEventListener('pointercancel', finishSignature);
+  instructionsCheckbox.addEventListener('change', updateContinue);
+
+  document.getElementById('clear-signature').addEventListener('click', () => {
+    context.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+    context.fillStyle = '#FFFFFF';
+    context.fillRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+    hasSignature = false;
+    signatureTimestamp = '';
+    signedBy.textContent = 'Signed by';
+    signedAt.textContent = '';
+    updateContinue();
+    canvas.focus();
+  });
+
+  document.getElementById('cancel-link').href += window.location.search;
+
+  continueButton.addEventListener('click', () => {
+    if (continueButton.disabled) return;
+    const savedFields = {
+      acknowledgementProvided: instructionsCheckbox.checked,
+      recordingOptIn: optInCheckbox.checked,
+      signature: canvas.toDataURL('image/png'),
+      signedBy: applicantName,
+      timestamp: signatureTimestamp
+    };
+    try {
+      window.sessionStorage.setItem('dtiCurrentTestAcknowledgement', JSON.stringify(savedFields));
+    } catch (error) {
+      toast.hidden = false;
+      return;
+    }
+    window.location.assign('04-session-information.html' + window.location.search);
+  });
+
+  resizeCanvas();
+  updateContinue();
+})();
+</script>
+<script>
+(() => {
+  const root = document.getElementById('screen-root');
+  function fit() {
+    const scale = Math.max(0, Math.min((window.innerWidth - 32) / 1280, (window.innerHeight - 32) / 800));
+    root.style.transform = 'scale(' + scale + ')';
+    root.style.left = (window.innerWidth - 1280 * scale) / 2 + 'px';
+    root.style.top = (window.innerHeight - 800 * scale) / 2 + 'px';
+  }
+  window.addEventListener('resize', fit);
+  fit();
+})();
+</script>
+</body>
+</html>

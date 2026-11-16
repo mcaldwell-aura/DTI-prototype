@@ -1,134 +1,364 @@
 <!DOCTYPE html>
-<html lang="en"><head>
+<html lang="en">
+<head>
 <meta charset="utf-8">
-<title>DTI Examiner – Review and submit</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DTI Examiner - Review and submit</title>
 <script src="shared/runtime.js"></script>
-  <link rel="stylesheet" href="shared/styles.css">
+<script src="shared/route-session.js"></script>
+<script src="shared/road-test-session.js"></script>
+<link rel="stylesheet" href="shared/styles.css">
+<style>
+  html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: var(--color-background); }
+  body > x-dc, body > #dc-root { display: block; position: absolute; width: 1280px; height: 800px; transform-origin: top left; }
+  .review-screen { display: flex; width: 1280px; height: 800px; flex-direction: column; font-family: var(--font-sans); color: var(--color-charcoal); background: var(--color-background); }
+  .review-header { display: flex; min-height: 72px; flex-shrink: 0; align-items: center; justify-content: space-between; gap: var(--space-16); padding: 0 var(--space-24); border-bottom: 1px solid var(--color-line); background: var(--color-white); }
+  .review-header h1 { margin: 0 0 var(--space-4); font-size: 19px; }
+  .review-header p { margin: 0; color: var(--color-slate); font-size: 13px; }
+  .review-status { padding: var(--space-8) var(--space-12); border-radius: 15px; background: var(--color-off-white-alt); color: var(--color-slate-dark); font-size: 13px; font-weight: 600; }
+  .review-body { display: grid; min-height: 0; flex: 1; grid-template-columns: 280px minmax(0, 1fr); gap: var(--space-20); padding: var(--space-24); }
+  .review-column { display: flex; min-height: 0; flex-direction: column; gap: var(--space-16); }
+  .review-sidebar { overflow: hidden; }
+  .summary-scroll { min-height: 0; flex: 1; overflow-y: auto; }
+  .submission-card { flex-shrink: 0; }
+  .review-card { padding: var(--space-20); border: 1px solid var(--color-line); border-radius: 14px; background: var(--color-white); }
+  .review-card h2 { margin: 0 0 var(--space-16); font-size: 18px; }
+  .review-card p { margin: var(--space-12) 0 0; font-size: 14px; line-height: 1.5; }
+  .review-outcome { margin-bottom: var(--space-16); font-size: 25px; font-weight: 700; }
+  .review-stats { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-12); margin: 0; font-size: 14px; }
+  .review-stats dt { color: var(--color-slate); }
+  .review-stats dd { margin: 0; font: 600 13px var(--font-mono); }
+  .review-note { margin-top: var(--space-16); padding: var(--space-12); border-radius: 12px; background: var(--color-indigo-pale); color: var(--color-indigo-dark); font-size: 12px; line-height: 1.5; }
+  .evidence { display: flex; min-height: 0; flex: 1; flex-direction: column; }
+  .error-list { min-height: 0; overflow-y: auto; }
+  .evidence-header { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-12); margin-bottom: var(--space-12); }
+  .evidence-header h2 { margin: 0; }
+  .evidence-count { font-size: 12px; color: var(--color-slate); white-space: nowrap; }
+  .evidence-entry { display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; align-items: start; gap: var(--space-12); padding: var(--space-14) 0; border-top: 1px solid var(--color-line); }
+  .evidence-label { font-size: 14px; line-height: 1.5; }
+  .evidence-metadata, .entry-time { margin-top: var(--space-6); color: var(--color-slate); font-size: 12px; line-height: 1.5; }
+  .entry-time { white-space: nowrap; font-family: var(--font-mono); }
+  .demo-submit { width: 100%; min-height: 52px; margin-top: var(--space-16); border: 0; border-radius: 12px; background: var(--color-indigo); color: var(--color-white); font: 700 15px var(--font-sans); cursor: pointer; }
+  .demo-submit:hover { background: var(--color-indigo-dark); color: var(--color-white); }
+  .demo-submit:disabled { background: var(--color-off-white-alt); color: var(--color-slate); cursor: default; }
+  .review-card .demo-caption { color: var(--color-slate); font-size: 12px; }
+  .retry-save { display: inline-flex; min-height: 44px; align-items: center; margin-top: var(--space-8); }
+  .retry-save { border: 0; padding: 0 var(--space-12); border-radius: 8px; background: var(--color-white); color: var(--color-red); font: 600 14px var(--font-sans); cursor: pointer; }
+  .save-error { padding: var(--space-12); border: 1px solid var(--color-red); border-radius: 12px; color: var(--color-red); font-size: 13px; line-height: 1.5; }
+  button:focus-visible, a:focus-visible { outline: 3px solid var(--color-indigo-light); outline-offset: var(--space-2); }
+  .timeline-card { flex-shrink: 0; }
+  .timeline-heading { display: flex; align-items: center; justify-content: space-between; gap: var(--space-16); }
+  .timeline-heading h2 { margin: 0; font-size: 16px; }
+  .timeline-legend { display: flex; align-items: center; gap: var(--space-12); font-size: 11px; color: var(--color-slate); }
+  .legend-item { display: inline-flex; align-items: center; gap: var(--space-6); white-space: nowrap; }
+  .point-icon { display: inline-flex; box-sizing: border-box; width: 28px; height: 28px; flex-shrink: 0; align-items: center; justify-content: center; border: 2px solid var(--color-indigo); border-radius: 50%; background: var(--color-indigo); color: var(--color-white); font: 700 12px var(--font-sans); }
+  .point-icon.skipped { border-style: dotted; background: transparent; color: var(--color-indigo); }
+  .error-icon { display: inline-flex; width: 28px; height: 28px; align-items: center; justify-content: center; box-sizing: border-box; padding-top: var(--space-4); background: var(--color-orange); color: var(--color-charcoal); clip-path: polygon(50% 0, 100% 100%, 0 100%); font-weight: 700; }
+  .error-diamond { display: inline-block; width: 14px; height: 14px; box-sizing: border-box; transform: rotate(45deg); border: 1px solid var(--color-amber); background: var(--color-orange); }
+  .timeline-legend .point-icon { width: 20px; height: 20px; font-size: 10px; }
+  .timeline-scroll { max-height: 240px; overflow: auto; margin-top: var(--space-12); }
+  .timeline-canvas { position: relative; margin: 0 var(--space-28); }
+  .timeline-line { position: absolute; left: 0; right: 0; height: 3px; background: var(--color-line-dark); }
+  .timeline-marker { position: absolute; z-index: 1; transform: translate(-50%, -50%); }
+  .timeline-error-button { display: grid; width: 44px; height: 44px; place-items: center; padding: 0; border: 0; border-radius: 8px; background: transparent; cursor: pointer; }
+  .timeline-error-button:hover { background: var(--color-amber-light); }
+  .timeline-connector { position: absolute; width: 1px; border-left: 1px dotted var(--color-gray-dark); }
+  .timeline-tick { position: absolute; transform: translateX(-50%); white-space: nowrap; color: var(--color-slate); font: 11px var(--font-mono); }
+  .timeline-card .timeline-caption { margin: var(--space-8) 0 0; color: var(--color-slate); font-size: 12px; }
+  .simulated-label { display: inline-block; margin-left: var(--space-6); color: var(--color-slate); font-size: 11px; font-weight: 400; }
+  .review-message { padding: var(--space-32); font-size: 17px; }
+  .error-row-actions { display: flex; flex-direction: column; align-items: flex-end; gap: var(--space-6); }
+  .details-button { min-width: 100px; min-height: 44px; padding: var(--space-8) var(--space-12); border: 1px solid var(--color-line-dark); border-radius: 8px; background: var(--color-white); color: var(--color-indigo); font: 600 13px var(--font-sans); cursor: pointer; }
+  .details-button:hover { background: var(--color-indigo-pale); }
+  .error-details-overlay { position: absolute; z-index: 50; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(20,24,29,0.6); }
+  .error-details-dialog { display: flex; width: 760px; max-height: 720px; flex-direction: column; border-radius: 18px; background: var(--color-white); overflow: hidden; }
+  .error-details-header, .error-details-footer { display: flex; flex-shrink: 0; align-items: center; justify-content: space-between; gap: var(--space-16); padding: var(--space-16) var(--space-24); }
+  .error-details-header { border-bottom: 1px solid var(--color-line); }
+  .error-details-header h2 { margin: 0; font-size: 21px; overflow-wrap: anywhere; }
+  .error-details-heading { display: flex; align-items: center; gap: var(--space-12); }
+  .error-details-close { min-width: 44px; min-height: 44px; flex-shrink: 0; border: 1px solid var(--color-line); border-radius: 10px; background: var(--color-white); color: var(--color-slate-dark); font-size: 24px; cursor: pointer; }
+  .error-details-body { min-height: 0; overflow-y: auto; padding: var(--space-24); }
+  .error-details-fields { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: var(--space-16); margin: 0; font-size: 15px; line-height: 1.5; }
+  .error-details-fields dt { color: var(--color-slate); }
+  .error-details-fields dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+  .error-details-body h3 { margin: var(--space-24) 0 var(--space-12); font-size: 16px; }
+  .error-details-note { margin: 0; padding: var(--space-16); border-radius: 10px; background: var(--color-off-white); font-size: 15px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .error-details-body .review-note { margin-top: var(--space-24); }
+  .error-details-footer { justify-content: flex-end; border-top: 1px solid var(--color-line); }
+</style>
 </head>
 <body>
 <x-dc>
-<helmet>
-
-
-</helmet>
-<div style="width: 1280px; height: 800px; display: flex; flex-direction: column; font-family: var(--font-sans); color: var(--color-charcoal); background: var(--color-background)">
-  <header style="height: 64px; flex-shrink: 0; display: flex; align-items: center; gap: var(--space-16); padding: 0 var(--space-24); background: var(--color-white); border-bottom: 1px solid var(--color-line)">
-    <div>
-      <div style="font-weight: 700; font-size: 17px">Review road test</div>
-      <div style="font-size: 13px; color: var(--color-slate)">Jordan A. Reyes · Non-commercial road test · West Loop A v3 · 9:52–10:16 AM</div>
-    </div>
-    <div style="flex: 1"></div>
-    <span style="display: flex; align-items: center; gap: var(--space-6); height: 30px; padding: 0 var(--space-12); border-radius: 15px; background: var(--color-off-white-alt); color: var(--color-slate-dark); font-size: 13px; font-weight: 600">Test ended · not yet submitted</span>
+<div class="review-screen">
+  <header class="review-header">
+    <div><h1>Review road test</h1><p>{{summary}}</p></div>
+    <span class="review-status">{{statusLabel}}</span>
   </header>
-
-  <main style="flex: 1; display: grid; grid-template-columns: 330px minmax(0, 1fr) 320px; gap: var(--space-20); padding: var(--space-20) var(--space-24); min-height: 0">
-    <section style="display: flex; flex-direction: column; gap: var(--space-16)">
-      <div style="background: var(--color-white); border: 1px solid var(--color-line); border-radius: 14px; padding: var(--space-22); display: flex; flex-direction: column; gap: var(--space-16)">
-        <div style="font-size: var(--space-13); font-weight: 600; color: var(--color-slate); text-transform: uppercase; letter-spacing: 0.05em">Calculated result</div>
-        <div style="display: flex; align-items: center; gap: var(--space-12)">
-          <span style="width: 48px; height: 48px; border-radius: 50%; background: var(--color-green); display: flex; align-items: center; justify-content: center"><svg width="26" height="26" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-white)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"></path></svg></span>
-          <span style="font-size: 36px; font-weight: 700; color: var(--color-green-dark)">Pass</span>
+  <sc-if value="{{showMessage}}"><main class="review-message" role="status"><p>No ended road test is available for this test instance.</p><a href="{{roadTestUrl}}">Return to road test</a></main></sc-if>
+  <sc-if value="{{showLoadError}}"><main class="review-message" role="alert">Unable to load the saved road test. Reload to try again.</main></sc-if>
+  <sc-if value="{{hasEnded}}">
+    <main class="review-body">
+      <aside class="review-column review-sidebar" aria-label="Test summary and submission">
+        <div class="summary-scroll"><div class="review-card">
+          <h2>Test summary</h2>
+          <div class="review-outcome" id="review-outcome" style="{{outcomeStyle}}">{{outcome}}</div>
+          <dl class="review-stats">
+            <dt>Errors</dt><dd id="review-error-count">{{errorCount}}</dd>
+            <dt>Error points</dt><dd id="review-points">{{points}}</dd>
+            <dt>Automatic failures</dt><dd>{{failureCount}}</dd>
+            <dt>Test date</dt><dd>{{testDate}}</dd>
+            <dt>Start time</dt><dd>{{startTime}}</dd>
+            <dt>End time</dt><dd id="review-end-time">{{endTime}}</dd>
+            <dt>Duration</dt><dd>{{duration}}</dd>
+            <dt>Portal score</dt><dd>Pending</dd>
+          </dl>
+          <sc-if value="{{hasFailure}}"><p><strong>Automatic failure:</strong> {{failureReason}}</p></sc-if>
+          <div class="review-note">Normal result pending: scoring rule not decided. Portal score is not connected.</div>
+        </div></div>
+        <div class="review-card submission-card">
+          <h2>Submit to DTI</h2>
+          <strong id="handoff-status" role="status" aria-live="polite">{{handoffStatus}}</strong>
+          <p class="demo-caption">Demo only. Submit clears this run and returns to Start a test so you can try again. No results are kept or uploaded to DTI or MAX.</p>
+          <button type="button" class="demo-submit" disabled="{{cannotSubmit}}" sc-camel-on-click="{{submitTest}}">{{submitLabel}}</button>
         </div>
-        <dl style="margin: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto; row-gap: var(--space-10); font-size: 15px">
-          <dt style="color: var(--color-slate)">Errors</dt><dd style="margin: 0; font: 600 15px var(--font-mono)">3</dd>
-          <dt style="color: var(--color-slate)">Score</dt><dd style="margin: 0; font: 600 15px var(--font-mono)">94</dd>
-          <dt style="color: var(--color-slate)">Automatic failures</dt><dd style="margin: 0; font-weight: 600">None</dd>
-          <dt style="color: var(--color-slate)">Duration</dt><dd style="margin: 0; font: 600 15px var(--font-mono)">23:41</dd>
-          <dt style="color: var(--color-slate)">Scoring rules</dt><dd style="margin: 0; font: 600 13px var(--font-mono)">v[TBD]</dd>
-        </dl>
+        <sc-if value="{{showSaveError}}"><div class="save-error" role="alert">{{saveError}}<br><button type="button" class="retry-save" sc-camel-on-click="{{retrySave}}">Try again</button></div></sc-if>
+      </aside>
+      <div class="review-column">
+        <section class="review-card timeline-card" aria-label="Test Timeline">
+          <div class="timeline-heading">
+            <h2>Road Test Duration - {{duration}}</h2>
+            <div class="timeline-legend" aria-label="Timeline legend">
+              <span class="legend-item"><span class="point-icon" aria-hidden="true">1</span>Evaluation Point</span>
+              <span class="legend-item"><span class="point-icon skipped" aria-hidden="true">2</span>Skipped</span>
+              <span class="legend-item"><span class="error-diamond" aria-hidden="true"></span>Error</span>
+            </div>
+          </div>
+          <div class="timeline-scroll" tabindex="0" aria-label="Road test event timeline; scroll to see all markers">
+            <div class="timeline-canvas" style="{{canvasStyle}}">
+              <div class="timeline-line" style="{{lineStyle}}"></div>
+              <sc-for list="{{markers}}" as="marker">
+                <div class="timeline-connector" style="{{marker.connectorStyle}}"></div>
+                <sc-if value="{{marker.isError}}"><button type="button" class="timeline-marker timeline-error-button" id="{{marker.triggerId}}" style="{{marker.style}}" title="{{marker.description}}" aria-label="{{marker.detailsLabel}}" aria-haspopup="dialog" sc-camel-on-click="{{marker.openDetails}}"><span class="error-diamond" aria-hidden="true"></span></button></sc-if>
+                <sc-if value="{{marker.isEvaluation}}"><span class="timeline-marker" style="{{marker.style}}" title="{{marker.description}}" aria-label="{{marker.description}}"><span class="{{marker.iconClass}}">{{marker.number}}</span></span></sc-if>
+              </sc-for>
+              <sc-for list="{{ticks}}" as="tick"><span class="timeline-tick" style="{{tick.style}}">{{tick.label}}</span></sc-for>
+            </div>
+          </div>
+          <p class="timeline-caption">Select an error diamond to view details. Evaluation points and skip reasons are simulated examples, not examiner-recorded evidence.</p>
+          <sc-if value="{{hasUnplotted}}"><p class="timeline-caption">{{unplottedCount}} entries have missing or out-of-range timestamps and cannot be placed on the timeline.</p></sc-if>
+        </section>
+        <section class="review-card evidence" aria-labelledby="evidence-title">
+          <div class="evidence-header"><h2 id="evidence-title">Test Errors</h2><span class="evidence-count" id="test-errors-count">{{evidenceSummary}}</span></div>
+          <div class="error-list">
+            <sc-if value="{{noRows}}"><p>No evaluation points or errors recorded.</p></sc-if>
+            <sc-for list="{{rows}}" as="entry">
+              <div class="evidence-entry">
+                <div aria-label="{{entry.iconLabel}}">
+                  <sc-if value="{{entry.isError}}"><span class="error-icon" aria-hidden="true">!</span></sc-if>
+                  <sc-if value="{{entry.isEvaluation}}"><span class="{{entry.iconClass}}" aria-hidden="true">{{entry.number}}</span></sc-if>
+                </div>
+                <div>
+                  <div class="evidence-label"><strong>{{entry.label}}</strong><sc-if value="{{entry.simulated}}"><span class="simulated-label">Simulated</span></sc-if></div>
+                  <div class="evidence-metadata">{{entry.locationLabel}}</div>
+                </div>
+                <div class="error-row-actions">
+                  <time class="entry-time">{{entry.timestamp}}</time>
+                  <sc-if value="{{entry.isError}}"><button type="button" class="details-button" id="{{entry.triggerId}}" aria-label="{{entry.detailsLabel}}" aria-haspopup="dialog" sc-camel-on-click="{{entry.openDetails}}">View details</button></sc-if>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </section>
       </div>
-      <div style="display: flex; gap: var(--space-10); padding: var(--space-14) var(--space-16); background: var(--color-indigo-pale); border-radius: 12px; font-size: 13px; line-height: 1.45; color: var(--color-indigo-dark)">
-        <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-indigo-dark)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0; margin-top: 1px"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"></path></svg>
-        <span>Calculated from your recorded observations only. No AI or inferred scoring. You confirm the final result.</span>
-      </div>
-    </section>
-
-    <section style="background: var(--color-white); border: 1px solid var(--color-line); border-radius: 14px; padding: var(--space-18) var(--space-20); display: flex; flex-direction: column; gap: var(--space-6); min-height: 0">
-      <div style="display: flex; align-items: baseline; padding-bottom: var(--space-6)">
-        <h1 style="margin: 0; font-size: 19px; font-weight: 700; flex: 1">Evaluation points</h1>
-        <span style="font-size: 13px; color: var(--color-slate)">10 scored · 1 skipped</span>
-      </div>
-      <sc-for list="{{rows}}" as="r" hint-placeholder-count="12">
-        <div style="{{r.rowStyle}}">
-          <span style="{{r.badgeStyle}}">{{r.n}}</span>
-          <span style="flex: 1; min-width: 0; font-size: 14px"><span style="font-weight: 600">{{r.label}}</span><span style="color: var(--color-slate)">{{r.detail}}</span></span>
-          <sc-if value="{{r.hasTag}}" hint-placeholder-val="{{ false }}">
-            <span style="{{r.tagStyle}}">{{r.tag}}</span>
-          </sc-if>
-          <button style="height: 32px; padding: 0 var(--space-10); border: none; background: none; color: var(--color-indigo); font: 600 13px var(--font-sans)">Edit</button>
+    </main>
+  </sc-if>
+  <sc-if value="{{showErrorDetails}}">
+    <div class="error-details-overlay">
+      <section class="error-details-dialog" role="dialog" aria-modal="true" aria-labelledby="error-details-title">
+        <header class="error-details-header">
+          <div class="error-details-heading"><span class="error-diamond" aria-hidden="true"></span><h2 id="error-details-title">{{errorDetails.label}}</h2></div>
+          <button type="button" class="error-details-close" aria-label="Close error details" sc-camel-on-click="{{closeErrorDetails}}">&times;</button>
+        </header>
+        <div class="error-details-body">
+          <dl class="error-details-fields">
+            <dt>Section</dt><dd>{{errorDetails.section}}</dd>
+            <dt>Error points</dt><dd>{{errorDetails.points}}</dd>
+            <dt>Test clock</dt><dd>{{errorDetails.elapsed}}</dd>
+            <dt>Recorded at</dt><dd>{{errorDetails.timestamp}}</dd>
+            <dt>GPS recorded</dt><dd>{{errorDetails.location}}</dd>
+          </dl>
+          <h3>Recorded note</h3>
+          <p class="error-details-note">{{errorDetails.note}}</p>
+          <div class="review-note">Video is mocked in this prototype. No recording is available for playback.</div>
         </div>
-      </sc-for>
-    </section>
-
-    <section style="display: flex; flex-direction: column; gap: var(--space-16)">
-      <div style="background: var(--color-white); border: 1px solid var(--color-line); border-radius: 14px; padding: var(--space-18) var(--space-20); display: flex; flex-direction: column; gap: var(--space-10)">
-        <h2 style="margin: 0 0 var(--space-2); font-size: 16px; font-weight: 700">Before you submit</h2>
-        <div style="display: flex; gap: var(--space-10); font-size: 14px; align-items: center"><svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-green)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"></path></svg>All points scored or explained</div>
-        <div style="display: flex; gap: var(--space-10); font-size: 14px; align-items: center"><svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-green)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"></path></svg>Skipped point has a reason</div>
-        <div style="display: flex; gap: var(--space-10); font-size: 14px; align-items: center"><svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-green)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"></path></svg>Acknowledgment on file</div>
-      </div>
-      <div style="background: var(--color-white); border: 1px solid var(--color-line); border-radius: 14px; padding: var(--space-18) var(--space-20); display: flex; flex-direction: column; gap: var(--space-12)">
-        <h2 style="margin: 0 0 var(--space-2); font-size: 16px; font-weight: 700">Capture and sync</h2>
-        <div style="display: flex; font-size: 14px"><span style="flex: 1; color: var(--color-slate-dark)">Official result</span><span style="font-weight: 600">Ready to submit</span></div>
-        <div style="display: flex; font-size: 14px"><span style="flex: 1; color: var(--color-slate-dark)">Telemetry</span><span style="font-weight: 600; color: var(--color-green)">Synced</span></div>
-        <div style="display: flex; flex-direction: column; gap: var(--space-6); font-size: 14px">
-          <div style="display: flex"><span style="flex: 1; color: var(--color-slate-dark)">Video</span><span style="font-weight: 600; color: var(--color-amber)">Uploading · 64%</span></div>
-          <div style="height: 6px; border-radius: 3px; background: var(--color-off-white-alt)"><div style="width: 64%; height: 6px; border-radius: 3px; background: var(--color-orange)"></div></div>
-        </div>
-        <div style="font-size: 12px; color: var(--color-slate); line-height: 1.4">Local copy stays on this device until every stream syncs.</div>
-      </div>
-      <div style="flex: 1"></div>
-      <a href="02-start-a-test.html" style="height: 60px; border-radius: 12px; background: var(--color-indigo); color: var(--color-white); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 17px; text-decoration: none">Submit official result</a>
-      <div style="font-size: 12px; color: var(--color-slate); text-align: center; margin-top: -var(--space-6)">Scoring locks after submission. Retries never create duplicates.</div>
-    </section>
-  </main>
+        <footer class="error-details-footer"><button type="button" class="details-button" sc-camel-on-click="{{closeErrorDetails}}">Close</button></footer>
+      </section>
+    </div>
+  </sc-if>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script="" data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:800}}">
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
 class Component extends DCLogic {
+  initializeReview() {
+    this.initialized = true;
+    try {
+      this.exam = window.DTIRoadTest.read();
+    } catch (error) {
+      this.loadError = true;
+      return;
+    }
+    if (this.exam && this.exam.endedAt !== null) {
+      if (this.exam.evaluationPoints === undefined || this.exam.result === undefined) this.saveReview();
+      else this.reviewReady = true;
+    }
+  }
+  saveReview() {
+    try {
+      this.exam = window.DTIRoadTest.write(window.DTIRoadTest.prepareReview(this.exam));
+      this.reviewReady = true;
+      this.saveError = '';
+    } catch (error) {
+      this.reviewReady = false;
+      this.saveError = 'Unable to save the review and result locally. Try again before submitting.';
+    }
+  }
+  submitTest() {
+    if (this.finished) return;
+    try {
+      if (!this.reviewReady) throw new Error('Review has not been saved.');
+      const current = window.DTIRoadTest.read();
+      window.DTIRoadTest.submit(current);
+      this.finished = true;
+      this.saveError = '';
+      window.location.assign(window.DTIRouteSession.url('02-start-a-test.html'));
+    } catch (error) {
+      this.saveError = 'Unable to clear this demo run. Nothing was sent. Try again.';
+    }
+    this.setState({});
+  }
   renderVals() {
-    const data = [
-      ['1', 'Start', ' · leave lot', null, 'ok'],
-      ['2', 'Right turn', ' · W Thomas Rd', 'Improper turn', 'err'],
-      ['3', 'Left turn', ' · N 43rd Ave', 'Signaling', 'err'],
-      ['4', 'Stop sign', ' · W Osborn Rd', null, 'ok'],
-      ['5', 'Lane change', ' · Indian School', null, 'ok'],
-      ['6', 'School zone', ' · Detour, road construction', 'Skipped', 'skip'],
-      ['7', 'Right turn', ' · N 27th Ave', null, 'ok'],
-      ['8', 'Right turn', ' · W McDowell Rd', null, 'ok'],
-      ['9', '4-way stop', ' · N 39th Ave', null, 'ok'],
-      ['10', 'Left turn', ' · W Van Buren St', null, 'ok'],
-      ['11', 'Return and park', '', null, 'ok'],
-      ['+', 'Recorded error', ' · 09:20, N 43rd Ave', 'Too slow', 'err']
-    ];
-    const rows = data.map(([n, label, detail, tag, kind]) => ({
-      n, label, detail, tag, hasTag: !!tag,
-      rowStyle: 'display: flex; align-items: center; gap: var(--space-12); padding: var(--space-4) var(--space-8); border-radius: 8px; min-height: 36px; ' + (kind === 'skip' ? 'background: #F6F7F4;' : ''),
-      badgeStyle: 'width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font: 600 11px \'IBM Plex Mono\', monospace; ' + (kind === 'skip' ? 'border: 2px dashed #8A9098; color: var(--color-slate); box-sizing: border-box;' : (n === '+' ? 'background: var(--color-charcoal); color: var(--color-white);' : 'background: var(--color-indigo); color: var(--color-white);')),
-      tagStyle: 'font-size: 12px; font-weight: 600; padding: 3px var(--space-9); border-radius: 11px; white-space: nowrap; ' + (kind === 'skip' ? 'background: var(--color-off-white-alt); color: var(--color-slate-dark);' : 'background: var(--color-amber-light); color: var(--color-amber);')
+    if (!this.initialized) this.initializeReview();
+    const model = window.DTIRoadTest;
+    const session = window.DTIRouteSession;
+    const record = this.exam;
+    if (this.loadError) return { showLoadError: true, summary: '', statusLabel: 'Unable to load' };
+    if (!record || record.endedAt === null) return { showMessage: true, summary: '', statusLabel: 'Review unavailable', roadTestUrl: session.url('07-road-test.html') };
+    const route = session.eligibleRoutes.find((item) => item.id === record.routeId);
+    const failures = record.events.filter((event) => event.type === 'automatic-failure');
+    const data = model.reviewData(record);
+    const selectedError = record.saved.find((error) => error.id === this.state?.selectedErrorId);
+    const errorDetails = selectedError ? {
+      label: selectedError.label, section: selectedError.source === 'safety' ? 'Basic Safety' : 'Road test',
+      points: selectedError.points === null ? 'Not captured' : selectedError.points,
+      elapsed: selectedError.savedAt === null ? 'Not captured' : model.elapsed(record.startedAt, selectedError.savedAt),
+      timestamp: selectedError.savedAt === null ? 'Not captured' : model.formatDate(selectedError.savedAt) + ' · ' + model.formatTime(selectedError.savedAt),
+      location: selectedError.location ? selectedError.loc + ' (simulated GPS)' : 'Not captured',
+      note: selectedError.note || 'No note recorded.'
+    } : {};
+    const detailsAction = (entry, prefix) => entry.kind === 'error' ? {
+      triggerId: prefix + entry.id,
+      detailsLabel: 'View error details: ' + entry.label + ' at ' + model.formatTime(entry.savedAt),
+      openDetails: () => this.setState({ selectedErrorId: entry.id })
+    } : {};
+    const iconClass = (entry) => 'point-icon' + (entry.kind === 'skipped' ? ' skipped' : '');
+    const rows = data.rows.map((entry) => ({
+      ...entry, ...detailsAction(entry, 'error-row-'), timestamp: model.formatTime(entry.savedAt),
+      isError: entry.kind === 'error', isEvaluation: entry.kind !== 'error', iconClass: iconClass(entry),
+      iconLabel: entry.kind === 'error' ? 'Examiner-recorded error' : 'Evaluation point ' + entry.number + ', ' + entry.kind
     }));
-    return { rows };
+    const markers = data.markers.map((entry) => ({
+      ...entry, ...detailsAction(entry, 'error-marker-'), isError: entry.kind === 'error', isEvaluation: entry.kind !== 'error', iconClass: iconClass(entry),
+      style: 'left:' + entry.position + '%;top:' + entry.top + 'px',
+      connectorStyle: 'left:' + entry.position + '%;top:' + Math.min(data.lineY, entry.top) + 'px;height:' + Math.abs(data.lineY - entry.top) + 'px',
+      description: (entry.kind === 'error' ? 'Error' : 'Simulated evaluation point ' + entry.number + ' (' + entry.kind + ')') + ': ' + entry.label + ' at ' + entry.elapsed
+    }));
+    return {
+      hasEnded: true,
+      summary: record.customerName + ' · ' + record.testTypeLabel + ' · ' + (route ? route.name : 'No assigned route'),
+      statusLabel: 'Test ended · prototype review',
+      outcome: failures.length ? 'Automatic fail' : 'Result pending',
+      outcomeStyle: 'color: ' + (failures.length ? 'var(--color-red)' : 'var(--color-indigo)'),
+      errorCount: record.saved.length, failureCount: failures.length, hasFailure: failures.length > 0, failureReason: failures.map((event) => event.reason).join('; '),
+      evidenceSummary: data.scored + ' scored, ' + data.skipped + ' skipped, ' + record.saved.length + ' errors',
+      points: record.totalErrorPoints === null ? 'Not captured' : record.totalErrorPoints,
+      testDate: model.formatDate(record.startedAt), startTime: model.formatTime(record.startedAt), endTime: model.formatTime(record.endedAt),
+      duration: model.elapsed(record.startedAt, record.endedAt), rows, noRows: rows.length === 0, markers,
+      showErrorDetails: !!selectedError, errorDetails,
+      closeErrorDetails: () => this.setState({ selectedErrorId: null }),
+      canvasStyle: 'min-width:' + data.width + 'px;height:' + data.height + 'px',
+      lineStyle: 'top:' + data.lineY + 'px',
+      ticks: data.ticks.map((tick, index) => ({ ...tick, style: 'left:' + tick.position + '%;top:' + (data.tickTop + index % 2 * 18) + 'px' })),
+      hasUnplotted: data.unplottedCount > 0, unplottedCount: data.unplottedCount,
+      cannotSubmit: !this.reviewReady || !!this.finished,
+      submitLabel: this.finished ? 'Returning to start...' : 'Submit to DTI (demo)',
+      handoffStatus: this.reviewReady ? 'Demo only · results cleared on submit' : 'Review not saved',
+      submitTest: () => this.submitTest(),
+      showSaveError: !!this.saveError, saveError: this.saveError || '',
+      retrySave: () => {
+        if (this.reviewReady) this.submitTest();
+        else { this.saveReview(); this.setState({}); }
+      }
+    };
   }
 }
 </script>
-
-
-
-<style id="screen-fit-style">html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #e5e7eb; }
-body > x-dc, body > #dc-root { display: block; position: absolute; width: 1280px; height: 800px; transform-origin: top left; }</style>
-<script id="screen-fit-script">
+<script>
+(() => {
+  let activeDialog = null;
+  let previousFocus = null;
+  let openerId = '';
+  document.addEventListener('click', (event) => {
+    const opener = event.target.closest('[aria-haspopup="dialog"]');
+    if (!opener) return;
+    previousFocus = opener;
+    openerId = opener.id;
+  }, true);
+  document.addEventListener('keydown', (event) => {
+    const dialog = document.querySelector('.error-details-dialog');
+    if (!dialog) return;
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      dialog.querySelector('.error-details-close').click();
+    }
+    if (event.key === 'Tab') {
+      const buttons = dialog.querySelectorAll('button');
+      const first = buttons[0], last = buttons[buttons.length - 1];
+      if (!dialog.contains(document.activeElement) || (!event.shiftKey && document.activeElement === last) || (event.shiftKey && document.activeElement === first)) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+      }
+    }
+  });
+  new MutationObserver(() => {
+    const dialog = document.querySelector('.error-details-dialog');
+    if (dialog === activeDialog) return;
+    document.querySelectorAll('.review-header, .review-body').forEach((element) => { element.inert = !!dialog; });
+    if (dialog) {
+      dialog.querySelector('button').focus();
+    } else {
+      const opener = document.getElementById(openerId) || previousFocus;
+      if (opener?.isConnected) opener.focus();
+      previousFocus = null;
+      openerId = '';
+    }
+    activeDialog = dialog;
+  }).observe(document.body, { childList: true, subtree: true });
+})();
+</script>
+<script>
 (() => {
   function fit() {
-    const root = document.querySelector("body > #dc-root, body > x-dc");
+    const root = document.querySelector('body > #dc-root, body > x-dc');
     if (!root) return;
     const scale = Math.max(0, Math.min((window.innerWidth - 32) / 1280, (window.innerHeight - 32) / 800));
-    root.style.transform = "scale(" + scale + ")";
-    root.style.left = (window.innerWidth - 1280 * scale) / 2 + "px";
-    root.style.top = (window.innerHeight - 800 * scale) / 2 + "px";
+    root.style.transform = 'scale(' + scale + ')';
+    root.style.left = (window.innerWidth - 1280 * scale) / 2 + 'px';
+    root.style.top = (window.innerHeight - 800 * scale) / 2 + 'px';
   }
-  window.addEventListener("resize", fit);
+  window.addEventListener('resize', fit);
   new MutationObserver(fit).observe(document.body, { childList: true });
   fit();
 })();
 </script>
-</body></html>
+</body>
+</html>

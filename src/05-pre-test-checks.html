@@ -1,168 +1,277 @@
 <!DOCTYPE html>
-<html lang="en"><head>
+<html lang="en">
+<head>
 <meta charset="utf-8">
-<title>DTI Examiner – Pre-test checks</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DTI Examiner - Pre-Test Checks</title>
 <script src="shared/runtime.js"></script>
-  <link rel="stylesheet" href="shared/styles.css">
+<link rel="stylesheet" href="shared/styles.css">
+<style>
+  html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #e5e7eb; }
+  body > x-dc, body > #dc-root { display: block; position: absolute; width: 1280px; height: 800px; transform-origin: top left; }
+  .pre-test-screen { display: flex; width: 1280px; height: 800px; flex-direction: column; background: var(--color-background); color: var(--color-charcoal); font-family: var(--font-sans); }
+  .screen-header { display: flex; height: 64px; flex: 0 0 64px; align-items: center; gap: var(--space-16); padding: 0 var(--space-24); border-bottom: 1px solid var(--color-line); background: var(--color-white); }
+  .back-icon { display: flex; width: 44px; height: 44px; align-items: center; justify-content: center; border: 1px solid var(--color-line); border-radius: 10px; }
+  .customer-name { font-size: 17px; font-weight: 700; }
+  .test-reference { margin-top: var(--space-4); color: var(--color-slate); font-size: 13px; }
+  .examiner { margin-left: auto; color: var(--color-slate); font-size: 14px; }
+  .workspace { display: grid; min-height: 0; flex: 1; grid-template-columns: minmax(0, 1fr) 300px; align-items: start; gap: var(--space-20); padding: var(--space-24); }
+  .checks-panel { display: flex; height: 100%; min-height: 0; flex-direction: column; overflow: hidden; border: 1px solid var(--color-line); border-radius: 14px; background: var(--color-white); }
+  .panel-header { padding: var(--space-24) var(--space-24) var(--space-20); }
+  h1 { margin: 0; font-size: 26px; line-height: 1.25; }
+  .checks-layout { display: grid; min-height: 0; flex: 1; grid-template-columns: 220px minmax(0, 1fr); gap: var(--space-24); padding: 0 var(--space-24) var(--space-20); }
+  .section-cards { display: flex; flex-direction: column; gap: var(--space-12); }
+  .section-card { display: flex; width: 100%; min-height: 90px; box-sizing: border-box; align-items: center; gap: var(--space-12); padding: var(--space-16); border: 2px solid var(--color-line); border-radius: 12px; background: var(--color-white); color: var(--color-charcoal); font-family: var(--font-sans); text-align: left; cursor: pointer; }
+  .section-card[aria-pressed="true"] { border-color: var(--color-indigo); background: var(--color-indigo-pale); color: var(--color-indigo-dark); }
+  .section-name { display: block; font-size: 16px; font-weight: 700; line-height: 1.4; }
+  .section-counter { display: block; margin-top: var(--space-6); color: var(--color-slate); font-size: 14px; }
+  .section-check { display: flex; width: 28px; height: 28px; flex: 0 0 28px; align-items: center; justify-content: center; border-radius: 50%; background: var(--color-green); color: var(--color-white); }
+  .checklist-content { min-width: 0; min-height: 0; overflow-y: auto; padding-right: var(--space-4); }
+  h2 { margin: 0; font-size: 19px; line-height: 1.3; }
+  .document-check { display: flex; width: 100%; min-height: 52px; align-items: flex-start; gap: var(--space-12); padding: var(--space-10) 0; border: 0; background: transparent; color: var(--color-charcoal); font: 15px/1.4 var(--font-sans); text-align: left; cursor: pointer; }
+  .document-mark { display: flex; width: 22px; height: 22px; flex: 0 0 22px; box-sizing: border-box; align-items: center; justify-content: center; border: 2px solid var(--color-gray-dark); border-radius: 3px; background: var(--color-white); color: transparent; }
+  .document-mark svg { width: 16px; height: 16px; }
+  .document-check[aria-checked="true"] .document-mark { border-color: var(--color-green); background: var(--color-green); color: var(--color-white); }
+  .required { color: var(--color-red); }
+  .checklist-header { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-12); padding-bottom: var(--space-12); }
+  .checklist-subheader { margin: 0 0 var(--space-12); font-size: 15px; font-weight: 600; }
+  .checklist-note { margin: var(--space-8) 0 var(--space-12); color: var(--color-slate); font-size: 13px; line-height: 1.4; }
+  .checklist-row { display: flex; min-height: 52px; align-items: center; gap: var(--space-8); padding: var(--space-6) 0; border-top: 1px solid var(--color-light-gray); }
+  .item-label { min-width: 0; flex: 1; font-size: 15px; line-height: 1.4; }
+  .result-button { width: 64px; min-height: 44px; flex: 0 0 64px; border: 1px solid var(--color-line-dark); border-radius: 8px; background: var(--color-white); color: var(--color-charcoal); font: 600 14px var(--font-sans); cursor: pointer; }
+  .pass[aria-pressed="true"] { border-color: var(--color-green); background: var(--color-green); color: var(--color-white); }
+  .fail[aria-pressed="true"] { border-color: var(--color-red); background: var(--color-red); color: var(--color-white); }
+  .panel-footer { display: flex; min-height: 84px; flex: 0 0 auto; align-items: center; justify-content: flex-end; gap: var(--space-12); padding: 0 var(--space-24); border-top: 1px solid var(--color-line); }
+  .action { display: flex; min-width: 130px; min-height: 52px; box-sizing: border-box; align-items: center; justify-content: center; padding: 0 var(--space-20); border: 1px solid var(--color-line-dark); border-radius: 10px; background: var(--color-white); color: var(--color-charcoal); font: 700 15px var(--font-sans); text-decoration: none; }
+  .primary { border-color: var(--color-indigo); background: var(--color-indigo); color: var(--color-white); }
+  .primary:hover { color: var(--color-white); background: var(--color-indigo-dark); }
+  .action:disabled { border-color: var(--color-line); background: var(--color-line); color: var(--color-slate); }
+  .gate-message { margin-right: auto; color: var(--color-slate); font-size: 13px; line-height: 1.4; }
+  .gate-message.failed { color: var(--color-red); }
+  .device-readiness { padding: var(--space-20); border: 1px solid var(--color-line); border-radius: 14px; background: var(--color-white); }
+  .readiness-header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-8); }
+  .readiness-header h2 { font-size: 17px; }
+  #readiness-status { flex: 0 0 auto; font-size: 13px; font-weight: 700; }
+  .device-list { display: flex; flex-direction: column; gap: var(--space-20); margin: var(--space-24) 0 0; padding: 0; list-style: none; }
+  .device-row { display: flex; align-items: center; gap: var(--space-8); font-size: 14px; }
+  .device-dot { width: 9px; height: 9px; flex: 0 0 9px; border-radius: 50%; background: currentColor; }
+  .device-name { flex: 1; color: var(--color-charcoal); }
+  .device-detail { font-size: 13px; font-weight: 600; }
+  .device-note { margin: var(--space-24) 0 0; color: var(--color-slate); font-size: 12px; line-height: 1.5; }
+</style>
 </head>
 <body>
 <x-dc>
-<helmet>
-
-
-</helmet>
-<div style="width: 1280px; height: 800px; display: flex; flex-direction: column; font-family: var(--font-sans); color: var(--color-charcoal); background: var(--color-background)">
-  <header style="height: 64px; flex-shrink: 0; display: flex; align-items: center; gap: var(--space-16); padding: 0 var(--space-24); background: var(--color-white); border-bottom: 1px solid var(--color-line)">
-    <a href="04-verify-customer.html" aria-label="Back to verify customer" style="width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--color-line)">
-      <svg width="20" height="20" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-charcoal)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
+<div class="pre-test-screen">
+  <header class="screen-header">
+    <a id="session-back-header" class="back-icon" href="{{sessionInformationUrl}}" aria-label="Back to session information">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-charcoal)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
     </a>
-    <div>
-      <div style="font-weight: 700; font-size: 17px">Jordan A. Reyes</div>
-      <div style="font-size: 13px; color: var(--color-slate)">Non-commercial road test · DTI-1042</div>
-    </div>
-    <div style="flex: 1"></div>
-    <div style="font-size: 14px; color: var(--color-slate)">M. Alvarez · West Phoenix MVD</div>
+    <div><div class="customer-name">{{customerName}}</div><div class="test-reference">Non-commercial road test · DTI-1042</div></div>
+    <div class="examiner">M. Alvarez · West Phoenix MVD</div>
   </header>
-
-  <nav aria-label="Exam steps" style="height: 64px; flex-shrink: 0; display: flex; align-items: center; gap: var(--space-8); padding: 0 var(--space-24); background: var(--color-white); border-bottom: 1px solid var(--color-line); font-size: 14px">
-    <div style="display: flex; align-items: center; gap: var(--space-8); font-weight: 600"><span style="width: 26px; height: 26px; border-radius: 50%; background: var(--color-green); display: flex; align-items: center; justify-content: center"><svg width="14" height="14" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-white)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"></path></svg></span>Verify and acknowledge</div>
-    <div style="width: 32px; height: 2px; background: var(--color-green)"></div>
-    <div style="display: flex; align-items: center; gap: var(--space-8); font-weight: 700; color: var(--color-indigo)"><span style="width: 26px; height: 26px; border-radius: 50%; background: var(--color-indigo); color: var(--color-white); display: flex; align-items: center; justify-content: center; font-size: 13px">2</span>Pre-test checks</div>
-    <div style="width: 32px; height: 2px; background: var(--color-line)"></div>
-    <div style="display: flex; align-items: center; gap: var(--space-8); color: var(--color-slate)"><span style="width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--color-line-dark); box-sizing: border-box; display: flex; align-items: center; justify-content: center; font-size: 13px">3</span>Route</div>
-    <div style="width: 32px; height: 2px; background: var(--color-line)"></div>
-    <div style="display: flex; align-items: center; gap: var(--space-8); color: var(--color-slate)"><span style="width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--color-line-dark); box-sizing: border-box; display: flex; align-items: center; justify-content: center; font-size: 13px">4</span>Road test</div>
-    <div style="width: 32px; height: 2px; background: var(--color-line)"></div>
-    <div style="display: flex; align-items: center; gap: var(--space-8); color: var(--color-slate)"><span style="width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--color-line-dark); box-sizing: border-box; display: flex; align-items: center; justify-content: center; font-size: 13px">5</span>Review</div>
-  </nav>
-
-  <main style="flex: 1; display: grid; grid-template-columns: 260px minmax(0, 1fr) 320px; gap: var(--space-20); padding: var(--space-20) var(--space-24); min-height: 0">
-    <aside style="display: flex; flex-direction: column; gap: var(--space-10)">
-      <div style="font-size: var(--space-12); font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-slate); padding: var(--space-4) var(--space-4) var(--space-6)">Eligibility checks</div>
-      <div style="padding: var(--space-14) var(--space-16); background: var(--color-white); border: 1px solid var(--color-line); border-radius: 12px; display: flex; align-items: center; gap: var(--space-12)">
-        <span style="width: var(--space-28); height: 28px; border-radius: 50%; background: var(--color-green); display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="14" height="14" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-white)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"></path></svg></span>
-        <div><div style="font-weight: 600; font-size: 15px">Basic understanding</div><div style="font-size: 13px; color: var(--color-slate)">5 of 5 passed</div></div>
-      </div>
-      <div style="padding: var(--space-14) var(--space-16); background: var(--color-white); border: 1px solid var(--color-line); border-radius: 12px; display: flex; align-items: center; gap: var(--space-12)">
-        <span style="width: var(--space-28); height: 28px; border-radius: 50%; background: var(--color-green); display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="14" height="14" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-white)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"></path></svg></span>
-        <div><div style="font-weight: 600; font-size: 15px">Basic safety</div><div style="font-size: 13px; color: var(--color-slate)">4 of 4 · one attempt each</div></div>
-      </div>
-      <div style="padding: var(--space-14) var(--space-16); background: var(--color-indigo-pale); border: 2px solid var(--color-indigo); border-radius: 12px; display: flex; align-items: center; gap: var(--space-12)">
-        <span style="width: var(--space-28); height: 28px; border-radius: 50%; background: var(--color-indigo); color: var(--color-white); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 13px; font-weight: 700">3</span>
-        <div><div style="font-weight: 700; font-size: 15px; color: var(--color-indigo-dark)">Vehicle inspection</div><div style="font-size: 13px; color: var(--color-indigo)">{{passedCount}} of 8 passed</div></div>
-      </div>
-    </aside>
-
-    <section style="background: var(--color-white); border: 1px solid var(--color-line); border-radius: 14px; padding: var(--space-20) var(--space-24); display: flex; flex-direction: column; gap: var(--space-10); min-height: 0">
-      <div style="display: flex; align-items: baseline; gap: var(--space-12); padding-bottom: var(--space-6)">
-        <h1 style="margin: 0; font-size: 22px; font-weight: 700; flex: 1">Vehicle inspection</h1>
-        <div style="font-size: 14px; color: var(--color-slate)">Every item must pass</div>
-      </div>
-      <sc-for list="{{items}}" as="item" hint-placeholder-count="8">
-        <div style="display: flex; align-items: center; gap: var(--space-12); padding: var(--space-4) 0; border-top: 1px solid var(--color-light-gray)">
-          <div style="flex: 1; font-size: 16px; font-weight: 500">{{item.label}}</div>
-          <button sc-camel-on-click="{{item.pass}}" aria-pressed="{{item.passed}}" style="{{item.passStyle}}">Pass</button>
-          <button sc-camel-on-click="{{item.fail}}" aria-pressed="{{item.failed}}" style="{{item.failStyle}}">Fail</button>
+  <main class="workspace">
+    <section class="checks-panel" aria-labelledby="pre-test-title">
+      <div class="panel-header"><h1 id="pre-test-title">Pre-Test Checks</h1></div>
+      <div class="checks-layout">
+        <nav class="section-cards" aria-label="Pre-test check sections">
+          <sc-for list="{{sections}}" as="section">
+            <button type="button" class="section-card" aria-pressed="{{section.selected}}" aria-controls="active-checklist" sc-camel-on-click="{{section.select}}">
+              <span><span class="section-name">{{section.label}}</span><span class="section-counter" aria-live="polite">{{section.passedCount}} of {{section.total}} {{section.counterLabel}}</span></span>
+              <sc-if value="{{section.complete}}">
+                <span class="section-check" role="img" aria-label="{{section.completionLabel}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"></path></svg></span>
+              </sc-if>
+            </button>
+          </sc-for>
+        </nav>
+        <div class="checklist-content">
+          <section id="active-checklist" aria-labelledby="checklist-title">
+            <div class="checklist-header"><h2 id="checklist-title">{{selectedTitle}}</h2></div>
+            <sc-if value="{{showDocuments}}">
+              <sc-for list="{{documents}}" as="document">
+                <button type="button" class="document-check" role="checkbox" aria-checked="{{document.checked}}" aria-required="true" aria-label="{{document.label}}" sc-camel-on-click="{{document.toggle}}">
+                  <span class="document-mark" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"></path></svg></span>
+                  <span>{{document.label}} <span class="required" aria-hidden="true">*</span></span>
+                </button>
+              </sc-for>
+            </sc-if>
+            <sc-if value="{{showChecklist}}"><p class="checklist-subheader">Every Item Must Pass</p></sc-if>
+            <sc-if value="{{showUnderstandingDetails}}">
+              <p class="checklist-note">For speedometer and seat belt: Pass means the equipment works; Fail means it does not.</p>
+            </sc-if>
+            <sc-if value="{{showInspectionDetails}}">
+              <p class="checklist-note">Pass means the item meets the inspection requirement; Fail means it does not. For low fuel / battery: Pass means both are adequate; Fail means fuel or battery is low.</p>
+            </sc-if>
+            <sc-for list="{{items}}" as="item">
+              <div class="checklist-row" role="group" aria-label="{{item.label}}">
+                <span class="item-label">{{item.label}}</span>
+                <button type="button" class="result-button pass" aria-pressed="{{item.passed}}" sc-camel-on-click="{{item.pass}}">Pass</button>
+                <button type="button" class="result-button fail" aria-pressed="{{item.failed}}" sc-camel-on-click="{{item.fail}}">Fail</button>
+              </div>
+            </sc-for>
+          </section>
         </div>
-      </sc-for>
+      </div>
+      <footer class="panel-footer">
+        <sc-if value="{{showFailed}}"><span class="gate-message failed" role="status">A checklist item is marked Fail. All items must pass to continue.</span></sc-if>
+        <sc-if value="{{showIncomplete}}"><span class="gate-message">Complete both checklists and verify vehicle documents to continue.</span></sc-if>
+        <a id="session-back-footer" class="action" href="{{sessionInformationUrl}}">Cancel</a>
+        <sc-if value="{{canContinue}}"><a id="continue-to-route" class="action primary" href="{{routeUrl}}">Next</a></sc-if>
+        <sc-if value="{{cannotContinue}}"><button type="button" class="action" disabled>Next</button></sc-if>
+      </footer>
     </section>
-
-    <aside style="display: flex; flex-direction: column; gap: var(--space-16)">
-      <div style="background: var(--color-white); border: 1px solid var(--color-line); border-radius: 14px; padding: var(--space-20); display: flex; flex-direction: column; gap: var(--space-14)">
-        <div style="display: flex; align-items: center"><h2 style="margin: 0; font-size: 17px; font-weight: 700; flex: 1">Device readiness</h2><span style="font-size: 13px; font-weight: 600; color: var(--color-green)">5 of 5 ready</span></div>
-        <div style="display: flex; align-items: center; gap: var(--space-12); font-size: 14px"><svg width="20" height="20" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-green)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"></path></svg><span style="flex: 1">Location services</span><span style="font-family: var(--font-mono); color: var(--color-slate-dark)">±3 m</span></div>
-        <div style="display: flex; align-items: center; gap: var(--space-12); font-size: 14px"><svg width="20" height="20" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-green)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"></path></svg><span style="flex: 1">Camera connected</span><span style="color: var(--color-slate-dark)">Test clip OK</span></div>
-        <div style="display: flex; align-items: center; gap: var(--space-12); font-size: 14px"><svg width="20" height="20" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-green)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"></path></svg><span style="flex: 1">Device storage</span><span style="font-family: var(--font-mono); color: var(--color-slate-dark)">38 GB</span></div>
-        <div style="display: flex; align-items: center; gap: var(--space-12); font-size: 14px"><svg width="20" height="20" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-green)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"></path></svg><span style="flex: 1">Battery</span><span style="font-family: var(--font-mono); color: var(--color-slate-dark)">82% · charging</span></div>
-        <div style="display: flex; align-items: center; gap: var(--space-12); font-size: 14px"><svg width="20" height="20" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-green)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"></path></svg><span style="flex: 1">Network</span><span style="color: var(--color-slate-dark)">LTE · good</span></div>
-      </div>
-      <sc-if value="{{showRemaining}}" hint-placeholder-val="{{ true }}">
-        <div style="background: var(--color-amber-light); border: 1px solid var(--color-amber-border); border-radius: 14px; padding: var(--space-16) var(--space-18); display: flex; gap: var(--space-12); font-size: 14px; line-height: 1.45; color: var(--color-amber-dark)">
-          <svg width="20" height="20" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-amber)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
-          <span><strong>Road test locked.</strong> {{remaining}} inspection items still need a result.</span>
-        </div>
-      </sc-if>
-      <sc-if value="{{showFailed}}" hint-placeholder-val="{{ false }}">
-        <div style="background: #FCEDEB; border: 1px solid #EBB8B2; border-radius: 14px; padding: var(--space-16) var(--space-18); font-size: 14px; line-height: 1.45; color: #7A1A12"><strong>Inspection failed.</strong> The road test cannot start. End the exam with a reason.</div>
-      </sc-if>
-      <sc-if value="{{allPassed}}" hint-placeholder-val="{{ false }}">
-        <div style="background: var(--color-green-light); border: 1px solid #B9DCC9; border-radius: 14px; padding: var(--space-16) var(--space-18); font-size: 14px; line-height: 1.45; color: var(--color-green-dark)"><strong>All checks passed.</strong> Results are saved to this exam session.</div>
-      </sc-if>
+    <aside class="device-readiness" aria-labelledby="device-title">
+      <div class="readiness-header"><h2 id="device-title">Device readiness</h2><span id="readiness-status" aria-live="polite"></span></div>
+      <ul class="device-list">
+        <li class="device-row" id="camera-connection"><span class="device-dot" aria-hidden="true"></span><span class="device-name">Camera connection</span><span class="device-detail"></span></li>
+        <li class="device-row" id="camera-signal"><span class="device-dot" aria-hidden="true"></span><span class="device-name">Camera signal</span><span class="device-detail"></span></li>
+        <li class="device-row" id="gps"><span class="device-dot" aria-hidden="true"></span><span class="device-name">GPS</span><span class="device-detail"></span></li>
+        <li class="device-row" id="network"><span class="device-dot" aria-hidden="true"></span><span class="device-name">Network Connection</span><span class="device-detail"></span></li>
+      </ul>
+      <p class="device-note">Camera and GPS status are simulated. Device readiness does not block Next.</p>
     </aside>
   </main>
-
-  <footer style="height: 88px; flex-shrink: 0; display: flex; align-items: center; gap: var(--space-16); padding: 0 var(--space-24); background: var(--color-white); border-top: 1px solid var(--color-line)">
-    <a href="04-verify-customer.html" style="height: 52px; padding: 0 var(--space-20); border-radius: 10px; display: flex; align-items: center; color: var(--color-charcoal); font-weight: 600; font-size: 15px; text-decoration: none; border: 1px solid var(--color-line-dark)">Back</a>
-    <div style="flex: 1"></div>
-    <sc-if value="{{allPassed}}" hint-placeholder-val="{{ false }}">
-      <a href="06-select-route.html" style="height: 52px; padding: 0 var(--space-28); border-radius: 10px; background: var(--color-indigo); color: var(--color-white); display: flex; align-items: center; gap: var(--space-10); font-weight: 600; font-size: 16px; text-decoration: none">Continue to route
-        <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-white)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></a>
-    </sc-if>
-    <sc-if value="{{notAllPassed}}" hint-placeholder-val="{{ true }}">
-      <button disabled="" style="height: 52px; padding: 0 var(--space-28); border-radius: 10px; border: none; background: var(--color-line); color: var(--color-slate-muted); font: 600 16px var(--font-sans)">Continue to route</button>
-    </sc-if>
-  </footer>
 </div>
 </x-dc>
 <script type="text/x-dc" data-dc-script="" data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:800}}">
 class Component extends DCLogic {
   renderVals() {
-    const base = [
-      ['signals', 'Turn signals · left and right'],
-      ['brake', 'Brake lights'],
-      ['horn', 'Horn'],
-      ['wind', 'Windshield and wipers'],
-      ['mirrors', 'Mirrors'],
-      ['belts', 'Seat belts'],
-      ['hazards', 'Hazard lights'],
-      ['tires', 'Tires']
+    const state = this.state || {};
+    const params = new URLSearchParams(window.location.search);
+    const firstName = params.get('firstName') || '';
+    const middleName = params.get('middleName') || '';
+    const lastName = params.get('lastName') || '';
+    const customerName = [
+      firstName.trim(),
+      middleName.trim() ? middleName.trim().charAt(0).toUpperCase() + '.' : '',
+      lastName.trim(),
+      (params.get('suffix') || '').trim()
+    ].filter(Boolean).join(' ') || 'Jordan A. Reyes';
+    const checklists = [
+      { id: 'understanding', label: 'Basic Understanding', items: [
+        ['understanding-stop', 'Stop'],
+        ['understanding-slow-down', 'Slow Down'],
+        ['understanding-straight', 'Drive Straight Ahead'],
+        ['understanding-lanes', 'Change Lanes left / right'],
+        ['understanding-turn', 'Turn left / right at the next street'],
+        ['understanding-corner', 'Corner Stop sign or traffic light'],
+        ['understanding-speedometer', 'Does your speedometer work?'],
+        ['understanding-seat-belt', 'Does your seat belt work?']
+      ] },
+      { id: 'inspection', label: 'Vehicle Inspection', items: [
+        ['tires', 'Tire condition check'],
+        ['inspection-speedometer', 'Speedometer'],
+        ['mirrors', 'Two operational mirrors'],
+        ['horn', 'Working horn'],
+        ['brake', 'All brake lights working'],
+        ['inspection-interior', 'Vehicle interior clear'],
+        ['inspection-windows', 'Driver/passenger windows operational'],
+        ['signals', 'Front/back turn signals'],
+        ['inspection-windshield', 'No obstruction on windshield'],
+        ['belts', 'Seat belts work'],
+        ['inspection-doors', 'Driver/passenger door operational'],
+        ['inspection-fuel-battery', 'Low fuel / battery']
+      ] }
     ];
-    const st = (this.state && this.state.status) || { signals: 'pass', brake: 'pass', horn: 'pass', wind: 'pass', mirrors: 'pass', belts: 'pass' };
-    const btn = 'height: 44px; width: 88px; border-radius: 10px; font: 600 15px \'Public Sans\', system-ui, sans-serif; cursor: pointer; ';
-    const set = (id, v) => this.setState({ status: Object.assign({}, st, { [id]: v }) });
-    const items = base.map(([id, label]) => {
-      const s = st[id];
+    const selectedId = state.selectedSection || 'vehicle';
+    const selected = checklists.find((section) => section.id === selectedId);
+    const status = state.status || {};
+    const setResult = (id, value) => this.setState({ status: Object.assign({}, status, { [id]: status[id] === value ? null : value }) });
+    const sections = checklists.map((section) => {
+      const passedCount = section.items.filter(([id]) => status[id] === 'pass').length;
       return {
-        label,
-        passed: s === 'pass',
-        failed: s === 'fail',
-        passStyle: btn + (s === 'pass' ? 'background: var(--color-green); color: var(--color-white); border: 1px solid var(--color-green);' : 'background: var(--color-white); color: var(--color-charcoal); border: 1px solid var(--color-line-dark);'),
-        failStyle: btn + (s === 'fail' ? 'background: var(--color-red); color: var(--color-white); border: 1px solid var(--color-red);' : 'background: var(--color-white); color: var(--color-charcoal); border: 1px solid var(--color-line-dark);'),
-        pass: () => set(id, 'pass'),
-        fail: () => set(id, 'fail')
+        label: section.label, passedCount, total: section.items.length,
+        counterLabel: 'passed', completionLabel: 'All items passed',
+        complete: passedCount === section.items.length,
+        selected: section.id === selectedId,
+        select: () => this.setState({ selectedSection: section.id })
       };
     });
-    const passedCount = base.filter(([id]) => st[id] === 'pass').length;
-    const failedCount = base.filter(([id]) => st[id] === 'fail').length;
-    const remaining = base.length - passedCount - failedCount;
-    const allPassed = passedCount === base.length;
+    const documents = [
+      { id: 'registration', label: 'Applicant provided a valid registration proof for the present vehicle.' },
+      { id: 'insurance', label: 'Applicant provided a valid insurance proof for the present vehicle.' }
+    ].map((document) => ({
+      label: document.label, checked: !!state[document.id],
+      toggle: () => this.setState({ [document.id]: !state[document.id] })
+    }));
+    sections.unshift({
+      label: 'Vehicle Information',
+      passedCount: documents.filter((document) => document.checked).length,
+      total: documents.length,
+      counterLabel: 'verified', completionLabel: 'Vehicle documents verified',
+      complete: documents.every((document) => document.checked),
+      selected: selectedId === 'vehicle',
+      select: () => this.setState({ selectedSection: 'vehicle' })
+    });
+    const showFailed = checklists.some((section) => section.items.some(([id]) => status[id] === 'fail'));
+    const canContinue = sections.every((section) => section.complete);
     return {
-      items, passedCount, remaining, allPassed,
-      notAllPassed: !allPassed,
-      showFailed: failedCount > 0,
-      showRemaining: remaining > 0 && failedCount === 0
+      customerName, sections, documents,
+      selectedTitle: selectedId === 'vehicle' ? 'Vehicle Information' : selected.label,
+      sessionInformationUrl: '04-session-information.html' + window.location.search,
+      routeUrl: '06-select-route.html' + window.location.search,
+      showChecklist: selectedId !== 'vehicle',
+      showUnderstandingDetails: selectedId === 'understanding',
+      showInspectionDetails: selectedId === 'inspection',
+      showDocuments: selectedId === 'vehicle',
+      items: selectedId === 'vehicle' ? [] : selected.items.map(([id, label]) => ({
+        label, passed: status[id] === 'pass', failed: status[id] === 'fail',
+        pass: () => setResult(id, 'pass'), fail: () => setResult(id, 'fail')
+      })),
+      canContinue, cannotContinue: !canContinue, showFailed,
+      showIncomplete: !canContinue && !showFailed
     };
   }
 }
 </script>
-
-
-
-<style id="screen-fit-style">html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #e5e7eb; }
-body > x-dc, body > #dc-root { display: block; position: absolute; width: 1280px; height: 800px; transform-origin: top left; }</style>
+<script id="device-readiness-script">
+(() => {
+  function updateReadiness() {
+    const devices = [
+      { id: 'camera-connection', ready: true, success: 'Connected', failure: 'Not found' },
+      { id: 'camera-signal', ready: true, success: 'Good', failure: 'Poor' },
+      { id: 'gps', ready: true, success: 'Good', failure: 'Poor' },
+      { id: 'network', ready: navigator.onLine && window.location.protocol !== 'file:', success: 'Connected', failure: 'Not connected' }
+    ];
+    renderReadiness(devices);
+  }
+  function renderReadiness(devices) {
+    const readyCount = devices.filter((device) => device.ready).length;
+    const summary = document.getElementById('readiness-status');
+    if (!summary) return;
+    const summaryText = readyCount + ' of ' + devices.length + ' ready';
+    if (summary.textContent !== summaryText) summary.textContent = summaryText;
+    const summaryColor = 'var(--color-' + (readyCount === 0 ? 'red' : readyCount === devices.length ? 'green' : 'amber') + ')';
+    if (summary.style.color !== summaryColor) summary.style.color = summaryColor;
+    devices.forEach((device) => {
+      const row = document.getElementById(device.id);
+      const detail = row.querySelector('.device-detail');
+      const text = device.ready ? device.success : device.failure;
+      const color = device.ready ? 'var(--color-green)' : 'var(--color-red)';
+      if (row.style.color !== color) row.style.color = color;
+      if (detail.textContent !== text) detail.textContent = text;
+    });
+  }
+  new MutationObserver(updateReadiness).observe(document.body, { childList: true, subtree: true });
+  window.addEventListener('online', updateReadiness);
+  window.addEventListener('offline', updateReadiness);
+  updateReadiness();
+})();
+</script>
 <script id="screen-fit-script">
 (() => {
   function fit() {
-    const root = document.querySelector("body > #dc-root, body > x-dc");
+    const root = document.querySelector('body > #dc-root, body > x-dc');
     if (!root) return;
     const scale = Math.max(0, Math.min((window.innerWidth - 32) / 1280, (window.innerHeight - 32) / 800));
-    root.style.transform = "scale(" + scale + ")";
-    root.style.left = (window.innerWidth - 1280 * scale) / 2 + "px";
-    root.style.top = (window.innerHeight - 800 * scale) / 2 + "px";
+    root.style.transform = 'scale(' + scale + ')';
+    root.style.left = (window.innerWidth - 1280 * scale) / 2 + 'px';
+    root.style.top = (window.innerHeight - 800 * scale) / 2 + 'px';
   }
-  window.addEventListener("resize", fit);
+  window.addEventListener('resize', fit);
   new MutationObserver(fit).observe(document.body, { childList: true });
   fit();
 })();
 </script>
-</body></html>
+</body>
+</html>

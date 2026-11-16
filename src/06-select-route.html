@@ -1,133 +1,184 @@
 <!DOCTYPE html>
-<html lang="en"><head>
+<html lang="en">
+<head>
 <meta charset="utf-8">
-<title>DTI Examiner – Select route</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DTI Examiner - Select Route</title>
+<script src="shared/route-session.js"></script>
 <script src="shared/runtime.js"></script>
-  <link rel="stylesheet" href="shared/styles.css">
+<link rel="stylesheet" href="shared/styles.css">
+<style>
+  html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #e5e7eb; }
+  body > x-dc, body > #dc-root { display: block; position: absolute; width: 1280px; height: 800px; transform-origin: top left; }
+  .route-screen { display: flex; position: relative; width: 1280px; height: 800px; flex-direction: column; font-family: var(--font-sans); color: var(--color-charcoal); background: var(--color-background); }
+  .route-header { display: flex; height: 64px; flex: 0 0 64px; align-items: center; gap: var(--space-16); padding: 0 var(--space-24); border-bottom: 1px solid var(--color-line); background: var(--color-white); }
+  .back-button { display: flex; width: 44px; height: 44px; align-items: center; justify-content: center; border: 1px solid var(--color-line); border-radius: 10px; background: var(--color-white); color: var(--color-charcoal); cursor: pointer; }
+  .header-title { font-size: 17px; font-weight: 700; }
+  .site-name { margin-left: auto; font-size: 14px; color: var(--color-slate); }
+  .route-body { display: grid; min-height: 0; flex: 1; grid-template-columns: 360px minmax(0, 1fr); gap: var(--space-20); padding: var(--space-24); }
+  .route-list { min-height: 0; overflow-y: auto; }
+  h1 { margin: 0 0 var(--space-8); font-size: 26px; }
+  .route-context { margin: 0 0 var(--space-20); color: var(--color-slate); font-size: 14px; line-height: 1.5; }
+  .route-card { display: flex; width: 100%; min-height: 100px; flex-direction: column; align-items: flex-start; gap: var(--space-10); box-sizing: border-box; margin-bottom: var(--space-12); padding: var(--space-20); border: 2px solid var(--color-line); border-radius: 12px; background: var(--color-white); color: var(--color-charcoal); text-align: left; font-family: var(--font-sans); cursor: pointer; }
+  .route-card[aria-pressed="true"] { border-color: var(--color-indigo); background: var(--color-indigo-pale); }
+  .route-name { font-size: 18px; font-weight: 700; }
+  .route-details { font-size: 15px; color: var(--color-slate-dark); }
+  .route-note, .empty-routes { margin: var(--space-16) 0 0; padding: var(--space-16); border-radius: 10px; background: var(--color-indigo-pale); color: var(--color-indigo-dark); font-size: 14px; line-height: 1.5; }
+  .map-section { min-width: 0; }
+  .map-heading { margin: 0 0 var(--space-12); font-size: 19px; line-height: 1.5; }
+  .map-frame { height: 536px; overflow: hidden; border: 1px solid var(--color-line); border-radius: 14px; }
+  .map-caption { margin: var(--space-10) 0 0; font-size: 12px; color: var(--color-slate); }
+  .route-footer { display: flex; height: 88px; flex: 0 0 88px; align-items: center; justify-content: flex-end; gap: var(--space-16); padding: 0 var(--space-24); border-top: 1px solid var(--color-line); background: var(--color-white); }
+  .action { display: flex; min-width: 160px; min-height: 52px; box-sizing: border-box; align-items: center; justify-content: center; padding: 0 var(--space-24); border: 1px solid var(--color-line-dark); border-radius: 10px; background: var(--color-white); color: var(--color-charcoal); font: 700 16px var(--font-sans); cursor: pointer; }
+  .primary { border-color: var(--color-indigo); background: var(--color-indigo); color: var(--color-white); }
+  .modal-overlay { position: absolute; z-index: 20; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(20,24,29,0.55); }
+  .route-dialog { position: relative; width: 580px; box-sizing: border-box; padding: var(--space-32); border-radius: 14px; background: var(--color-white); box-shadow: 0 12px 40px rgba(20,24,29,0.18); }
+  .route-dialog h2 { margin: 0 var(--space-32) var(--space-16) 0; font-size: 24px; }
+  .route-dialog p { margin: 0 0 var(--space-24); font-size: 17px; line-height: 1.5; }
+  .close-dialog { position: absolute; top: 12px; right: 12px; width: 44px; height: 44px; border: 0; border-radius: 8px; background: var(--color-white); color: var(--color-slate); font: 24px var(--font-sans); cursor: pointer; }
+  .dialog-actions { display: flex; justify-content: flex-end; gap: var(--space-12); }
+  .route-error { position: absolute; z-index: 30; right: 24px; bottom: 104px; max-width: 650px; padding: var(--space-16); border-radius: 10px; background: var(--color-red); color: var(--color-white); font-size: 15px; }
+</style>
 </head>
 <body>
 <x-dc>
-<helmet>
-
-
-</helmet>
-<div style="width: 1280px; height: 800px; display: flex; flex-direction: column; font-family: var(--font-sans); color: var(--color-charcoal); background: var(--color-background)">
-  <header style="height: 64px; flex-shrink: 0; display: flex; align-items: center; gap: var(--space-16); padding: 0 var(--space-24); background: var(--color-white); border-bottom: 1px solid var(--color-line)">
-    <a href="05-pre-test-checks.html" aria-label="Back to pre-test checks" style="width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--color-line)">
-      <svg width="20" height="20" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-charcoal)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
-    </a>
-    <div>
-      <div style="font-weight: 700; font-size: 17px">Jordan A. Reyes</div>
-      <div style="font-size: 13px; color: var(--color-slate)">Non-commercial road test · DTI-1042</div>
-    </div>
-    <div style="flex: 1"></div>
-    <div style="font-size: 14px; color: var(--color-slate)">M. Alvarez · West Phoenix MVD</div>
+<div class="route-screen">
+  <header class="route-header">
+    <button type="button" class="back-button" aria-label="Back to pre-test checks" sc-camel-on-click="{{goBack}}">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
+    </button>
+    <span class="header-title">Select Route</span>
+    <span class="site-name">{{siteName}}</span>
   </header>
-
-  <nav aria-label="Exam steps" style="height: 64px; flex-shrink: 0; display: flex; align-items: center; gap: var(--space-8); padding: 0 var(--space-24); background: var(--color-white); border-bottom: 1px solid var(--color-line); font-size: 14px">
-    <div style="display: flex; align-items: center; gap: var(--space-8); font-weight: 600"><span style="width: 26px; height: 26px; border-radius: 50%; background: var(--color-green); display: flex; align-items: center; justify-content: center"><svg width="14" height="14" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-white)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"></path></svg></span>Verify and acknowledge</div>
-    <div style="width: 32px; height: 2px; background: var(--color-green)"></div>
-    <div style="display: flex; align-items: center; gap: var(--space-8); font-weight: 600"><span style="width: 26px; height: 26px; border-radius: 50%; background: var(--color-green); display: flex; align-items: center; justify-content: center"><svg width="14" height="14" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-white)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"></path></svg></span>Pre-test checks</div>
-    <div style="width: 32px; height: 2px; background: var(--color-green)"></div>
-    <div style="display: flex; align-items: center; gap: var(--space-8); font-weight: 700; color: var(--color-indigo)"><span style="width: 26px; height: 26px; border-radius: 50%; background: var(--color-indigo); color: var(--color-white); display: flex; align-items: center; justify-content: center; font-size: 13px">3</span>Route</div>
-    <div style="width: 32px; height: 2px; background: var(--color-line)"></div>
-    <div style="display: flex; align-items: center; gap: var(--space-8); color: var(--color-slate)"><span style="width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--color-line-dark); box-sizing: border-box; display: flex; align-items: center; justify-content: center; font-size: 13px">4</span>Road test</div>
-    <div style="width: 32px; height: 2px; background: var(--color-line)"></div>
-    <div style="display: flex; align-items: center; gap: var(--space-8); color: var(--color-slate)"><span style="width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--color-line-dark); box-sizing: border-box; display: flex; align-items: center; justify-content: center; font-size: 13px">5</span>Review</div>
-  </nav>
-
-  <main style="flex: 1; display: flex; gap: var(--space-20); padding: var(--space-20) var(--space-24); min-height: 0">
-    <section style="width: 360px; flex-shrink: 0; display: flex; flex-direction: column; gap: var(--space-12)">
-      <div>
-        <h1 style="margin: 0 0 var(--space-4); font-size: 22px; font-weight: 700">Choose a route</h1>
-        <div style="font-size: 14px; color: var(--color-slate)">Enabled non-commercial routes for this office</div>
-      </div>
-      <label style="display: flex; gap: var(--space-14); padding: var(--space-16); background: var(--color-white); border: 2px solid var(--color-indigo); border-radius: 12px; cursor: pointer">
-        <input type="radio" name="route" checked="" style="width: 22px; height: 22px; margin: var(--space-2) 0 0; accent-color: var(--color-indigo); flex-shrink: 0">
-        <span style="display: flex; flex-direction: column; gap: var(--space-4)">
-          <span style="font-weight: 700; font-size: 16px">West Loop A</span>
-          <span style="font-size: 14px; color: var(--color-slate-dark)">11 evaluation points · about 22 min</span>
-          <span style="font-size: 12px; font-family: var(--font-mono); color: var(--color-indigo); font-weight: 600">VERSION 3 · ACTIVE</span>
-        </span>
-      </label>
-      <label style="display: flex; gap: var(--space-14); padding: var(--space-16); background: var(--color-white); border: 1px solid var(--color-line); border-radius: 12px; cursor: pointer">
-        <input type="radio" name="route" style="width: 22px; height: 22px; margin: var(--space-2) 0 0; accent-color: var(--color-indigo); flex-shrink: 0">
-        <span style="display: flex; flex-direction: column; gap: var(--space-4)">
-          <span style="font-weight: 700; font-size: 16px">West Loop B</span>
-          <span style="font-size: 14px; color: var(--color-slate-dark)">9 evaluation points · about 18 min</span>
-          <span style="font-size: 12px; font-family: var(--font-mono); color: var(--color-slate); font-weight: 600">VERSION 2 · ACTIVE</span>
-        </span>
-      </label>
-      <label style="display: flex; gap: var(--space-14); padding: var(--space-16); background: var(--color-white); border: 1px solid var(--color-line); border-radius: 12px; cursor: pointer">
-        <input type="radio" name="route" style="width: 22px; height: 22px; margin: var(--space-2) 0 0; accent-color: var(--color-indigo); flex-shrink: 0">
-        <span style="display: flex; flex-direction: column; gap: var(--space-4)">
-          <span style="font-weight: 700; font-size: 16px">Neighborhood C</span>
-          <span style="font-size: 14px; color: var(--color-slate-dark)">8 evaluation points · about 15 min</span>
-          <span style="font-size: 12px; font-family: var(--font-mono); color: var(--color-slate); font-weight: 600">VERSION 5 · ACTIVE</span>
-        </span>
-      </label>
-      <div style="flex: 1"></div>
-      <div style="display: flex; gap: var(--space-10); padding: var(--space-14) var(--space-16); background: var(--color-indigo-pale); border-radius: 10px; font-size: 13px; line-height: 1.45; color: var(--color-indigo-dark)">
-        <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-indigo-dark)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0; margin-top: 1px"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
-        <span>The route and its version lock when the test starts. Changing it later means restarting the session.</span>
-      </div>
+  <main class="route-body">
+    <section class="route-list" aria-labelledby="choose-route-title">
+      <h1 id="choose-route-title">Choose a Route</h1>
+      <p class="route-context">{{testTypeLabel}} · {{siteName}}</p>
+      <sc-for list="{{routes}}" as="route">
+        <button type="button" class="route-card" aria-pressed="{{route.selected}}" sc-camel-on-click="{{route.select}}">
+          <span class="route-name">{{route.name}}</span>
+          <span class="route-details">Estimated duration: {{route.minutes}} min · {{route.miles}} mi</span>
+        </button>
+      </sc-for>
+      <sc-if value="{{noRoutes}}"><p class="empty-routes">No eligible routes are available for this test type and site. You may start the road test without an assigned route if authorized to do so.</p></sc-if>
+      <sc-if value="{{routeUnavailable}}"><p class="route-note" role="status">The previously selected route is no longer eligible. Choose another route or continue without one.</p></sc-if>
+      <p class="route-note">You can change your route before starting the road test.</p>
     </section>
-
-    <section style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--space-12)">
-      <div style="border-radius: var(--space-14); overflow: hidden; border: 1px solid var(--color-line); height: 428px">
-        <dc-import name="RouteMap" active="0" show-vehicle="{{noVehicle}}" w="852" h="428" hint-size="852px,428px"></dc-import>
+    <section class="map-section" aria-labelledby="map-title">
+      <h2 class="map-heading" id="map-title">{{mapTitle}}</h2>
+      <div class="map-frame">
+        <dc-import name="RouteMap" active="0" show-vehicle="{{falseValue}}" show-route="{{hasRoute}}" route-variant="{{mapVariant}}" route-name="{{selectedName}}" site-name="{{siteName}}" fit-route="{{trueValue}}" w="850" h="536" hint-size="850px,536px"></dc-import>
       </div>
-      <div style="display: flex; flex-wrap: wrap; gap: var(--space-8)">
-        <sc-for list="{{points}}" as="pt" hint-placeholder-count="6">
-          <div style="flex-shrink: 0; display: flex; align-items: center; gap: var(--space-8); height: 40px; padding: 0 var(--space-12) 0 var(--space-6); background: var(--color-white); border: 1px solid var(--color-line); border-radius: 20px; font-size: 13px; font-weight: 500">
-            <span style="width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--color-indigo); box-sizing: border-box; color: var(--color-indigo); display: flex; align-items: center; justify-content: center; font: 600 12px var(--font-mono)">{{pt.n}}</span>{{pt.label}}
-          </div>
-        </sc-for>
-      </div>
+      <p class="map-caption">Illustrative prototype map and route data.</p>
     </section>
   </main>
-
-  <footer style="height: 88px; flex-shrink: 0; display: flex; align-items: center; gap: var(--space-16); padding: 0 var(--space-24); background: var(--color-white); border-top: 1px solid var(--color-line)">
-    <div style="font-size: 14px; color: var(--color-slate-dark); display: flex; gap: var(--space-8); align-items: center">
-      <span style="font-weight: 600; color: var(--color-charcoal)">Starting the test begins:</span> timer · GPS and telemetry · video capture
-    </div>
-    <div style="flex: 1"></div>
-    <a href="07-road-test.html" style="height: 56px; padding: 0 var(--space-32); border-radius: 10px; background: var(--color-indigo); color: var(--color-white); display: flex; align-items: center; gap: var(--space-10); font-weight: 700; font-size: 17px; text-decoration: none">
-      <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="var(--color-white)" aria-hidden="true"><path d="M7 4.5v15l12-7.5z"></path></svg>
-      Start road test
-    </a>
+  <footer class="route-footer">
+    <button type="button" class="action primary" id="verify-camera" sc-camel-on-click="{{verifyCamera}}">Verify Camera</button>
   </footer>
+  <sc-if value="{{showNoRouteDialog}}">
+    <div class="modal-overlay">
+      <section class="route-dialog" role="dialog" aria-modal="true" aria-labelledby="no-route-title" aria-describedby="no-route-description">
+        <button type="button" class="close-dialog" aria-label="Close continue without route dialog" sc-camel-on-click="{{closeDialog}}">×</button>
+        <h2 id="no-route-title">Continue Without a Route?</h2>
+        <p id="no-route-description">No route has been selected. Are you sure you want to continue without an assigned route?</p>
+        <div class="dialog-actions">
+          <button type="button" class="action" sc-camel-on-click="{{closeDialog}}">Cancel</button>
+          <button type="button" class="action primary" sc-camel-on-click="{{continueWithoutRoute}}">Continue Without Route</button>
+        </div>
+      </section>
+    </div>
+  </sc-if>
+  <sc-if value="{{showError}}"><div class="route-error" role="alert">{{errorMessage}}</div></sc-if>
 </div>
 </x-dc>
 <script type="text/x-dc" data-dc-script="" data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:800}}">
 class Component extends DCLogic {
   renderVals() {
-    const labels = ['Start', 'Right turn', 'Left turn', 'Stop sign', 'Lane change', 'School zone', 'Right turn', 'Right turn', '4-way stop', 'Left turn', 'Park'];
+    const state = this.state || {};
+    const session = window.DTIRouteSession;
+    if (!this.routeLoaded) {
+      this.routeLoaded = true;
+      try {
+        this.initialRouteId = session.load()?.routeId || null;
+      } catch (error) {
+        this.loadError = 'Unable to load the saved route. Choose a route again before continuing.';
+      }
+    }
+    const selectedId = state.selectedId === undefined ? this.initialRouteId : state.selectedId;
+    const selected = session.eligibleRoutes.find((route) => route.id === selectedId);
+    const saveAndNavigate = (routeId, destination) => {
+      try {
+        session.save(routeId);
+      } catch (error) {
+        this.setState({ errorMessage: 'An error occurred while saving, please try again.' });
+        return;
+      }
+      window.location.assign(session.url(destination));
+    };
+    const nextPage = session.cameraConnected ? '06-camera-verification.html' : '07-road-test.html';
+    const closeDialog = () => this.setState({ showNoRouteDialog: false });
+    const errorMessage = state.errorMessage || (state.selectedId === undefined ? this.loadError : '');
     return {
-      noVehicle: false,
-      points: labels.map((label, i) => ({ n: i + 1, label }))
+      siteName: session.context.siteName,
+      testTypeLabel: session.context.testType === 'nc' ? 'Non-commercial road test' : session.context.testType === 'commercial' ? 'Commercial road test' : session.context.testType,
+      routes: session.eligibleRoutes.map((route) => ({
+        ...route, selected: route.id === selectedId,
+        select: () => this.setState({ selectedId: route.id, errorMessage: '' })
+      })),
+      noRoutes: session.eligibleRoutes.length === 0,
+      routeUnavailable: !!selectedId && !selected,
+      hasRoute: !!selected, mapVariant: selected ? selected.variant : 'a',
+      selectedName: selected ? selected.name : '',
+      mapTitle: selected ? selected.name : 'Test site',
+      trueValue: true, falseValue: false,
+      showNoRouteDialog: !!state.showNoRouteDialog,
+      verifyCamera: () => selected ? saveAndNavigate(selected.id, nextPage) : this.setState({ showNoRouteDialog: true }),
+      closeDialog,
+      continueWithoutRoute: () => saveAndNavigate(null, nextPage),
+      goBack: () => saveAndNavigate(selected ? selected.id : null, '05-pre-test-checks.html'),
+      showError: !!errorMessage, errorMessage
     };
   }
 }
 </script>
-
-
-
-<style id="screen-fit-style">html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #e5e7eb; }
-body > x-dc, body > #dc-root { display: block; position: absolute; width: 1280px; height: 800px; transform-origin: top left; }</style>
+<script id="route-dialog-focus">
+(() => {
+  let activeDialog = null;
+  document.addEventListener('keydown', (event) => {
+    const dialog = document.querySelector('.route-dialog');
+    if (!dialog) return;
+    const buttons = Array.from(dialog.querySelectorAll('button'));
+    if (event.key === 'Escape') buttons[0].click();
+    if (event.key === 'Tab') {
+      const target = event.shiftKey ? buttons[buttons.length - 1] : buttons[0];
+      if (!dialog.contains(document.activeElement) || (!event.shiftKey && document.activeElement === buttons[buttons.length - 1]) || (event.shiftKey && document.activeElement === buttons[0])) {
+        event.preventDefault();
+        target.focus();
+      }
+    }
+  });
+  new MutationObserver(() => {
+    const dialog = document.querySelector('.route-dialog');
+    if (dialog && dialog !== activeDialog) dialog.querySelector('button').focus();
+    if (!dialog && activeDialog) document.getElementById('verify-camera')?.focus();
+    activeDialog = dialog;
+  }).observe(document.body, { childList: true, subtree: true });
+})();
+</script>
 <script id="screen-fit-script">
 (() => {
   function fit() {
-    const root = document.querySelector("body > #dc-root, body > x-dc");
+    const root = document.querySelector('body > #dc-root, body > x-dc');
     if (!root) return;
     const scale = Math.max(0, Math.min((window.innerWidth - 32) / 1280, (window.innerHeight - 32) / 800));
-    root.style.transform = "scale(" + scale + ")";
-    root.style.left = (window.innerWidth - 1280 * scale) / 2 + "px";
-    root.style.top = (window.innerHeight - 800 * scale) / 2 + "px";
+    root.style.transform = 'scale(' + scale + ')';
+    root.style.left = (window.innerWidth - 1280 * scale) / 2 + 'px';
+    root.style.top = (window.innerHeight - 800 * scale) / 2 + 'px';
   }
-  window.addEventListener("resize", fit);
+  window.addEventListener('resize', fit);
   new MutationObserver(fit).observe(document.body, { childList: true });
   fit();
 })();
 </script>
-</body></html>
+</body>
+</html>

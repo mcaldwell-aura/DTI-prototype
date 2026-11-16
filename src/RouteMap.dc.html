@@ -11,7 +11,8 @@
 
 
 </helmet>
-<div role="img" aria-label="Map of test route West Loop A with 11 evaluation points" style="position: relative; width: {{w}}px; height: {{h}}px; overflow: hidden; background-color: #ECEEE8; background-image: repeating-linear-gradient(0deg, transparent 0 46px, #E1E4DC 46px 48px), repeating-linear-gradient(90deg, transparent 0 46px, #E1E4DC 46px 48px); font-family: var(--font-sans); color: var(--color-charcoal)">
+<div role="img" aria-label="{{mapLabel}}" style="position: relative; width: {{w}}px; height: {{h}}px; overflow: hidden; background-color: #ECEEE8; background-image: repeating-linear-gradient(0deg, transparent 0 46px, #E1E4DC 46px 48px), repeating-linear-gradient(90deg, transparent 0 46px, #E1E4DC 46px 48px); font-family: var(--font-sans); color: var(--color-charcoal)">
+  <div class="map-content" style="{{mapContentStyle}}">
   <div style="position: absolute; left: 47%; top: 33%; width: 17%; height: 13%; background: #D3E5CC; border-radius: 8px"></div>
   <div style="position: absolute; left: 49%; top: 37%; font-size: 11px; font-weight: 600; color: #3F6B37">Park</div>
   <div style="position: absolute; left: 24%; top: 88%; width: 10%; height: 7%; background: #D3E5CC; border-radius: 8px"></div>
@@ -34,14 +35,16 @@
   <div style="position: absolute; left: calc(70% + 9px); top: 3%; font-size: 11px; font-weight: 600; color: var(--color-slate-muted)">N 35th Ave</div>
   <div style="position: absolute; left: calc(82% + 9px); top: 3%; font-size: 11px; font-weight: 600; color: var(--color-slate-muted)">N 27th Ave</div>
 
-  <svg viewBox="0 0 1000 800" preserveAspectRatio="none" style="position: absolute; inset: 0; width: 100%; height: 100%" aria-hidden="true">
-    <path d="M180 640 L180 420 L420 420 L420 240 L700 240 L700 420 L820 420 L820 580 L400 580 L400 680 L180 680 L180 640" fill="none" stroke="var(--color-white)" stroke-width="11" stroke-linejoin="round" vector-effect="non-scaling-stroke"></path>
-    <path d="M180 640 L180 420 L420 420 L420 240 L700 240 L700 420 L820 420 L820 580 L400 580 L400 680 L180 680 L180 640" fill="none" stroke="var(--color-indigo)" stroke-width="6" stroke-linejoin="round" vector-effect="non-scaling-stroke"></path>
-  </svg>
+  <sc-if value="{{showRoute}}">
+    <svg class="route-line" viewBox="0 0 1000 800" preserveAspectRatio="none" style="position: absolute; inset: 0; width: 100%; height: 100%" aria-hidden="true">
+      <path d="{{routePath}}" fill="none" stroke="var(--color-white)" stroke-width="11" stroke-linejoin="round" vector-effect="non-scaling-stroke"></path>
+      <path d="{{routePath}}" fill="none" stroke="var(--color-indigo)" stroke-width="6" stroke-linejoin="round" vector-effect="non-scaling-stroke"></path>
+    </svg>
+  </sc-if>
 
-  <div style="position: absolute; left: 7%; top: 77%; display: flex; align-items: center; gap: var(--space-6); padding: var(--space-4) var(--space-8); background: var(--color-charcoal); color: var(--color-white); border-radius: 6px; font-size: 11px; font-weight: 600">
+  <div class="site-marker" style="{{siteMarkerStyle}}">
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--color-white)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18M5 21V8l7-4 7 4v13"></path></svg>
-    MVD
+    {{siteName}}
   </div>
 
   <sc-for list="{{pins}}" as="p" hint-placeholder-count="11">
@@ -56,34 +59,57 @@
   </sc-if>
 
   <sc-if value="{{showVehicleDot}}" hint-placeholder-val="{{ true }}">
-    <div style="{{vehicleStyle}}"></div>
+    <div class="device-location" role="img" aria-label="{{locationLabel}}" style="{{vehicleStyle}}"></div>
   </sc-if>
+  </div>
 
+  <sc-if value="{{showRoute}}">
   <div style="position: absolute; left: 12px; bottom: 12px; display: flex; gap: var(--space-14); align-items: center; padding: var(--space-8) var(--space-12); background: var(--color-white); border-radius: 10px; box-shadow: 0 1px 4px rgba(20,24,29,0.15); font-size: 12px; color: var(--color-charcoal-light)">
     <span style="display: flex; align-items: center; gap: var(--space-6)"><span style="width: var(--space-12); height: 12px; border-radius: 50%; background: var(--color-indigo)"></span>Done</span>
     <span style="display: flex; align-items: center; gap: var(--space-6)"><span style="width: var(--space-12); height: 12px; border-radius: 50%; background: var(--color-orange); border: 2px solid var(--color-charcoal); box-sizing: border-box"></span>Current</span>
     <span style="display: flex; align-items: center; gap: var(--space-6)"><span style="width: var(--space-12); height: 12px; border-radius: 50%; background: var(--color-white); border: 2px solid var(--color-indigo); box-sizing: border-box"></span>Upcoming</span>
   </div>
+  </sc-if>
 
+  <sc-if value="{{showMapControls}}">
   <div style="position: absolute; right: 12px; top: 12px; display: flex; flex-direction: column; gap: var(--space-6)">
     <button aria-label="Re-center on vehicle" style="width: 44px; height: 44px; border-radius: 10px; border: none; background: var(--color-white); box-shadow: 0 1px 4px rgba(20,24,29,0.15); display: flex; align-items: center; justify-content: center">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-indigo)" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="7"></circle><circle cx="12" cy="12" r="2"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3"></path></svg>
     </button>
   </div>
+  </sc-if>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"active":{"editor":"int","default":4,"min":0,"max":11},"showVehicle":{"editor":"boolean","default":true},"w":{"editor":null,"default":760},"h":{"editor":null,"default":600},"$preview":{"width":760,"height":600}}'>
+<script type="text/x-dc" data-dc-script data-props='{"active":{"editor":"int","default":4,"min":0,"max":11},"showVehicle":{"editor":"boolean","default":true},"showDeviceLocation":{"editor":"boolean","default":false},"showRoute":{"editor":"boolean","default":true},"routeVariant":{"editor":null,"default":"a"},"routeName":{"editor":null,"default":"West Loop A"},"siteName":{"editor":null,"default":"MVD"},"fitRoute":{"editor":"boolean","default":false},"w":{"editor":null,"default":760},"h":{"editor":null,"default":600},"$preview":{"width":760,"height":600}}'>
 class Component extends DCLogic {
   renderVals() {
-    const active = Number(this.props.active ?? 4);
+    const showRoute = this.props.showRoute ?? true;
+    const active = showRoute ? Number(this.props.active ?? 4) : 0;
     const showVehicle = this.props.showVehicle ?? true;
-    const pts = [
+    const showDeviceLocation = this.props.showDeviceLocation ?? false;
+    const defaultPoints = [
       [180, 640, 'Start · leave lot'], [180, 420, 'Right turn at signal'], [420, 420, 'Left turn'],
       [420, 320, 'Stop sign'], [560, 240, 'Lane change'], [700, 330, 'School zone'],
       [820, 420, 'Right turn'], [820, 580, 'Right turn'], [600, 580, '4-way stop'],
       [400, 680, 'Left turn'], [180, 680, 'Return and park']
     ];
-    const pins = pts.map((p, i) => {
+    const variants = {
+      a: {
+        points: defaultPoints,
+        path: 'M180 640 L180 420 L420 420 L420 240 L700 240 L700 420 L820 420 L820 580 L400 580 L400 680 L180 680 L180 640'
+      },
+      b: {
+        points: [[180, 640, 'Start'], [180, 420, 'Right turn'], [420, 420, 'Left turn'], [420, 240, 'Right turn'], [700, 240, 'Right turn'], [700, 580, 'Right turn'], [420, 580, 'Left turn'], [420, 680, 'Right turn'], [180, 680, 'Return and park']],
+        path: 'M180 640 L180 420 L420 420 L420 240 L700 240 L700 580 L420 580 L420 680 L180 680 Z'
+      },
+      c: {
+        points: [[180, 640, 'Start'], [180, 420, 'Right turn'], [420, 420, 'Right turn'], [420, 580, 'Left turn'], [700, 580, 'Right turn'], [700, 680, 'Right turn'], [420, 680, 'Drive straight'], [180, 680, 'Return and park']],
+        path: 'M180 640 L180 420 L420 420 L420 580 L700 580 L700 680 L180 680 Z'
+      }
+    };
+    const variant = variants[this.props.routeVariant || 'a'];
+    const pts = variant.points;
+    const pins = (showRoute ? pts : []).map((p, i) => {
       const n = i + 1;
       const isActive = n === active;
       const done = active > 0 && n < active;
@@ -99,21 +125,45 @@ class Component extends DCLogic {
     });
     const cur = active > 0 ? pts[active - 1] : null;
     const calloutStyle = cur ? 'position: absolute; left: calc(' + (cur[0] / 10) + '% + 30px); top: ' + (cur[1] / 8) + '%; transform: translateY(-50%); background: var(--color-white); border: 1px solid var(--color-amber-border); border-radius: 10px; padding: var(--space-8) var(--space-12); box-shadow: 0 2px 8px rgba(20,24,29,0.15); z-index: 5; white-space: nowrap' : '';
-    let vehicleStyle = '';
+    let vx = 180, vy = 640;
     if (active >= 2) {
       const prev = pts[active - 2];
-      const vx = prev[0] + (cur[0] - prev[0]) * 0.55;
-      const vy = prev[1] + (cur[1] - prev[1]) * 0.55;
-      vehicleStyle = 'position: absolute; left: ' + (vx / 10) + '%; top: ' + (vy / 8) + '%; transform: translate(-50%, -50%); width: 20px; height: 20px; border-radius: 50%; background: #1D63D8; border: 3px solid var(--color-white); box-shadow: 0 0 0 8px rgba(29,99,216,0.22); z-index: 3';
+      vx = prev[0] + (cur[0] - prev[0]) * 0.55;
+      vy = prev[1] + (cur[1] - prev[1]) * 0.55;
     }
+    const vehicleStyle = 'position: absolute; left: ' + (vx / 10) + '%; top: ' + (vy / 8) + '%; transform: translate(-50%, -50%); width: 20px; height: 20px; border-radius: 50%; background: #1D63D8; border: 3px solid var(--color-white); box-shadow: 0 0 0 8px rgba(29,99,216,0.22); z-index: 3';
+    let transform = '';
+    if (this.props.fitRoute) {
+      if (showRoute) {
+        const xs = pts.map((point) => point[0]);
+        const ys = pts.map((point) => point[1]);
+        const minX = Math.min(...xs), maxX = Math.max(...xs);
+        const minY = Math.min(...ys), maxY = Math.max(...ys);
+        const scale = Math.min(1.25, 1000 / (maxX - minX + 160), 800 / (maxY - minY + 160));
+        transform = 'scale(' + scale + ') translate(' + ((500 - (minX + maxX) / 2) / 10) + '%, ' + ((400 - (minY + maxY) / 2) / 8) + '%)';
+      } else {
+        transform = 'translate(32%, -30%)';
+      }
+    }
+    const routeName = this.props.routeName || 'West Loop A';
+    const siteName = this.props.siteName || 'MVD';
+    const sitePosition = this.props.fitRoute || showDeviceLocation
+      ? 'left: 18%; top: 80%; transform: translate(' + (showRoute || showDeviceLocation ? '20px' : '-50%') + ', -50%);'
+      : 'left: 7%; top: 77%;';
     return {
       w: this.props.w ?? 760,
       h: this.props.h ?? 600,
+      showRoute, routePath: variant.path, siteName,
+      mapLabel: showRoute ? 'Map of test route ' + routeName + ' with ' + pts.length + ' evaluation points' : 'Map centered on test site ' + siteName,
+      mapContentStyle: 'position: absolute; inset: 0; transform-origin: center; transform: ' + (transform || 'none') + ';',
+      siteMarkerStyle: 'position: absolute; ' + sitePosition + ' display: flex; align-items: center; gap: var(--space-6); padding: var(--space-4) var(--space-8); background: var(--color-charcoal); color: var(--color-white); border-radius: 6px; font-size: 11px; font-weight: 600;',
+      showMapControls: !this.props.fitRoute,
       pins, active,
       activeLabel: cur ? cur[2] : '',
       showCallout: !!cur,
       calloutStyle,
-      showVehicleDot: showVehicle && active >= 2,
+      showVehicleDot: showVehicle && (active >= 2 || showDeviceLocation),
+      locationLabel: showDeviceLocation ? 'Simulated current device location' : 'Current vehicle location',
       vehicleStyle
     };
   }
