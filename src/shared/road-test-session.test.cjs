@@ -109,33 +109,34 @@ test('notes edit only the chosen occurrence and preserve evidence timestamps, po
   assert.equal('savedSafetyPoints' in view, false);
 });
 
-test('Basic Safety still requires all answers and preserves individual notes when another item changes', () => {
+test('Basic Safety records optional errors once each, with no pass/fail answers required', () => {
   const h = harness();
   const c = h.component('07-road-test.html');
-  for (let i = 0; i < 8; i++) {
-    const view = c.renderVals();
-    assert.ok(view.cannotSaveSafety);
-    (i === 0 ? view.safetyItems[i].fail : view.safetyItems[i].pass)();
-  }
-  c.renderVals().saveSafety();
-  const original = h.model.read().saved[0];
-  c.renderVals().saved[0].editNote();
-  c.renderVals().changeEditingNote({ currentTarget: { value: 'Item-specific note' } });
-  c.renderVals().saveEditedNote();
-  h.advance(3000);
-  c.renderVals().safetyItems[1].fail();
+  let view = c.renderVals();
+  assert.ok(view.cannotSaveSafety);
+  view.safetyItems[0].pick();
+  c.renderVals().safetyItems[2].pick();
+  c.renderVals().changeSafetyNote({ currentTarget: { value: 'Shared note' } });
   c.renderVals().saveSafety();
   let record = h.model.read();
-  assert.equal(record.totalErrorPoints, 2);
   assert.equal(record.saved.length, 2);
-  assert.equal(record.saved[0].id, original.id);
-  assert.equal(record.saved[0].savedAt, original.savedAt);
-  assert.equal(record.saved[0].note, 'Item-specific note');
-  c.renderVals().safetyItems[0].pass();
+  assert.equal(record.totalErrorPoints, 2);
+  assert.ok(record.saved.every((line) => line.source === 'safety' && line.points === 1 && line.note === 'Shared note'));
+  view = c.renderVals();
+  assert.equal(view.safetyItems[0].recorded, true);
+  assert.equal(view.safetyItems[1].recorded, false);
+  assert.ok(view.cannotSaveSafety);
+  view.safetyItems[0].pick();
+  view = c.renderVals();
+  assert.equal(view.safetyItems[0].selected, false);
+  assert.ok(view.cannotSaveSafety);
+  h.advance(3000);
+  view.safetyItems[1].pick();
   c.renderVals().saveSafety();
   record = h.model.read();
-  assert.equal(record.saved.length, 1);
-  assert.equal(record.totalErrorPoints, 1);
+  assert.equal(record.saved.length, 3);
+  assert.equal(new Set(record.saved.map((line) => line.elementId)).size, 3);
+  assert.equal(record.saved[2].note, '');
 });
 
 test('the second full-stop occurrence prompts confirmation, persists on cancel, and ends only after successful confirmation', () => {

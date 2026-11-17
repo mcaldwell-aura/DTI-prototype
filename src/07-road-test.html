@@ -15,11 +15,11 @@
   .safety-heading h1 { margin: 0 0 var(--space-4); font-size: 21px; }
   .safety-heading p { margin: 0; color: var(--color-slate); font-size: 14px; }
   .safety-note { margin: var(--space-12) 0 var(--space-8); color: var(--color-slate); font-size: 13px; line-height: 1.4; }
-  .safety-row { display: grid; grid-template-columns: minmax(0, 1fr) 64px 64px; align-items: center; gap: var(--space-10); padding: var(--space-6) 0; border-top: 1px solid var(--color-line); }
-  .safety-label { font-size: 15px; line-height: 1.4; }
-  .safety-result { min-height: 44px; border: 1px solid var(--color-line-dark); border-radius: 8px; background: var(--color-white); color: var(--color-slate-dark); font: 600 14px var(--font-sans); cursor: pointer; }
-  .safety-pass[aria-pressed="true"] { border-color: var(--color-green); background: var(--color-green); color: var(--color-white); }
-  .safety-fail[aria-pressed="true"] { border-color: var(--color-red); background: var(--color-red); color: var(--color-white); }
+  .safety-list { display: flex; flex-direction: column; gap: var(--space-8); }
+  .safety-error { display: flex; align-items: center; justify-content: space-between; gap: var(--space-12); width: 100%; min-height: 52px; padding: var(--space-8) var(--space-16); box-sizing: border-box; border: 1px solid var(--color-line-dark); border-radius: 10px; background: var(--color-white); color: var(--color-charcoal); font: 600 15px var(--font-sans); text-align: left; cursor: pointer; }
+  .safety-error[aria-pressed="true"] { border: 2px solid var(--color-indigo); background: var(--color-indigo); color: var(--color-white); }
+  .safety-error:disabled { border-color: var(--color-line); background: var(--color-off-white); color: var(--color-slate-dark); cursor: default; }
+  .safety-status { flex-shrink: 0; font-size: 13px; white-space: nowrap; }
   .safety-footer { flex-shrink: 0; padding: var(--space-12) var(--space-20); border-top: 1px solid var(--color-line); background: var(--color-off-white); }
   .safety-progress { margin-bottom: var(--space-10); font-size: 13px; color: var(--color-slate-dark); }
   .safety-actions { display: flex; gap: var(--space-10); }
@@ -96,7 +96,7 @@
 
     <section style="flex: 1; min-width: 0; background: var(--color-white); display: flex; flex-direction: column">
       <div role="tablist" aria-label="Road test panels" style="height: 56px; flex-shrink: 0; display: flex; gap: var(--space-4); padding: 0 var(--space-20); border-bottom: 1px solid var(--color-line)">
-        <button id="safety-tab" role="tab" aria-controls="safety-panel" sc-camel-on-click="{{showSafety}}" aria-selected="{{isSafety}}" style="{{safetyTabStyle}}">Basic Safety <sc-if value="{{safetyConfirmed}}"><span style="color: var(--color-green)" aria-label="Basic Safety complete">&#10003;</span></sc-if></button>
+        <button id="safety-tab" role="tab" aria-controls="safety-panel" sc-camel-on-click="{{showSafety}}" aria-selected="{{isSafety}}" style="{{safetyTabStyle}}">Basic Safety</button>
         <button role="tab" sc-camel-on-click="{{showRecord}}" aria-selected="{{isRecord}}" style="{{recordTabStyle}}">Record error</button>
         <button role="tab" sc-camel-on-click="{{showList}}" aria-selected="{{isList}}" style="{{listTabStyle}}">Errors recorded <span style="{{countStyle}}">{{count}}</span></button>
         <span style="flex: 1"></span>
@@ -113,21 +113,19 @@
           <div class="safety-heading">
             <div><h1>Basic Safety</h1><p>1 point each</p></div>
           </div>
-          <p class="safety-note">Answer every item. For the emergency-vehicle question, Pass means a correct answer; Fail means an incorrect answer.</p>
-          <sc-for list="{{safetyItems}}" as="item">
-            <div class="safety-row" role="group" aria-label="{{item.label}}">
-              <span class="safety-label">{{item.label}}</span>
-              <button type="button" class="safety-result safety-pass" aria-pressed="{{item.passed}}" sc-camel-on-click="{{item.pass}}">Pass</button>
-              <button type="button" class="safety-result safety-fail" aria-pressed="{{item.failed}}" sc-camel-on-click="{{item.fail}}">Fail</button>
-            </div>
-          </sc-for>
+          <p class="safety-note">Select an error to record it. Each error can be recorded once. For the emergency-vehicle question, record an error if the answer is wrong.</p>
+          <div class="safety-list" role="group" aria-label="Basic Safety errors">
+            <sc-for list="{{safetyItems}}" as="item">
+              <button type="button" class="safety-error" aria-pressed="{{item.selected}}" disabled="{{item.recorded}}" sc-camel-on-click="{{item.pick}}"><span>{{item.label}}</span><span class="safety-status">{{item.status}}</span></button>
+            </sc-for>
+          </div>
         </section>
         <div class="safety-footer">
           <div class="safety-progress" aria-live="polite">{{safetyProgress}}</div>
           <div class="safety-actions">
             <input id="safety-note" type="text" aria-label="Basic Safety optional note" placeholder="Optional note" value="{{safetyNote}}" sc-camel-on-change="{{changeSafetyNote}}">
             <button type="button" sc-camel-on-click="{{clearSafety}}">Clear</button>
-            <button type="button" class="save-results" id="save-safety" disabled="{{cannotSaveSafety}}" sc-camel-on-click="{{saveSafety}}">Save results</button>
+            <button type="button" class="save-results" id="save-safety" disabled="{{cannotSaveSafety}}" sc-camel-on-click="{{saveSafety}}">{{safetySaveLabel}}</button>
           </div>
         </div>
       </sc-if>
@@ -321,21 +319,23 @@ class Component extends DCLogic {
     const note = st.note || '';
     const modal = st.modal || null;
     const failSel = st.failSel || null;
-    const safetyResults = st.safetyResults === undefined ? this.exam.safetyResults : st.safetyResults;
-    const safetyNote = st.safetyNote === undefined ? this.exam.safetyNote : st.safetyNote;
-    const answered = safetyLabels.filter((label, index) => safetyResults[index] === 'pass' || safetyResults[index] === 'fail').length;
-    const safetyDirty = safetyLabels.some((label, index) => safetyResults[index] !== this.exam.safetyResults[index]) || safetyNote !== this.exam.safetyNote;
-    const safetyConfirmed = answered === safetyLabels.length && !safetyDirty;
-    const setSafetyResult = (index, value) => {
-      const results = { ...safetyResults };
-      if (results[index] === value) delete results[index];
-      else results[index] = value;
-      this.setState({ safetyResults: results, toast: null, saveError: '' });
-    };
-    const safetyItems = safetyLabels.map((label, index) => ({
-      label, passed: safetyResults[index] === 'pass', failed: safetyResults[index] === 'fail',
-      pass: () => setSafetyResult(index, 'pass'), fail: () => setSafetyResult(index, 'fail')
-    }));
+    const safetySel = st.safetySel || [];
+    const safetyNote = st.safetyNote || '';
+    const recordedSafety = new Set(this.exam.saved.filter((error) => error.source === 'safety').map((error) => error.elementId));
+    const safetyItems = safetyLabels.map((label, index) => {
+      const id = 'safety-' + index;
+      const recorded = recordedSafety.has(id);
+      const selected = !recorded && safetySel.includes(id);
+      return {
+        label, recorded, selected, status: recorded ? 'Recorded' : '1 point',
+        pick: () => {
+          if (recorded) return;
+          this.setState({ safetySel: selected ? safetySel.filter((x) => x !== id) : safetySel.concat([id]), toast: null, saveError: '' });
+        }
+      };
+    });
+    const safetyPicked = safetyLabels.flatMap((label, index) => safetyItems[index].selected ? [{ source: 'safety', id: 'safety-' + index, points: 1, label }] : []);
+    const safetyN = safetyPicked.length;
     const saved = this.exam.saved;
     const toggle = (l) => {
       const has = sel.indexOf(l) >= 0;
@@ -410,23 +410,20 @@ class Component extends DCLogic {
       isSafety: tab === 'safety',
       safetyTabStyle: tabStyle(tab === 'safety'),
       showSafety: () => this.setState({ tab: 'safety', toast: null }),
-      safetyItems, safetyNote, safetyConfirmed,
-      safetyProgress: answered + ' of ' + safetyLabels.length + ' answered · ' + (safetyConfirmed ? 'Saved — Basic Safety complete.' : answered === safetyLabels.length ? 'Save results to confirm Basic Safety.' : 'All eight answers are required to save.'),
-      cannotSaveSafety: answered !== safetyLabels.length || safetyConfirmed,
+      safetyItems, safetyNote,
+      safetyProgress: (safetyN === 0 ? 'No error selected' : safetyN === 1 ? '1 error selected' : safetyN + ' errors selected · saved as ' + safetyN + ' separate line items') + ' · ' + recordedSafety.size + ' of ' + safetyLabels.length + ' recorded',
+      cannotSaveSafety: safetyN === 0,
+      safetySaveLabel: safetyN > 1 ? 'Save ' + safetyN + ' errors' : 'Save error',
       changeSafetyNote: (event) => this.setState({ safetyNote: event.currentTarget.value, toast: null }),
-      clearSafety: () => this.setState({ safetyResults: {}, safetyNote: '', toast: null }),
+      clearSafety: () => this.setState({ safetySel: [], safetyNote: '', toast: null }),
       saveSafety: () => {
-        if (answered !== safetyLabels.length) {
-          this.setState({ saveError: 'Answer all eight Basic Safety items before saving.' });
+        if (!safetyN) {
+          this.setState({ saveError: 'Select a Basic Safety error before saving.' });
           return;
         }
-        const failed = safetyLabels.flatMap((label, index) => safetyResults[index] === 'fail' ? [{ source: 'safety', id: 'safety-' + index, points: 1, label }] : []);
-        const failures = roadTest.makeLines(this.exam, failed, safetyNote).map((line) => {
-          const existing = saved.find((error) => error.source === 'safety' && error.elementId === line.elementId);
-          return existing ? { ...existing, note: safetyNote === this.exam.safetyNote ? existing.note : safetyNote } : line;
-        });
-        if (this.persistExam({ safetyResults: { ...safetyResults }, safetyNote, saved: saved.filter((error) => error.source !== 'safety').concat(failures) })) {
-          this.setState({ toast: 'Basic Safety saved' });
+        const lines = roadTest.makeLines(this.exam, safetyPicked, safetyNote);
+        if (this.persistExam({ saved: saved.concat(lines) })) {
+          this.setState({ safetySel: [], safetyNote: '', toast: safetyN + (safetyN === 1 ? ' error saved' : ' errors saved') });
         }
       },
       recordTabStyle: tabStyle(tab === 'record'), listTabStyle: tabStyle(tab === 'list'),
@@ -464,7 +461,7 @@ class Component extends DCLogic {
         this.finishExam(selectedReason);
       },
       endTest: () => this.finishExam(),
-      hasPendingChanges: n > 0 || !!note || safetyDirty,
+      hasPendingChanges: n > 0 || !!note || safetyN > 0 || !!safetyNote,
       showNoteDialog: modal === 'note' && !!editingError,
       editingErrorLabel: editingError ? editingError.label : '',
       editingNote: st.editingNote || '',
