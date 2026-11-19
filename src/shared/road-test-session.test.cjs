@@ -30,7 +30,7 @@ function harness(search = '?testId=rubric-test', storage = new Map()) {
     }
   };
   const context = vm.createContext({ window, URLSearchParams, Date: Clock, DCLogic: Logic });
-  for (const file of ['route-session.js', 'road-test-session.js']) {
+  for (const file of ['route-session.js', 'road-test-session.js', 'test-actions.js', 'motion-alert.js']) {
     vm.runInContext(readFileSync(join(__dirname, file), 'utf8'), context);
   }
   const component = (file) => {
@@ -40,7 +40,7 @@ function harness(search = '?testId=rubric-test', storage = new Map()) {
     return new Component();
   };
   return {
-    model: window.DTIRoadTest, session: window.DTIRouteSession, storage, navigations, component,
+    model: window.DTIRoadTest, session: window.DTIRouteSession, storage, navigations, component, window,
     advance: (ms) => { now += ms; },
     failWrites: (value) => { failWrites = value; }
   };
@@ -137,6 +137,111 @@ test('Basic Safety records optional errors once each, with no pass/fail answers 
   assert.equal(record.saved.length, 3);
   assert.equal(new Set(record.saved.map((line) => line.elementId)).size, 3);
   assert.equal(record.saved[2].note, '');
+});
+
+function answerPreTest(c, failIndex = -1) {
+  c.renderVals().documents.forEach((document) => document.checked || document.toggle());
+  for (const sectionIndex of [1, 2]) {
+    c.renderVals().sections[sectionIndex].select();
+    const count = c.renderVals().items.length;
+    for (let index = 0; index < count; index++) {
+      const item = c.renderVals().items[index];
+      (sectionIndex === 2 && index === failIndex ? item.fail : item.pass)();
+    }
+  }
+}
+
+test('Continue to Route enables once every item is answered, goes straight to Route when all pass, and back saves answers', () => {
+  const h = harness();
+  let c = h.component('05-pre-test-checks.html');
+  assert.equal(c.renderVals().cannotContinue, true);
+  c.renderVals().documents.forEach((document) => document.toggle());
+  c.renderVals().sections[1].select();
+  c.renderVals().items[0].fail();
+  c.renderVals().goBack();
+  assert.match(h.navigations.pop(), /^04-session-information\.html/);
+  c = h.component('05-pre-test-checks.html');
+  c.renderVals().sections[1].select();
+  assert.equal(c.renderVals().items[0].failed, true);
+  assert.equal(c.renderVals().documents.every((document) => document.checked), true);
+  answerPreTest(c);
+  assert.equal(c.renderVals().cannotContinue, false);
+  c.renderVals().continueToRoute();
+  assert.equal(c.renderVals().showRequirementsDialog, false);
+  assert.match(h.navigations.pop(), /^06-select-route\.html/);
+});
+
+test('Continue to Route with a failed item shows the requirements modal; close keeps the test, Cancel Test marks it Canceled', () => {
+  const h = harness();
+  const c = h.component('05-pre-test-checks.html');
+  answerPreTest(c, 3);
+  assert.equal(c.renderVals().cannotContinue, false);
+  c.renderVals().continueToRoute();
+  assert.equal(c.renderVals().showRequirementsDialog, true);
+  c.renderVals().closeDialog();
+  assert.equal(c.renderVals().showRequirementsDialog, false);
+  assert.equal(h.navigations.length, 0);
+  assert.equal([...h.storage.keys()].some((key) => key.startsWith('dtiTestStatus:')), false);
+  h.session.save('west-loop-a');
+  c.renderVals().continueToRoute();
+  c.renderVals().cancelTest();
+  const statusKey = [...h.storage.keys()].find((key) => key.startsWith('dtiTestStatus:'));
+  assert.equal(JSON.parse(h.storage.get(statusKey)).status, 'Canceled');
+  assert.equal(h.session.load(), null);
+  assert.deepEqual(h.navigations, ['02-start-a-test.html?canceled=pre-test']);
+});
+
+test('Cancel requires a description, then saves the screen, reason, and completed fields as a Canceled test and goes home', () => {
+  const h = harness();
+  const c = h.component('05-pre-test-checks.html');
+  c.renderVals().sections[1].select();
+  c.renderVals().items[0].fail();
+  h.session.save('west-loop-a');
+  const cancel = h.window.DTITestActions;
+  assert.equal(cancel.cancelTest('   '), 'Description required.');
+  assert.equal(h.storage.has(cancel.statusKey), false, 'Nothing is saved without a description');
+  assert.equal(h.navigations.length, 0);
+  c.renderVals();
+  assert.equal(cancel.cancelTest('  Customer felt unwell.  '), null);
+  const saved = JSON.parse(h.storage.get(cancel.statusKey));
+  assert.equal(saved.status, 'Canceled');
+  assert.equal(saved.cancelScreen, 'Pre-test Checks');
+  assert.equal(saved.cancelReason, 'Customer felt unwell.');
+  assert.equal(saved.savedFields.status['understanding-stop'], 'fail');
+  assert.equal(h.session.load(), null);
+  assert.deepEqual(h.navigations, ['02-start-a-test.html?canceled=examiner']);
+  assert.equal(cancel.cancelTest('x'.repeat(2500)), null);
+  assert.equal(JSON.parse(h.storage.get(cancel.statusKey)).cancelReason.length, 2000);
+});
+
+test('Pause requires a description, saves the screen, reason, and completed fields as Paused, keeps working data, and goes home', () => {
+  const h = harness();
+  const c = h.component('06-select-route.html');
+  c.renderVals().routes[1].select();
+  h.session.save('west-loop-a');
+  const actions = h.window.DTITestActions;
+  assert.equal(actions.pauseTest(''), 'Description required.');
+  assert.equal(h.storage.has(actions.statusKey), false);
+  c.renderVals();
+  assert.equal(actions.pauseTest('Customer needs to move their car.'), null);
+  const saved = JSON.parse(h.storage.get(actions.statusKey));
+  assert.equal(saved.status, 'Paused');
+  assert.equal(saved.pauseScreen, 'Route');
+  assert.equal(saved.pausedReason, 'Customer needs to move their car.');
+  assert.equal(saved.savedFields.routeId, 'west-loop-b');
+  assert.equal(h.session.load().routeId, 'west-loop-a', 'Pausing keeps the test data for resuming');
+  assert.deepEqual(h.navigations, ['02-start-a-test.html?paused=examiner']);
+});
+
+test('motion alert fires only above the speed threshold and before the road test timer starts', () => {
+  const h = harness();
+  const motion = h.window.DTIMotionAlert;
+  assert.equal(motion.shouldAlert(motion.thresholdMph), false);
+  assert.equal(motion.shouldAlert(motion.thresholdMph + 1), true, 'No road test record means no start time');
+  h.model.write(h.model.create(false));
+  assert.equal(motion.shouldAlert(motion.thresholdMph + 1), true, 'A record with a blank start time still alerts');
+  h.model.write(h.model.create(true));
+  assert.equal(motion.shouldAlert(motion.thresholdMph + 1), false, 'No alert once the road test has started');
 });
 
 test('the second full-stop occurrence prompts confirmation, persists on cancel, and ends only after successful confirmation', () => {
@@ -245,7 +350,9 @@ test('Review projects chronological errors and explicitly simulated evaluation p
   const view = h.component('08-review-and-submit.html').renderVals();
   record = h.model.read();
   assert.equal(view.duration, '14:10');
-  assert.equal(view.evidenceSummary, '2 scored, 1 skipped, 3 errors');
+  assert.equal(view.errorCountLabel, '3 errors');
+  assert.ok(view.rows.every((entry) => entry.kind === 'error'), 'Only examiner-recorded errors are listed');
+  assert.deepEqual(Array.from(view.rows, (entry) => entry.label), [first[0].label, batch[0].label, batch[1].label], 'Errors are listed oldest first');
   assert.deepEqual(Array.from(view.ticks, (tick) => tick.label), ['00:00', '03:00', '06:00', '09:00', '12:00', '14:10']);
   assert.ok(record.evaluationPoints.every((point) => point.simulated && point.testKey === record.testKey));
   assert.equal(record.evaluationPoints[1].skipReason, 'Road closure (simulated)');
@@ -253,7 +360,6 @@ test('Review projects chronological errors and explicitly simulated evaluation p
   assert.deepEqual(Array.from(view.rows, (entry) => entry.savedAt), Array.from(view.rows, (entry) => entry.savedAt).sort((a, b) => a - b));
   assert.ok(view.rows.every((entry) => /^\d{2}:\d{2}:\d{2} [AP]M$/.test(entry.timestamp)));
   assert.equal(view.rows.find((entry) => entry.id === first[0].id).locationLabel, '33.4884, -112.1494 (simulated GPS)');
-  assert.equal(view.rows.find((entry) => entry.kind === 'skipped').label, 'Road closure (simulated)');
   const firstMarker = view.markers.find((entry) => entry.id === first[0].id);
   assert.equal(firstMarker.elapsed, '02:00');
   assert.equal(firstMarker.position, 120 / 850 * 100);
@@ -411,7 +517,7 @@ test('Review opens the exact error occurrence from timeline or list without chan
   let view = c.renderVals();
   const before = h.storage.get(record.testKey);
   assert.equal(view.showErrorDetails, false);
-  assert.equal(view.rows.find((row) => row.kind === 'scored').openDetails, undefined);
+  assert.equal(view.markers.find((marker) => marker.kind === 'scored').openDetails, undefined);
   view.markers.find((marker) => marker.id === first[0].id).openDetails();
   view = c.renderVals();
   assert.equal(view.showErrorDetails, true);
@@ -443,7 +549,7 @@ test('error details show absent legacy metadata and notes explicitly instead of 
   };
   h.model.write(h.model.end({ ...record, saved: [error] }));
   const c = h.component('08-review-and-submit.html');
-  c.renderVals().rows.find((row) => row.isError).openDetails();
+  c.renderVals().rows[0].openDetails();
   const details = c.renderVals().errorDetails;
   assert.equal(details.points, 'Not captured');
   assert.equal(details.elapsed, 'Not captured');

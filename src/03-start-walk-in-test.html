@@ -20,9 +20,9 @@
   .lookup-demo label { display: block; margin-bottom: var(--space-8); font-size: 13px; font-weight: 700; }
   .lookup-demo select { box-sizing: border-box; width: 100%; min-height: 44px; padding: 0 var(--space-8); border: 1px solid var(--color-line-dark); border-radius: 8px; background: var(--color-white); font: 13px var(--font-sans); }
   .lookup-help { margin: var(--space-12) 0 0; font-size: 13px; line-height: 1.5; color: var(--color-slate); }
-  .lookup-warning { display: flex; align-items: flex-start; gap: var(--space-12); padding: var(--space-12); border: 1px solid var(--color-amber-border); border-radius: 10px; background: var(--color-amber-light); color: var(--color-amber-dark); font-size: 14px; line-height: 1.5; }
-  .lookup-warning svg { flex: 0 0 24px; }
-  .lookup-no-record { margin: 0; color: var(--color-red); font-size: 14px; text-align: left; }
+  .lookup-paused { display: flex; align-items: center; gap: var(--space-10); padding: var(--space-12); border: 1px solid var(--color-indigo-light); border-radius: 10px; background: var(--color-indigo-pale); color: var(--color-indigo-dark); font-size: 14px; font-weight: 600; line-height: 1.4; }
+  .lookup-paused svg { flex: 0 0 22px; }
+  .lookup-no-record { margin: 0; color: var(--color-red); font-size: 14px; font-weight: 700; text-align: left; }
   button:focus-visible, select:focus-visible, a:focus-visible { outline: 3px solid var(--color-indigo-light); outline-offset: var(--space-2); }
 </style>
 </head>
@@ -132,33 +132,49 @@
             <sc-if value="{{isDl}}" hint-placeholder-val="{{ true }}">
               <div style="display: flex; flex-direction: column; gap: var(--space-6)">
                 <label for="dl" style="font-size: var(--space-13); font-weight: 600; color: var(--color-slate-dark)">Driver license / ID number</label>
-                <input id="dl" type="text" required value="{{dlValue}}" sc-camel-on-input="{{updateDl}}" style="height: 48px; border: 1px solid var(--color-line-dark); border-radius: 10px; padding: 0 var(--space-14); font: 500 16px var(--font-mono); color: var(--color-charcoal)">
+                <input id="dl" type="text" required value="{{dlValue}}" sc-camel-on-input="{{updateDl}}" minlength="9" maxlength="9" pattern="[A-Z0-9]{9}" autocapitalize="characters" autocomplete="off" placeholder="9 characters" style="height: 48px; border: 1px solid var(--color-line-dark); border-radius: 10px; padding: 0 var(--space-14); font: 500 16px var(--font-mono); color: var(--color-charcoal)">
               </div>
             </sc-if>
             <sc-if value="{{isSsn}}" hint-placeholder-val="{{ false }}">
               <div style="display: flex; flex-direction: column; gap: var(--space-6)">
                 <label for="ssn" style="font-size: var(--space-13); font-weight: 600; color: var(--color-slate-dark)">Social Security Number</label>
-                <input id="ssn" type="text" required value="{{ssnValue}}" sc-camel-on-input="{{updateSsn}}" inputmode="numeric" pattern="[0-9]{9}" maxlength="9" autocomplete="off" style="height: 48px; border: 1px solid var(--color-line-dark); border-radius: 10px; padding: 0 var(--space-14); font: 500 16px var(--font-mono); color: var(--color-charcoal)">
+                <input id="ssn" type="text" required value="{{ssnDisplay}}" sc-camel-on-input="{{updateSsn}}" inputmode="numeric" maxlength="11" autocomplete="off" spellcheck="false" placeholder="XXX-XX-XXXX" aria-describedby="ssn-hint" style="height: 48px; border: 1px solid var(--color-line-dark); border-radius: 10px; padding: 0 var(--space-14); font: 500 16px var(--font-mono); color: var(--color-charcoal)">
+                <span id="ssn-hint" style="font-size: 12px; color: var(--color-slate)">Digits are hidden as you type. {{ssnCount}} of 9 entered.</span>
               </div>
             </sc-if>
             <div style="display: flex; flex-direction: column; gap: var(--space-6)">
               <label for="dob" style="font-size: var(--space-13); font-weight: 600; color: var(--color-slate-dark)">Date of birth</label>
-              <input id="dob" type="text" required value="{{dobValue}}" sc-camel-on-input="{{updateDob}}" placeholder="MM/DD/YYYY" style="height: 48px; border: 1px solid var(--color-line-dark); border-radius: 10px; padding: 0 var(--space-14); font: 500 16px var(--font-mono); color: var(--color-charcoal)">
+              <input id="dob" type="text" required value="{{dobValue}}" sc-camel-on-input="{{updateDob}}" inputmode="numeric" maxlength="10" autocomplete="off" placeholder="MM/DD/YYYY" style="height: 48px; border: 1px solid var(--color-line-dark); border-radius: 10px; padding: 0 var(--space-14); font: 500 16px var(--font-mono); color: var(--color-charcoal)">
             </div>
-            <sc-for list="{{eligibilityMessages}}" as="message">
-              <div class="lookup-warning" role="alert">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3 22 21H2Z"></path><path d="M12 9v5"></path><circle cx="12" cy="17" r="0.8" fill="currentColor"></circle></svg>
-                <span>{{message.text}}</span>
+            <sc-if value="{{showSearch}}" hint-placeholder-val="{{ true }}">
+              <button type="button" id="search-max" sc-camel-on-click="{{searchMax}}" disabled="{{searchDisabled}}" style="min-height: 52px; border-radius: 10px; border: none; background: var(--color-indigo); color: var(--color-white); font: 700 15px var(--font-sans); display: flex; align-items: center; justify-content: center; gap: var(--space-8); opacity: {{searchOpacity}}; cursor: {{searchCursor}}">
+                <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-white)" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-4-4"></path></svg>Search</button>
+            </sc-if>
+            <sc-if value="{{showResume}}" hint-placeholder-val="{{ false }}">
+              <div class="lookup-paused" role="status">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M10 9v6M14 9v6"></path></svg>
+                <span>{{pausedMessage}}</span>
               </div>
+              <button type="button" id="resume-test" sc-camel-on-click="{{resumeTest}}" style="min-height: 52px; border-radius: 10px; border: none; background: var(--color-indigo); color: var(--color-white); font: 700 15px var(--font-sans); display: flex; align-items: center; justify-content: center; gap: var(--space-8); cursor: pointer">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>Resume test</button>
+              <sc-if value="{{showResumeError}}"><p class="lookup-no-record" role="alert">Unable to resume the test. Please try again.</p></sc-if>
+            </sc-if>
+            <sc-if value="{{showRetake}}" hint-placeholder-val="{{ false }}">
+              <div class="lookup-paused" role="status">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5M12 8h.01"></path></svg>
+                <span><strong>Retake.</strong> {{retakeMessage}}</span>
+              </div>
+              <button type="button" id="continue-retake" sc-camel-on-click="{{continueRetake}}" style="min-height: 52px; border-radius: 10px; border: none; background: var(--color-indigo); color: var(--color-white); font: 700 15px var(--font-sans); cursor: pointer">Continue to verification</button>
+            </sc-if>
+            <sc-for list="{{eligibilityMessages}}" as="message">
+              <p class="lookup-no-record" role="alert">{{message.text}}</p>
             </sc-for>
-            <button type="button" id="search-max" sc-camel-on-click="{{searchMax}}" disabled="{{searchDisabled}}" style="min-height: 52px; border-radius: 10px; border: none; background: var(--color-indigo); color: var(--color-white); font: 700 15px var(--font-sans); display: flex; align-items: center; justify-content: center; gap: var(--space-8); opacity: {{searchOpacity}}; cursor: {{searchCursor}}">
-              <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-white)" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-4-4"></path></svg>Search</button>
             <sc-if value="{{showNoRecord}}"><p class="lookup-no-record" role="alert">No customer record found.</p></sc-if>
           </fieldset>
           <sc-if value="{{typeMissing}}" hint-placeholder-val="{{ true }}">
             <span style="font-size: 13px; color: var(--color-slate)">Choose a test type to enable customer lookup.</span>
           </sc-if>
-          <p class="lookup-help">Demo inputs: DL D12345678 or SSN 900001234, with DOB 03/14/2007. A match opens customer verification directly.</p>
+          <p class="lookup-help">Demo inputs: DL D12345678 or SSN 900-00-1234, with DOB 03/14/2007. Dashes and slashes are added for you. Use the prototype search scenario to try existing, paused, and failed tests.</p>
         </div>
       </div>
     </div>
@@ -187,27 +203,74 @@ class Component extends DCLogic {
     const dobValue = st.dobValue || '';
     const scenario = st.scenario || 'eligible';
     const eligibilityMessages = st.eligibilityMessages || [];
-    const resetFeedback = { showNoRecord: false, showConnectionError: false, eligibilityMessages: [] };
+    const resetFeedback = { showNoRecord: false, showConnectionError: false, eligibilityMessages: [], pausedTest: null, pausedCustomer: null, resumeError: false, retakeDate: null, retakeCustomer: null };
     const update = (patch) => this.setState({ ...resetFeedback, ...patch });
     const typeMissing = type !== 'nc';
     const tab = (on) => 'height: 44px; border-radius: 8px; border: none; font: 600 14px \'Public Sans\', system-ui, sans-serif; cursor: pointer; ' + (on ? 'background: var(--color-white); color: var(--color-charcoal); box-shadow: 0 1px 3px rgba(20,24,29,0.15);' : 'background: transparent; color: var(--color-slate-dark);');
-    const hasLookupInput = method === 'dl'
-      ? !!dlValue.trim() && !!dobValue.trim()
-      : /^\d{9}$/.test(ssnValue) && !!dobValue.trim();
-    const searchDisabled = typeMissing || !hasLookupInput;
+    const hasLookupInput = /^\d{2}\/\d{2}\/\d{4}$/.test(dobValue) && (method === 'dl'
+      ? /^[A-Z0-9]{9}$/.test(dlValue)
+      : /^\d{9}$/.test(ssnValue));
+    const pausedTest = st.pausedTest || null;
+    const searchDisabled = typeMissing || !hasLookupInput || eligibilityMessages.length > 0;
+    const pad = (value) => String(value).padStart(2, '0');
+    const formatDateTime = (time, withSeconds) => {
+      const date = new Date(time);
+      const hours = date.getHours();
+      return pad(date.getMonth() + 1) + '/' + pad(date.getDate()) + '/' + date.getFullYear() + ' ' + (withSeconds ? pad(hours % 12 || 12) : hours % 12 || 12) + ':' + pad(date.getMinutes()) + (withSeconds ? ':' + pad(date.getSeconds()) : '') + ' ' + (hours >= 12 ? 'PM' : 'AM');
+    };
+    const openVerification = (customer, extra = {}) => {
+      const current = new URLSearchParams(window.location.search);
+      const next = new URLSearchParams({ ...customer, testType: type, siteId: current.get('siteId') || 'west-phoenix', ...extra });
+      for (const key of ['testId', 'location', 'appointmentDate', 'cameraConnected']) {
+        if (current.has(key) && !(key in extra)) next.set(key, current.get(key));
+      }
+      window.location.assign('04-verify-customer.html?' + next.toString());
+    };
+    // Adds the next separator as soon as a group is complete, but not while deleting, so backspace isn't blocked.
+    const group = (chars, sizes, sep, grow) => {
+      let out = '';
+      let at = 0;
+      sizes.forEach((size, index) => {
+        if (index > 0 && (chars.length > at || (grow && chars.length === at))) out += sep;
+        out += chars.slice(at, at + size);
+        at += size;
+      });
+      return out;
+    };
+    const maskSsn = (digits, grow) => group('*'.repeat(digits.length), [3, 2, 4], '-', grow && digits.length < 9);
+    const formatDob = (digits, grow) => group(digits, [2, 2, 4], '/', grow && digits.length < 8);
+    const setField = (event, value) => {
+      if (event.currentTarget.value !== value) event.currentTarget.value = value;
+    };
     return {
       isDl: method === 'dl', isSsn: method === 'ssn',
       showNoRecord: !!st.showNoRecord, showConnectionError: !!st.showConnectionError,
       eligibilityMessages: eligibilityMessages.map((text) => ({ text })),
       typeMissing, lookupOpacity: typeMissing ? '0.55' : '1',
-      dlValue, ssnValue, dobValue, searchDisabled, scenario,
+      dlValue, ssnDisplay: maskSsn(ssnValue, false), ssnCount: ssnValue.length, dobValue, searchDisabled, scenario,
       searchOpacity: searchDisabled ? '0.55' : '1',
       searchCursor: searchDisabled ? 'not-allowed' : 'pointer',
       changeType: (event) => update({ type: event.currentTarget.value }),
       changeScenario: (event) => update({ scenario: event.currentTarget.value }),
-      updateDl: (event) => update({ dlValue: event.currentTarget.value }),
-      updateSsn: (event) => update({ ssnValue: event.currentTarget.value }),
-      updateDob: (event) => update({ dobValue: event.currentTarget.value }),
+      updateDl: (event) => {
+        const value = event.currentTarget.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 9);
+        setField(event, value);
+        update({ dlValue: value });
+      },
+      updateSsn: (event) => {
+        // The field only shows asterisks, so keep the digits already entered for each remaining * and add newly typed digits.
+        const raw = event.currentTarget.value;
+        const kept = Math.min((raw.match(/\*/g) || []).length, ssnValue.length);
+        const digits = (ssnValue.slice(0, kept) + raw.replace(/\D/g, '')).slice(0, 9);
+        setField(event, maskSsn(digits, digits.length > ssnValue.length));
+        update({ ssnValue: digits });
+      },
+      updateDob: (event) => {
+        const digits = event.currentTarget.value.replace(/\D/g, '').slice(0, 8);
+        const value = formatDob(digits, digits.length > dobValue.replace(/\D/g, '').length);
+        setField(event, value);
+        update({ dobValue: value });
+      },
       searchMax: () => {
         if (searchDisabled) return;
         const lookup = window.DTICustomerLookup;
@@ -227,19 +290,42 @@ class Component extends DCLogic {
           update({ eligibilityMessages: messages });
           return;
         }
-        update({});
-        const current = new URLSearchParams(window.location.search);
-        const next = new URLSearchParams({ ...response.customer, testType: type, siteId: current.get('siteId') || 'west-phoenix' });
-        for (const key of ['testId', 'location', 'appointmentDate', 'cameraConnected']) {
-          if (current.has(key)) next.set(key, current.get(key));
+        const paused = lookup.pausedTest(response.customer.customerId, type, response.tests);
+        if (paused) {
+          update({ pausedTest: paused, pausedCustomer: response.customer });
+          return;
         }
-        window.location.assign('04-verify-customer.html?' + next.toString());
+        update({});
+        const previousFail = response.tests
+          .filter((test) => test.customerId === response.customer.customerId && test.testType === type && test.status === 'Fail' && test.completedDate)
+          .map((test) => test.completedDate).sort().pop();
+        if (previousFail) {
+          update({ retakeDate: previousFail, retakeCustomer: response.customer });
+          return;
+        }
+        openVerification(response.customer);
+      },
+      showSearch: !pausedTest && !st.retakeCustomer, showResume: !!pausedTest, showResumeError: !!st.resumeError,
+      showRetake: !!st.retakeCustomer,
+      retakeMessage: st.retakeDate ? 'This customer failed a ' + (type === 'nc' ? 'Non-commercial road test' : 'road test') + ' on ' + st.retakeDate.replace(/^(\d{4})-(\d{2})-(\d{2})$/, '$2/$3/$1') + '.' : '',
+      continueRetake: () => st.retakeCustomer && openVerification(st.retakeCustomer),
+      pausedMessage: pausedTest ? 'Paused test found, started ' + formatDateTime(pausedTest.startedAt, false).replace(' ', ' at ') + '.' : '',
+      resumeTest: () => {
+        if (!pausedTest || !st.pausedCustomer) return;
+        const resumedTimestamp = formatDateTime(Date.now(), true);
+        try {
+          window.sessionStorage.setItem('dtiTestInstance:' + pausedTest.testId, JSON.stringify({ ...pausedTest, status: 'In Progress', resumedTimestamp }));
+        } catch (error) {
+          this.setState({ resumeError: true });
+          return;
+        }
+        openVerification(st.pausedCustomer, { testId: pausedTest.testId });
       },
       dismissConnectionError: () => this.setState({ showConnectionError: false }),
       dlTabStyle: tab(method === 'dl'), ssnTabStyle: tab(method === 'ssn'),
       useDl: () => update({ method: 'dl' }),
       useSsn: () => update({ method: 'ssn' }),
-      summary: typeMissing ? 'Select a test type before finding a customer' : !hasLookupInput ? 'Enter the required MAX lookup information' : eligibilityMessages.length ? 'Resolve the warning before starting a new test' : 'Search to open customer verification'
+      summary: typeMissing ? 'Select a test type before finding a customer' : pausedTest ? 'Resume the paused test to continue' : st.retakeCustomer ? 'Continue to start the retake' : !hasLookupInput ? 'Enter the required MAX lookup information' : eligibilityMessages.length ? 'This customer can\'t start a new test' : 'Search to open customer verification'
     };
   }
 }

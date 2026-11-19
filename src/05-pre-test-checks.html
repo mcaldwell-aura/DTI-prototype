@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>DTI Examiner - Pre-Test Checks</title>
 <script src="shared/runtime.js"></script>
+<script src="shared/route-session.js"></script>
+<script src="shared/test-actions.js"></script>
+<script src="shared/test-header.js"></script>
+<script src="shared/motion-alert.js"></script>
 <link rel="stylesheet" href="shared/styles.css">
 <style>
   html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #e5e7eb; }
@@ -12,9 +16,6 @@
   .pre-test-screen { display: flex; width: 1280px; height: 800px; flex-direction: column; background: var(--color-background); color: var(--color-charcoal); font-family: var(--font-sans); }
   .screen-header { display: flex; height: 64px; flex: 0 0 64px; align-items: center; gap: var(--space-16); padding: 0 var(--space-24); border-bottom: 1px solid var(--color-line); background: var(--color-white); }
   .back-icon { display: flex; width: 44px; height: 44px; align-items: center; justify-content: center; border: 1px solid var(--color-line); border-radius: 10px; }
-  .customer-name { font-size: 17px; font-weight: 700; }
-  .test-reference { margin-top: var(--space-4); color: var(--color-slate); font-size: 13px; }
-  .examiner { margin-left: auto; color: var(--color-slate); font-size: 14px; }
   .workspace { display: grid; min-height: 0; flex: 1; grid-template-columns: minmax(0, 1fr) 300px; align-items: start; gap: var(--space-20); padding: var(--space-24); }
   .checks-panel { display: flex; height: 100%; min-height: 0; flex-direction: column; overflow: hidden; border: 1px solid var(--color-line); border-radius: 14px; background: var(--color-white); }
   .panel-header { padding: var(--space-24) var(--space-24) var(--space-20); }
@@ -42,11 +43,11 @@
   .pass[aria-pressed="true"] { border-color: var(--color-green); background: var(--color-green); color: var(--color-white); }
   .fail[aria-pressed="true"] { border-color: var(--color-red); background: var(--color-red); color: var(--color-white); }
   .panel-footer { display: flex; min-height: 84px; flex: 0 0 auto; align-items: center; justify-content: flex-end; gap: var(--space-12); padding: 0 var(--space-24); border-top: 1px solid var(--color-line); }
-  .action { display: flex; min-width: 130px; min-height: 52px; box-sizing: border-box; align-items: center; justify-content: center; padding: 0 var(--space-20); border: 1px solid var(--color-line-dark); border-radius: 10px; background: var(--color-white); color: var(--color-charcoal); font: 700 15px var(--font-sans); text-decoration: none; }
+  .action { display: flex; min-width: 130px; min-height: 52px; box-sizing: border-box; align-items: center; justify-content: center; padding: 0 var(--space-20); border: 1px solid var(--color-line-dark); border-radius: 10px; background: var(--color-white); color: var(--color-charcoal); font: 700 15px var(--font-sans); text-decoration: none; white-space: nowrap; }
   .primary { border-color: var(--color-indigo); background: var(--color-indigo); color: var(--color-white); }
   .primary:hover { color: var(--color-white); background: var(--color-indigo-dark); }
   .action:disabled { border-color: var(--color-line); background: var(--color-line); color: var(--color-slate); }
-  .gate-message { margin-right: auto; color: var(--color-slate); font-size: 13px; line-height: 1.4; }
+  .gate-message { color: var(--color-slate); font-size: 13px; line-height: 1.4; text-align: right; }
   .gate-message.failed { color: var(--color-red); }
   .device-readiness { padding: var(--space-20); border: 1px solid var(--color-line); border-radius: 14px; background: var(--color-white); }
   .readiness-header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-8); }
@@ -58,17 +59,26 @@
   .device-name { flex: 1; color: var(--color-charcoal); }
   .device-detail { font-size: 13px; font-weight: 600; }
   .device-note { margin: var(--space-24) 0 0; color: var(--color-slate); font-size: 12px; line-height: 1.5; }
+  .back-icon { box-sizing: border-box; padding: 0; background: var(--color-white); cursor: pointer; }
+  .action:disabled { cursor: not-allowed; }
+  .modal-overlay { position: absolute; z-index: 20; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(20,24,29,0.55); }
+  .requirements-dialog { position: relative; width: 580px; box-sizing: border-box; padding: var(--space-32); border-radius: 14px; background: var(--color-white); box-shadow: 0 12px 40px rgba(20,24,29,0.18); }
+  .requirements-dialog h2 { margin: 0 var(--space-32) var(--space-16) 0; font-size: 24px; }
+  .requirements-dialog p { margin: 0 0 var(--space-24); font-size: 17px; line-height: 1.5; }
+  .close-dialog { position: absolute; top: 12px; right: 12px; width: 44px; height: 44px; border: 0; border-radius: 8px; background: var(--color-white); color: var(--color-slate); font: 24px var(--font-sans); cursor: pointer; }
+  .dialog-actions { display: flex; justify-content: flex-end; }
+  .cancel-test { border-color: var(--color-red); background: var(--color-red); color: var(--color-white); cursor: pointer; }
+  .save-error { position: absolute; z-index: 30; right: 24px; bottom: 104px; max-width: 650px; padding: var(--space-16); border-radius: 10px; background: var(--color-red); color: var(--color-white); font-size: 15px; }
 </style>
 </head>
 <body>
 <x-dc>
 <div class="pre-test-screen">
   <header class="screen-header">
-    <a id="session-back-header" class="back-icon" href="{{sessionInformationUrl}}" aria-label="Back to session information">
+    <button type="button" id="session-back-header" class="back-icon" aria-label="Save and go back to session information" sc-camel-on-click="{{goBack}}">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-charcoal)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
-    </a>
-    <div><div class="customer-name">{{customerName}}</div><div class="test-reference">Non-commercial road test · DTI-1042</div></div>
-    <div class="examiner">M. Alvarez · West Phoenix MVD</div>
+    </button>
+    <div class="test-context" data-test-context></div>
   </header>
   <main class="workspace">
     <section class="checks-panel" aria-labelledby="pre-test-title">
@@ -113,11 +123,11 @@
         </div>
       </div>
       <footer class="panel-footer">
-        <sc-if value="{{showFailed}}"><span class="gate-message failed" role="status">A checklist item is marked Fail. All items must pass to continue.</span></sc-if>
-        <sc-if value="{{showIncomplete}}"><span class="gate-message">Complete both checklists and verify vehicle documents to continue.</span></sc-if>
-        <a id="session-back-footer" class="action" href="{{sessionInformationUrl}}">Cancel</a>
-        <sc-if value="{{canContinue}}"><a id="continue-to-route" class="action primary" href="{{routeUrl}}">Next</a></sc-if>
-        <sc-if value="{{cannotContinue}}"><button type="button" class="action" disabled>Next</button></sc-if>
+        <button type="button" id="session-back-footer" class="test-action-trigger" data-test-action="cancel">Cancel</button>
+        <button type="button" class="test-action-trigger" data-test-action="pause" style="margin-right: auto">Pause</button>
+        <sc-if value="{{showFailed}}"><span class="gate-message failed" role="status">One or more items are marked Fail.</span></sc-if>
+        <sc-if value="{{showIncomplete}}"><span class="gate-message">Answer every checklist item and verify vehicle documents to continue.</span></sc-if>
+        <button type="button" id="continue-to-route" class="{{continueClass}}" disabled="{{cannotContinue}}" sc-camel-on-click="{{continueToRoute}}">Continue to Route</button>
       </footer>
     </section>
     <aside class="device-readiness" aria-labelledby="device-title">
@@ -128,25 +138,46 @@
         <li class="device-row" id="gps"><span class="device-dot" aria-hidden="true"></span><span class="device-name">GPS</span><span class="device-detail"></span></li>
         <li class="device-row" id="network"><span class="device-dot" aria-hidden="true"></span><span class="device-name">Network Connection</span><span class="device-detail"></span></li>
       </ul>
-      <p class="device-note">Camera and GPS status are simulated. Device readiness does not block Next.</p>
+      <p class="device-note">Camera and GPS status are simulated. Device readiness does not block Continue to Route.</p>
     </aside>
   </main>
+  <sc-if value="{{showRequirementsDialog}}">
+    <div class="modal-overlay">
+      <section class="requirements-dialog" role="dialog" aria-modal="true" aria-labelledby="requirements-title" aria-describedby="requirements-message">
+        <button type="button" class="close-dialog" aria-label="Close" sc-camel-on-click="{{closeDialog}}">×</button>
+        <h2 id="requirements-title">Pre-Test Requirements Not Met</h2>
+        <p id="requirements-message">The customer did not meet all pre-test requirements and cannot proceed with the road test. The customer must return at a later time to complete the test.</p>
+        <div class="dialog-actions">
+          <button type="button" id="cancel-test" class="action cancel-test" sc-camel-on-click="{{cancelTest}}">Cancel Test</button>
+        </div>
+      </section>
+    </div>
+  </sc-if>
+  <sc-if value="{{showError}}"><div class="save-error" role="alert">{{errorMessage}}</div></sc-if>
 </div>
 </x-dc>
 <script type="text/x-dc" data-dc-script="" data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:800}}">
 class Component extends DCLogic {
   renderVals() {
-    const state = this.state || {};
-    const params = new URLSearchParams(window.location.search);
-    const firstName = params.get('firstName') || '';
-    const middleName = params.get('middleName') || '';
-    const lastName = params.get('lastName') || '';
-    const customerName = [
-      firstName.trim(),
-      middleName.trim() ? middleName.trim().charAt(0).toUpperCase() + '.' : '',
-      lastName.trim(),
-      (params.get('suffix') || '').trim()
-    ].filter(Boolean).join(' ') || 'Jordan A. Reyes';
+    const session = window.DTIRouteSession;
+    const scope = session.roadTestStorageKey.slice('dtiRoadTest:'.length);
+    const preTestKey = 'dtiPreTestChecks:' + scope;
+    if (!this.savedLoaded) {
+      this.savedLoaded = true;
+      this.saved = {};
+      try {
+        const saved = JSON.parse(window.sessionStorage.getItem(preTestKey) || 'null');
+        if (saved && typeof saved === 'object') {
+          this.saved = {
+            status: saved.status && typeof saved.status === 'object' ? saved.status : {},
+            registration: saved.registration === true, insurance: saved.insurance === true
+          };
+        }
+      } catch (error) {
+        this.loadError = 'Saved pre-test checks could not be loaded. Complete the checks again.';
+      }
+    }
+    const state = Object.assign({}, this.saved, this.state || {});
     const checklists = [
       { id: 'understanding', label: 'Basic Understanding', items: [
         ['understanding-stop', 'Stop'],
@@ -176,7 +207,7 @@ class Component extends DCLogic {
     const selectedId = state.selectedSection || 'vehicle';
     const selected = checklists.find((section) => section.id === selectedId);
     const status = state.status || {};
-    const setResult = (id, value) => this.setState({ status: Object.assign({}, status, { [id]: status[id] === value ? null : value }) });
+    const setResult = (id, value) => this.setState({ status: Object.assign({}, status, { [id]: status[id] === value ? null : value }), errorMessage: '' });
     const sections = checklists.map((section) => {
       const passedCount = section.items.filter(([id]) => status[id] === 'pass').length;
       return {
@@ -204,12 +235,23 @@ class Component extends DCLogic {
       select: () => this.setState({ selectedSection: 'vehicle' })
     });
     const showFailed = checklists.some((section) => section.items.some(([id]) => status[id] === 'fail'));
-    const canContinue = sections.every((section) => section.complete);
+    const checklistsAnswered = checklists.every((section) => section.items.every(([id]) => status[id] === 'pass' || status[id] === 'fail'));
+    const canContinue = checklistsAnswered && documents.every((document) => document.checked);
+    const saveAndNavigate = (destination) => {
+      try {
+        window.sessionStorage.setItem(preTestKey, JSON.stringify({ status, registration: !!state.registration, insurance: !!state.insurance, savedAt: Date.now() }));
+      } catch (error) {
+        this.setState({ errorMessage: 'An error occurred while saving, please try again.' });
+        return;
+      }
+      window.location.assign(session.url(destination));
+    };
+    const errorMessage = state.errorMessage || this.loadError || '';
+    window.DTITestActions.configure({ screen: 'Pre-test Checks', saveFields: () => ({ status, registration: !!state.registration, insurance: !!state.insurance }) });
     return {
-      customerName, sections, documents,
+      sections, documents,
       selectedTitle: selectedId === 'vehicle' ? 'Vehicle Information' : selected.label,
       sessionInformationUrl: '04-session-information.html' + window.location.search,
-      routeUrl: '06-select-route.html' + window.location.search,
       showChecklist: selectedId !== 'vehicle',
       showUnderstandingDetails: selectedId === 'understanding',
       showInspectionDetails: selectedId === 'inspection',
@@ -219,7 +261,28 @@ class Component extends DCLogic {
         pass: () => setResult(id, 'pass'), fail: () => setResult(id, 'fail')
       })),
       canContinue, cannotContinue: !canContinue, showFailed,
-      showIncomplete: !canContinue && !showFailed
+      continueClass: canContinue ? 'action primary' : 'action',
+      showIncomplete: !canContinue,
+      goBack: () => saveAndNavigate('04-session-information.html'),
+      continueToRoute: () => {
+        if (!canContinue) return;
+        if (showFailed) this.setState({ showRequirementsDialog: true, errorMessage: '' });
+        else saveAndNavigate('06-select-route.html');
+      },
+      showRequirementsDialog: !!state.showRequirementsDialog,
+      closeDialog: () => this.setState({ showRequirementsDialog: false }),
+      cancelTest: () => {
+        try {
+          window.sessionStorage.setItem('dtiTestStatus:' + scope, JSON.stringify({ status: 'Canceled', reason: 'Pre-test requirements not met', canceledAt: Date.now() }));
+          [preTestKey, session.roadTestStorageKey, 'dtiCurrentTestAcknowledgement'].forEach((key) => window.sessionStorage.removeItem(key));
+          session.clear();
+        } catch (error) {
+          this.setState({ errorMessage: 'An error occurred while canceling the test, please try again.' });
+          return;
+        }
+        window.location.assign('02-start-a-test.html?canceled=pre-test');
+      },
+      showError: !!errorMessage, errorMessage
     };
   }
 }
@@ -231,7 +294,7 @@ class Component extends DCLogic {
       { id: 'camera-connection', ready: true, success: 'Connected', failure: 'Not found' },
       { id: 'camera-signal', ready: true, success: 'Good', failure: 'Poor' },
       { id: 'gps', ready: true, success: 'Good', failure: 'Poor' },
-      { id: 'network', ready: navigator.onLine && window.location.protocol !== 'file:', success: 'Connected', failure: 'Not connected' }
+      { id: 'network', ready: window.DTIConnection.connected(), success: 'Connected', failure: 'Not connected' }
     ];
     renderReadiness(devices);
   }
@@ -256,6 +319,30 @@ class Component extends DCLogic {
   window.addEventListener('online', updateReadiness);
   window.addEventListener('offline', updateReadiness);
   updateReadiness();
+})();
+</script>
+<script id="requirements-dialog-focus">
+(() => {
+  let activeDialog = null;
+  document.addEventListener('keydown', (event) => {
+    const dialog = document.querySelector('.requirements-dialog');
+    if (!dialog) return;
+    const buttons = Array.from(dialog.querySelectorAll('button'));
+    if (event.key === 'Escape') buttons[0].click();
+    if (event.key === 'Tab') {
+      const target = event.shiftKey ? buttons[buttons.length - 1] : buttons[0];
+      if (!dialog.contains(document.activeElement) || (!event.shiftKey && document.activeElement === buttons[buttons.length - 1]) || (event.shiftKey && document.activeElement === buttons[0])) {
+        event.preventDefault();
+        target.focus();
+      }
+    }
+  });
+  new MutationObserver(() => {
+    const dialog = document.querySelector('.requirements-dialog');
+    if (dialog && dialog !== activeDialog) dialog.querySelector('button').focus();
+    if (!dialog && activeDialog) document.getElementById('continue-to-route')?.focus();
+    activeDialog = dialog;
+  }).observe(document.body, { childList: true, subtree: true });
 })();
 </script>
 <script id="screen-fit-script">

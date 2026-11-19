@@ -33,7 +33,7 @@
   .error-list { min-height: 0; overflow-y: auto; }
   .evidence-header { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-12); margin-bottom: var(--space-12); }
   .evidence-header h2 { margin: 0; }
-  .evidence-count { font-size: 12px; color: var(--color-slate); white-space: nowrap; }
+  .evidence-count { font-size: 14px; font-weight: 600; color: var(--color-slate-dark); white-space: nowrap; }
   .evidence-entry { display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; align-items: start; gap: var(--space-12); padding: var(--space-14) 0; border-top: 1px solid var(--color-line); }
   .evidence-label { font-size: 14px; line-height: 1.5; }
   .evidence-metadata, .entry-time { margin-top: var(--space-6); color: var(--color-slate); font-size: 12px; line-height: 1.5; }
@@ -148,22 +148,19 @@
           <sc-if value="{{hasUnplotted}}"><p class="timeline-caption">{{unplottedCount}} entries have missing or out-of-range timestamps and cannot be placed on the timeline.</p></sc-if>
         </section>
         <section class="review-card evidence" aria-labelledby="evidence-title">
-          <div class="evidence-header"><h2 id="evidence-title">Test Errors</h2><span class="evidence-count" id="test-errors-count">{{evidenceSummary}}</span></div>
+          <div class="evidence-header"><h2 id="evidence-title">Test Errors</h2><span class="evidence-count" id="test-errors-count">{{errorCountLabel}}</span></div>
           <div class="error-list">
-            <sc-if value="{{noRows}}"><p>No evaluation points or errors recorded.</p></sc-if>
+            <sc-if value="{{noRows}}"><p>No errors recorded.</p></sc-if>
             <sc-for list="{{rows}}" as="entry">
               <div class="evidence-entry">
-                <div aria-label="{{entry.iconLabel}}">
-                  <sc-if value="{{entry.isError}}"><span class="error-icon" aria-hidden="true">!</span></sc-if>
-                  <sc-if value="{{entry.isEvaluation}}"><span class="{{entry.iconClass}}" aria-hidden="true">{{entry.number}}</span></sc-if>
-                </div>
+                <div aria-label="Examiner-recorded error"><span class="error-icon" aria-hidden="true">!</span></div>
                 <div>
-                  <div class="evidence-label"><strong>{{entry.label}}</strong><sc-if value="{{entry.simulated}}"><span class="simulated-label">Simulated</span></sc-if></div>
+                  <div class="evidence-label"><strong>{{entry.label}}</strong></div>
                   <div class="evidence-metadata">{{entry.locationLabel}}</div>
                 </div>
                 <div class="error-row-actions">
                   <time class="entry-time">{{entry.timestamp}}</time>
-                  <sc-if value="{{entry.isError}}"><button type="button" class="details-button" id="{{entry.triggerId}}" aria-label="{{entry.detailsLabel}}" aria-haspopup="dialog" sc-camel-on-click="{{entry.openDetails}}">View details</button></sc-if>
+                  <button type="button" class="details-button" id="{{entry.triggerId}}" aria-label="{{entry.detailsLabel}}" aria-haspopup="dialog" sc-camel-on-click="{{entry.openDetails}}">View details</button>
                 </div>
               </div>
             </sc-for>
@@ -261,10 +258,9 @@ class Component extends DCLogic {
       openDetails: () => this.setState({ selectedErrorId: entry.id })
     } : {};
     const iconClass = (entry) => 'point-icon' + (entry.kind === 'skipped' ? ' skipped' : '');
-    const rows = data.rows.map((entry) => ({
-      ...entry, ...detailsAction(entry, 'error-row-'), timestamp: model.formatTime(entry.savedAt),
-      isError: entry.kind === 'error', isEvaluation: entry.kind !== 'error', iconClass: iconClass(entry),
-      iconLabel: entry.kind === 'error' ? 'Examiner-recorded error' : 'Evaluation point ' + entry.number + ', ' + entry.kind
+    // The list shows examiner-recorded errors only; simulated evaluation points stay on the timeline.
+    const rows = data.rows.filter((entry) => entry.kind === 'error').map((entry) => ({
+      ...entry, ...detailsAction(entry, 'error-row-'), timestamp: model.formatTime(entry.savedAt)
     }));
     const markers = data.markers.map((entry) => ({
       ...entry, ...detailsAction(entry, 'error-marker-'), isError: entry.kind === 'error', isEvaluation: entry.kind !== 'error', iconClass: iconClass(entry),
@@ -279,7 +275,7 @@ class Component extends DCLogic {
       outcome: failures.length ? 'Automatic fail' : 'Result pending',
       outcomeStyle: 'color: ' + (failures.length ? 'var(--color-red)' : 'var(--color-indigo)'),
       errorCount: record.saved.length, failureCount: failures.length, hasFailure: failures.length > 0, failureReason: failures.map((event) => event.reason).join('; '),
-      evidenceSummary: data.scored + ' scored, ' + data.skipped + ' skipped, ' + record.saved.length + ' errors',
+      errorCountLabel: record.saved.length + (record.saved.length === 1 ? ' error' : ' errors'),
       points: record.totalErrorPoints === null ? 'Not captured' : record.totalErrorPoints,
       testDate: model.formatDate(record.startedAt), startTime: model.formatTime(record.startedAt), endTime: model.formatTime(record.endedAt),
       duration: model.elapsed(record.startedAt, record.endedAt), rows, noRows: rows.length === 0, markers,

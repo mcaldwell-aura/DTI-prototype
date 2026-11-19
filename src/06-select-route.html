@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>DTI Examiner - Select Route</title>
 <script src="shared/route-session.js"></script>
+<script src="shared/test-actions.js"></script>
+<script src="shared/test-header.js"></script>
+<script src="shared/motion-alert.js"></script>
 <script src="shared/runtime.js"></script>
 <link rel="stylesheet" href="shared/styles.css">
 <style>
@@ -13,8 +16,6 @@
   .route-screen { display: flex; position: relative; width: 1280px; height: 800px; flex-direction: column; font-family: var(--font-sans); color: var(--color-charcoal); background: var(--color-background); }
   .route-header { display: flex; height: 64px; flex: 0 0 64px; align-items: center; gap: var(--space-16); padding: 0 var(--space-24); border-bottom: 1px solid var(--color-line); background: var(--color-white); }
   .back-button { display: flex; width: 44px; height: 44px; align-items: center; justify-content: center; border: 1px solid var(--color-line); border-radius: 10px; background: var(--color-white); color: var(--color-charcoal); cursor: pointer; }
-  .header-title { font-size: 17px; font-weight: 700; }
-  .site-name { margin-left: auto; font-size: 14px; color: var(--color-slate); }
   .route-body { display: grid; min-height: 0; flex: 1; grid-template-columns: 360px minmax(0, 1fr); gap: var(--space-20); padding: var(--space-24); }
   .route-list { min-height: 0; overflow-y: auto; }
   h1 { margin: 0 0 var(--space-8); font-size: 26px; }
@@ -47,8 +48,7 @@
     <button type="button" class="back-button" aria-label="Back to pre-test checks" sc-camel-on-click="{{goBack}}">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
     </button>
-    <span class="header-title">Select Route</span>
-    <span class="site-name">{{siteName}}</span>
+    <div class="test-context" data-test-context></div>
   </header>
   <main class="route-body">
     <section class="route-list" aria-labelledby="choose-route-title">
@@ -73,6 +73,8 @@
     </section>
   </main>
   <footer class="route-footer">
+    <button type="button" class="test-action-trigger" data-test-action="cancel">Cancel</button>
+    <button type="button" class="test-action-trigger" data-test-action="pause" style="margin-right: auto">Pause</button>
     <button type="button" class="action primary" id="verify-camera" sc-camel-on-click="{{verifyCamera}}">Verify Camera</button>
   </footer>
   <sc-if value="{{showNoRouteDialog}}">
@@ -118,6 +120,7 @@ class Component extends DCLogic {
     const nextPage = session.cameraConnected ? '06-camera-verification.html' : '07-road-test.html';
     const closeDialog = () => this.setState({ showNoRouteDialog: false });
     const errorMessage = state.errorMessage || (state.selectedId === undefined ? this.loadError : '');
+    window.DTITestActions.configure({ screen: 'Route', saveFields: () => ({ routeId: selected ? selected.id : null }) });
     return {
       siteName: session.context.siteName,
       testTypeLabel: session.context.testType === 'nc' ? 'Non-commercial road test' : session.context.testType === 'commercial' ? 'Commercial road test' : session.context.testType,
