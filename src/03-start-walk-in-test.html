@@ -28,7 +28,12 @@
   .lookup-button { min-height: 52px; padding: 0 var(--space-22); border: 1px solid var(--color-indigo); border-radius: 10px; background: var(--color-indigo); color: var(--color-white); font: 700 15px var(--font-sans); cursor: pointer; }
   .lookup-button:disabled { opacity: 0.55; cursor: not-allowed; }
   .lookup-find { display: flex; align-items: center; justify-content: center; gap: var(--space-8); border-color: #000; background: #000; }
-  .lookup-criteria { min-height: 44px; padding: 0 var(--space-14); border: 1px solid var(--color-line-dark); border-radius: 10px; background: var(--color-white); font: 600 15px var(--font-sans); }
+  .lookup-criteria { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); padding: var(--space-4); border-radius: 10px; background: var(--color-off-white-alt); }
+  .lookup-criteria label { position: relative; }
+  .lookup-criteria input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+  .lookup-criteria span { display: grid; min-height: 44px; place-items: center; border-radius: 8px; color: var(--color-slate-dark); font: 600 14px var(--font-sans); }
+  .lookup-criteria input:checked + span { background: var(--color-white); color: var(--color-charcoal); box-shadow: 0 1px 3px rgba(20,24,29,0.15); }
+  .lookup-criteria input:focus-visible + span { outline: 3px solid var(--color-indigo-light); outline-offset: -3px; }
   .lookup-footer { min-height: 84px; flex-shrink: 0; display: flex; align-items: flex-start; gap: var(--space-12); box-sizing: border-box; padding: var(--space-16) var(--space-28); border-top: 1px solid var(--color-line); }
   .lookup-final-action { display: flex; flex-direction: column; align-items: flex-end; gap: var(--space-6); }
   .lookup-final-action .lookup-no-record { text-align: right; }
@@ -138,11 +143,11 @@
           <h2 class="lookup-heading">2 - Find customer in MAX</h2>
           <fieldset style="display: flex; flex-direction: column; gap: var(--space-12); min-width: 0; margin: 0; padding: 0; border: 0">
             <div style="display: flex; flex-direction: column; gap: var(--space-6)">
-              <label for="search-criteria" style="font-size: var(--space-13); font-weight: 600; color: var(--color-slate-dark)">Search Criteria</label>
-              <select id="search-criteria" class="lookup-criteria" value="{{method}}" sc-camel-on-change="{{changeMethod}}">
-                <option value="dl">DL ID + DOB</option>
-                <option value="ssn">SSN + DOB</option>
-              </select>
+              <span id="search-criteria-label" style="font-size: var(--space-13); font-weight: 600; color: var(--color-slate-dark)">Search Criteria</span>
+              <div id="search-criteria" class="lookup-criteria" role="radiogroup" aria-labelledby="search-criteria-label">
+                <label><input type="radio" name="search-criteria" value="dl" checked="{{isDl}}" sc-camel-on-change="{{changeMethod}}"><span>DL ID + DOB</span></label>
+                <label><input type="radio" name="search-criteria" value="ssn" checked="{{isSsn}}" sc-camel-on-change="{{changeMethod}}"><span>SSN + DOB</span></label>
+              </div>
             </div>
             <sc-if value="{{isDl}}" hint-placeholder-val="{{ true }}">
               <div style="display: flex; flex-direction: column; gap: var(--space-6)">
@@ -275,7 +280,7 @@ class Component extends DCLogic {
       toastMessage: st.toastMessage, showToast: !!st.toastMessage,
       invalidDob: dobValue.length === 10 && !validDob,
       eligibilityMessages,
-      dlValue, ssnDisplay: maskSsn(ssnValue, false), ssnCount: ssnValue.length, dobValue, searchDisabled, scenario, method,
+      dlValue, ssnDisplay: maskSsn(ssnValue, false), ssnCount: ssnValue.length, dobValue, searchDisabled, scenario,
       changeType: (event) => update({ type: event.currentTarget.value }),
       changeMethod: (event) => update({ method: event.currentTarget.value, dlValue: '', ssnValue: '' }),
       changeScenario: (event) => update({ scenario: event.currentTarget.value }),
