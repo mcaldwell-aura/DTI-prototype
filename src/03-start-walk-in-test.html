@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="en"><head>
 <meta charset="utf-8">
-<title>DTI Examiner – Start walk-in test</title>
+<title>DTI Examiner – Start New Test</title>
 <script src="shared/runtime.js"></script>
+<script src="shared/route-session.js"></script>
 <script src="shared/customer-lookup.js"></script>
   <link rel="stylesheet" href="shared/styles.css">
 <style>
@@ -23,6 +24,15 @@
   .lookup-paused { display: flex; align-items: center; gap: var(--space-10); padding: var(--space-12); border: 1px solid var(--color-indigo-light); border-radius: 10px; background: var(--color-indigo-pale); color: var(--color-indigo-dark); font-size: 14px; font-weight: 600; line-height: 1.4; }
   .lookup-paused svg { flex: 0 0 22px; }
   .lookup-no-record { margin: 0; color: var(--color-red); font-size: 14px; font-weight: 700; text-align: left; }
+  .lookup-match { display: flex; align-items: center; gap: var(--space-8); margin: 0; padding: var(--space-12); border-radius: 10px; background: var(--color-green-light); color: var(--color-green); font-size: 14px; }
+  .lookup-button { min-height: 52px; padding: 0 var(--space-22); border: 1px solid var(--color-indigo); border-radius: 10px; background: var(--color-indigo); color: var(--color-white); font: 700 15px var(--font-sans); cursor: pointer; }
+  .lookup-button:disabled { opacity: 0.55; cursor: not-allowed; }
+  .lookup-find { display: flex; align-items: center; justify-content: center; gap: var(--space-8); border-color: #000; background: #000; }
+  .lookup-criteria { min-height: 44px; padding: 0 var(--space-14); border: 1px solid var(--color-line-dark); border-radius: 10px; background: var(--color-white); font: 600 15px var(--font-sans); }
+  .lookup-footer { min-height: 84px; flex-shrink: 0; display: flex; align-items: flex-start; gap: var(--space-12); box-sizing: border-box; padding: var(--space-16) var(--space-28); border-top: 1px solid var(--color-line); }
+  .lookup-final-action { display: flex; flex-direction: column; align-items: flex-end; gap: var(--space-6); }
+  .lookup-final-action .lookup-no-record { text-align: right; }
+  .lookup-create { display: flex; align-items: center; gap: var(--space-8); }
   button:focus-visible, select:focus-visible, a:focus-visible { outline: 3px solid var(--color-indigo-light); outline-offset: var(--space-2); }
 </style>
 </head>
@@ -62,10 +72,10 @@
         </span>
         <div class="test-home-copy">
           <h2>Start new test</h2>
-          <p>Choose the test type, then look up the customer in MAX by DL ID or last 4 of SSN with date of birth.</p>
+          <p>Choose the test type, then look up the customer in MAX by DL ID or SSN with DOB.</p>
         </div>
         <a class="test-home-action" href="03-start-walk-in-test.html">
-          Start walk-in test
+          Start New Test
           <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>
         </a>
       </section>
@@ -86,9 +96,9 @@
   </div>
   <div style="position: absolute; inset: 0; background: rgba(20,24,29,0.55)"></div>
 
-  <section role="dialog" aria-modal="true" aria-label="Start walk-in test" style="position: absolute; left: 100px; top: 56px; width: 1080px; height: 688px; box-sizing: border-box; background: var(--color-white); border-radius: 18px; box-shadow: 0 12px 40px rgba(20,24,29,0.3); display: flex; flex-direction: column; overflow: hidden">
+  <section role="dialog" aria-modal="true" aria-label="Start New Test" style="position: absolute; left: 100px; top: 56px; width: 1080px; height: 688px; box-sizing: border-box; background: var(--color-white); border-radius: 18px; box-shadow: 0 12px 40px rgba(20,24,29,0.3); display: flex; flex-direction: column; overflow: hidden">
     <div style="height: 72px; flex-shrink: 0; display: flex; align-items: center; gap: var(--space-12); padding: 0 var(--space-16) 0 var(--space-28); border-bottom: 1px solid var(--color-line)">
-      <h1 style="margin: 0; font-size: 22px; font-weight: 700; flex: 1">Start walk-in test</h1>
+      <h1 style="margin: 0; font-size: 22px; font-weight: 700; flex: 1">Start New Test</h1>
       <a href="02-start-a-test.html" aria-label="Close" style="width: 44px; height: 44px; border-radius: 10px; border: 1px solid var(--color-line); display: flex; align-items: center; justify-content: center">
         <svg width="20" height="20" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-charcoal)" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
       </a>
@@ -97,7 +107,7 @@
     <div class="lookup-body">
       <div class="lookup-column lookup-type">
         <fieldset style="margin: 0; padding: 0; border: none; display: flex; flex-direction: column; gap: var(--space-10)">
-          <legend class="lookup-heading">Test Type</legend>
+          <legend class="lookup-heading">1 - Test Type</legend>
           <label for="test-type" style="font-size: var(--space-13); font-weight: 600; color: var(--color-slate-dark)">Choose a test type</label>
           <select id="test-type" name="testType" required sc-camel-on-change="{{changeType}}" style="height: 48px; padding: 0 var(--space-14); border: 1px solid var(--color-line-dark); border-radius: 10px; background: var(--color-white); font: 600 15px var(--font-sans); color: var(--color-charcoal)">
             <option value="" disabled selected>Choose a test type</option>
@@ -114,20 +124,25 @@
             <option value="in-progress">Existing In Progress test</option>
             <option value="paused">Existing Paused test</option>
             <option value="failed-today">Failed today at another site</option>
+            <option value="passed-today">Passed today at another site</option>
             <option value="failed-earlier">Failed on a previous day</option>
             <option value="no-record">No customer found</option>
             <option value="connection-error">Connection error</option>
+            <option value="creation-error">Test creation error</option>
           </select>
-          <p class="lookup-help">Simulates MAX and DTI responses. No backend is connected and no test is created.</p>
+          <p class="lookup-help">Lookup, creation, and resuming are simulated. No backend is connected.</p>
         </div>
       </div>
       <div class="lookup-column lookup-customer">
         <div style="display: flex; flex-direction: column; gap: var(--space-12)">
-          <h2 class="lookup-heading">Customer Lookup</h2>
-          <fieldset disabled="{{typeMissing}}" style="display: flex; flex-direction: column; gap: var(--space-12); min-width: 0; margin: 0; padding: 0; border: 0; opacity: {{lookupOpacity}}">
-            <div role="tablist" aria-label="Lookup method" style="display: grid; grid-template-columns: 1fr 1fr; padding: var(--space-4); border-radius: 10px; background: var(--color-off-white-alt)">
-              <button role="tab" sc-camel-on-click="{{useDl}}" aria-selected="{{isDl}}" style="{{dlTabStyle}}">DL ID + DOB</button>
-              <button role="tab" sc-camel-on-click="{{useSsn}}" aria-selected="{{isSsn}}" style="{{ssnTabStyle}}">SSN + DOB</button>
+          <h2 class="lookup-heading">2 - Find customer in MAX</h2>
+          <fieldset style="display: flex; flex-direction: column; gap: var(--space-12); min-width: 0; margin: 0; padding: 0; border: 0">
+            <div style="display: flex; flex-direction: column; gap: var(--space-6)">
+              <label for="search-criteria" style="font-size: var(--space-13); font-weight: 600; color: var(--color-slate-dark)">Search Criteria</label>
+              <select id="search-criteria" class="lookup-criteria" value="{{method}}" sc-camel-on-change="{{changeMethod}}">
+                <option value="dl">DL ID + DOB</option>
+                <option value="ssn">SSN + DOB</option>
+              </select>
             </div>
             <sc-if value="{{isDl}}" hint-placeholder-val="{{ true }}">
               <div style="display: flex; flex-direction: column; gap: var(--space-6)">
@@ -144,50 +159,58 @@
             </sc-if>
             <div style="display: flex; flex-direction: column; gap: var(--space-6)">
               <label for="dob" style="font-size: var(--space-13); font-weight: 600; color: var(--color-slate-dark)">Date of birth</label>
-              <input id="dob" type="text" required value="{{dobValue}}" sc-camel-on-input="{{updateDob}}" inputmode="numeric" maxlength="10" autocomplete="off" placeholder="MM/DD/YYYY" style="height: 48px; border: 1px solid var(--color-line-dark); border-radius: 10px; padding: 0 var(--space-14); font: 500 16px var(--font-mono); color: var(--color-charcoal)">
+              <input id="dob" type="text" required value="{{dobValue}}" sc-camel-on-input="{{updateDob}}" aria-invalid="{{invalidDob}}" inputmode="numeric" maxlength="10" autocomplete="off" placeholder="MM/DD/YYYY" style="height: 48px; border: 1px solid var(--color-line-dark); border-radius: 10px; padding: 0 var(--space-14); font: 500 16px var(--font-mono); color: var(--color-charcoal)">
+              <sc-if value="{{invalidDob}}"><p class="lookup-no-record" role="alert">Enter a valid date of birth that is not in the future.</p></sc-if>
             </div>
-            <sc-if value="{{showSearch}}" hint-placeholder-val="{{ true }}">
-              <button type="button" id="search-max" sc-camel-on-click="{{searchMax}}" disabled="{{searchDisabled}}" style="min-height: 52px; border-radius: 10px; border: none; background: var(--color-indigo); color: var(--color-white); font: 700 15px var(--font-sans); display: flex; align-items: center; justify-content: center; gap: var(--space-8); opacity: {{searchOpacity}}; cursor: {{searchCursor}}">
-                <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-white)" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-4-4"></path></svg>Search</button>
+            <button type="button" id="search-max" class="lookup-button lookup-find" sc-camel-on-click="{{searchMax}}" disabled="{{searchDisabled}}">
+              <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-4-4"></path></svg>Search MAX</button>
+            <sc-if value="{{showTypeError}}"><p class="lookup-no-record" role="alert">Please select a test type.</p></sc-if>
+            <sc-if value="{{showNoRecord}}"><p class="lookup-no-record" role="alert">No customer record found.</p></sc-if>
+            <sc-if value="{{showCustomerMatch}}" hint-placeholder-val="{{ false }}">
+              <p class="lookup-match" role="status">
+                <svg width="20" height="20" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M5 12l5 5L20 7"></path></svg>
+                <span>Customer found: <strong>{{matchedName}}</strong></span>
+              </p>
             </sc-if>
+            <sc-for list="{{eligibilityMessages}}" as="message"><p class="lookup-no-record" role="alert">{{message.text}}</p></sc-for>
             <sc-if value="{{showResume}}" hint-placeholder-val="{{ false }}">
               <div class="lookup-paused" role="status">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M10 9v6M14 9v6"></path></svg>
                 <span>{{pausedMessage}}</span>
               </div>
-              <button type="button" id="resume-test" sc-camel-on-click="{{resumeTest}}" style="min-height: 52px; border-radius: 10px; border: none; background: var(--color-indigo); color: var(--color-white); font: 700 15px var(--font-sans); display: flex; align-items: center; justify-content: center; gap: var(--space-8); cursor: pointer">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>Resume test</button>
-              <sc-if value="{{showResumeError}}"><p class="lookup-no-record" role="alert">Unable to resume the test. Please try again.</p></sc-if>
             </sc-if>
             <sc-if value="{{showRetake}}" hint-placeholder-val="{{ false }}">
               <div class="lookup-paused" role="status">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5M12 8h.01"></path></svg>
                 <span><strong>Retake.</strong> {{retakeMessage}}</span>
               </div>
-              <button type="button" id="continue-retake" sc-camel-on-click="{{continueRetake}}" style="min-height: 52px; border-radius: 10px; border: none; background: var(--color-indigo); color: var(--color-white); font: 700 15px var(--font-sans); cursor: pointer">Continue to verification</button>
             </sc-if>
-            <sc-for list="{{eligibilityMessages}}" as="message">
-              <p class="lookup-no-record" role="alert">{{message.text}}</p>
-            </sc-for>
-            <sc-if value="{{showNoRecord}}"><p class="lookup-no-record" role="alert">No customer record found.</p></sc-if>
           </fieldset>
-          <sc-if value="{{typeMissing}}" hint-placeholder-val="{{ true }}">
-            <span style="font-size: 13px; color: var(--color-slate)">Choose a test type to enable customer lookup.</span>
-          </sc-if>
           <p class="lookup-help">Demo inputs: DL D12345678 or SSN 900-00-1234, with DOB 03/14/2007. Dashes and slashes are added for you. Use the prototype search scenario to try existing, paused, and failed tests.</p>
         </div>
       </div>
     </div>
 
-    <div style="height: 84px; flex-shrink: 0; display: flex; align-items: center; gap: var(--space-12); padding: 0 var(--space-28); border-top: 1px solid var(--color-line)">
-      <span style="flex: 1; font-size: 14px; color: var(--color-slate-dark)">{{summary}}</span>
+    <div class="lookup-footer">
+      <span style="flex: 1; align-self: center; font-size: 14px; color: var(--color-slate-dark)">{{summary}}</span>
       <a href="02-start-a-test.html" style="height: 52px; padding: 0 var(--space-22); border-radius: 10px; border: 1px solid var(--color-line-dark); display: flex; align-items: center; color: var(--color-charcoal); font-weight: 600; font-size: 15px; text-decoration: none">Cancel</a>
+      <div class="lookup-final-action">
+        <sc-if value="{{showCreate}}" hint-placeholder-val="{{ true }}">
+          <button type="button" id="create-test" class="lookup-button lookup-create" disabled="{{createDisabled}}" sc-camel-on-click="{{createTest}}">Create test and check-in
+            <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>
+          </button>
+        </sc-if>
+        <sc-if value="{{showResume}}" hint-placeholder-val="{{ false }}">
+          <button type="button" id="resume-test" class="lookup-button" sc-camel-on-click="{{resumeTest}}">Resume test</button>
+        </sc-if>
+        <sc-if value="{{showResumeError}}"><p class="lookup-no-record" role="alert">Unable to resume the test. Please try again.</p></sc-if>
+      </div>
     </div>
   </section>
-  <sc-if value="{{showConnectionError}}" hint-placeholder-val="{{ false }}">
+  <sc-if value="{{showToast}}" hint-placeholder-val="{{ false }}">
     <div role="alert" aria-live="assertive" style="position: absolute; z-index: 30; top: 72px; left: 50%; transform: translateX(-50%); width: 720px; box-sizing: border-box; display: flex; align-items: center; gap: var(--space-12); padding: var(--space-14) var(--space-18); border-radius: 10px; background: var(--color-red); color: var(--color-white); box-shadow: 0 4px 16px rgba(20,24,29,0.25); font-size: 14px; font-weight: 600">
-      <span style="flex: 1">Connection error occurred. Please check the connection status and try again.</span>
-      <button sc-camel-on-click="{{dismissConnectionError}}" aria-label="Dismiss connection error" style="width: 44px; height: 44px; flex-shrink: 0; border: 0; border-radius: 6px; background: transparent; color: var(--color-white); font: 700 20px var(--font-sans)">×</button>
+      <span style="flex: 1">{{toastMessage}}</span>
+      <button sc-camel-on-click="{{dismissToast}}" aria-label="Dismiss error" style="width: 44px; height: 44px; flex-shrink: 0; border: 0; border-radius: 6px; background: transparent; color: var(--color-white); font: 700 20px var(--font-sans)">×</button>
     </div>
   </sc-if>
 </div>
@@ -203,28 +226,32 @@ class Component extends DCLogic {
     const dobValue = st.dobValue || '';
     const scenario = st.scenario || 'eligible';
     const eligibilityMessages = st.eligibilityMessages || [];
-    const resetFeedback = { showNoRecord: false, showConnectionError: false, eligibilityMessages: [], pausedTest: null, pausedCustomer: null, resumeError: false, retakeDate: null, retakeCustomer: null };
+    const resetFeedback = { showNoRecord: false, showTypeError: false, toastMessage: '', eligibilityMessages: [], matchedCustomer: null, pausedTest: null, resumeError: false, retakeDate: null };
     const update = (patch) => this.setState({ ...resetFeedback, ...patch });
     const typeMissing = type !== 'nc';
-    const tab = (on) => 'height: 44px; border-radius: 8px; border: none; font: 600 14px \'Public Sans\', system-ui, sans-serif; cursor: pointer; ' + (on ? 'background: var(--color-white); color: var(--color-charcoal); box-shadow: 0 1px 3px rgba(20,24,29,0.15);' : 'background: transparent; color: var(--color-slate-dark);');
-    const hasLookupInput = /^\d{2}\/\d{2}\/\d{4}$/.test(dobValue) && (method === 'dl'
+    const lookup = window.DTICustomerLookup;
+    const validDob = lookup.validDob(dobValue);
+    const hasLookupInput = validDob && (method === 'dl'
       ? /^[A-Z0-9]{9}$/.test(dlValue)
       : /^\d{9}$/.test(ssnValue));
     const pausedTest = st.pausedTest || null;
-    const searchDisabled = typeMissing || !hasLookupInput || eligibilityMessages.length > 0;
+    const matchedCustomer = st.matchedCustomer || null;
+    const showResume = !!matchedCustomer && !!pausedTest && eligibilityMessages.length === 0;
+    const createDisabled = typeMissing || !matchedCustomer || showResume || eligibilityMessages.length > 0;
+    const searchDisabled = !hasLookupInput;
     const pad = (value) => String(value).padStart(2, '0');
     const formatDateTime = (time, withSeconds) => {
       const date = new Date(time);
       const hours = date.getHours();
       return pad(date.getMonth() + 1) + '/' + pad(date.getDate()) + '/' + date.getFullYear() + ' ' + (withSeconds ? pad(hours % 12 || 12) : hours % 12 || 12) + ':' + pad(date.getMinutes()) + (withSeconds ? ':' + pad(date.getSeconds()) : '') + ' ' + (hours >= 12 ? 'PM' : 'AM');
     };
-    const openVerification = (customer, extra = {}) => {
+    const verificationParams = (customer, extra = {}) => {
       const current = new URLSearchParams(window.location.search);
       const next = new URLSearchParams({ ...customer, testType: type, siteId: current.get('siteId') || 'west-phoenix', ...extra });
-      for (const key of ['testId', 'location', 'appointmentDate', 'cameraConnected']) {
-        if (current.has(key) && !(key in extra)) next.set(key, current.get(key));
+      for (const key of ['location', 'appointmentDate', 'cameraConnected']) {
+        if (current.has(key)) next.set(key, current.get(key));
       }
-      window.location.assign('04-verify-customer.html?' + next.toString());
+      return next;
     };
     // Adds the next separator as soon as a group is complete, but not while deleting, so backspace isn't blocked.
     const group = (chars, sizes, sep, grow) => {
@@ -244,13 +271,13 @@ class Component extends DCLogic {
     };
     return {
       isDl: method === 'dl', isSsn: method === 'ssn',
-      showNoRecord: !!st.showNoRecord, showConnectionError: !!st.showConnectionError,
-      eligibilityMessages: eligibilityMessages.map((text) => ({ text })),
-      typeMissing, lookupOpacity: typeMissing ? '0.55' : '1',
-      dlValue, ssnDisplay: maskSsn(ssnValue, false), ssnCount: ssnValue.length, dobValue, searchDisabled, scenario,
-      searchOpacity: searchDisabled ? '0.55' : '1',
-      searchCursor: searchDisabled ? 'not-allowed' : 'pointer',
+      showNoRecord: !!st.showNoRecord, showTypeError: !!st.showTypeError,
+      toastMessage: st.toastMessage, showToast: !!st.toastMessage,
+      invalidDob: dobValue.length === 10 && !validDob,
+      eligibilityMessages,
+      dlValue, ssnDisplay: maskSsn(ssnValue, false), ssnCount: ssnValue.length, dobValue, searchDisabled, scenario, method,
       changeType: (event) => update({ type: event.currentTarget.value }),
+      changeMethod: (event) => update({ method: event.currentTarget.value, dlValue: '', ssnValue: '' }),
       changeScenario: (event) => update({ scenario: event.currentTarget.value }),
       updateDl: (event) => {
         const value = event.currentTarget.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 9);
@@ -273,59 +300,70 @@ class Component extends DCLogic {
       },
       searchMax: () => {
         if (searchDisabled) return;
-        const lookup = window.DTICustomerLookup;
+        if (typeMissing) {
+          update({ showTypeError: true });
+          return;
+        }
         let response;
         try {
           response = lookup.search({ method, identifier: method === 'dl' ? dlValue : ssnValue, dob: dobValue, testType: type, scenario });
         } catch (error) {
-          update({ showConnectionError: true });
+          update({ toastMessage: 'Connection error occurred. Please check the connection status and try again.' });
           return;
         }
         if (!response.customer) {
           update({ showNoRecord: true });
           return;
         }
-        const messages = lookup.blockers(response.customer.customerId, type, response.tests);
+        const matchedCustomer = response.customer;
+        const messages = lookup.blockers(matchedCustomer.customerId, type, response.tests);
         if (messages.length) {
-          update({ eligibilityMessages: messages });
+          update({ matchedCustomer, eligibilityMessages: messages });
           return;
         }
-        const paused = lookup.pausedTest(response.customer.customerId, type, response.tests);
+        const paused = lookup.pausedTest(matchedCustomer.customerId, type, response.tests);
         if (paused) {
-          update({ pausedTest: paused, pausedCustomer: response.customer });
+          update({ matchedCustomer, pausedTest: paused });
           return;
         }
-        update({});
         const previousFail = response.tests
-          .filter((test) => test.customerId === response.customer.customerId && test.testType === type && test.status === 'Fail' && test.completedDate)
+          .filter((test) => test.customerId === matchedCustomer.customerId && test.testType === type && test.status === 'Fail' && test.completedDate)
           .map((test) => test.completedDate).sort().pop();
-        if (previousFail) {
-          update({ retakeDate: previousFail, retakeCustomer: response.customer });
+        update({ matchedCustomer, retakeDate: previousFail || null });
+      },
+      showCustomerMatch: !!matchedCustomer,
+      matchedName: matchedCustomer ? [matchedCustomer.firstName, matchedCustomer.middleName && matchedCustomer.middleName[0].toUpperCase() + '.', matchedCustomer.lastName, matchedCustomer.suffix].filter(Boolean).join(' ') : '',
+      showCreate: !showResume, createDisabled, showResume, showResumeError: !!st.resumeError,
+      showRetake: !!st.retakeDate,
+      retakeMessage: st.retakeDate ? 'This customer failed a ' + (type === 'nc' ? 'Non-commercial road test' : 'road test') + ' on ' + st.retakeDate.replace(/^(\d{4})-(\d{2})-(\d{2})$/, '$2/$3/$1') + '.' : '',
+      createTest: () => {
+        if (createDisabled || this.openingTest) return;
+        let query;
+        try {
+          query = lookup.create(matchedCustomer, type, verificationParams(matchedCustomer), scenario);
+        } catch (error) {
+          this.setState({ toastMessage: 'An error occurred while creating the test. Please restart the app and try again.' });
           return;
         }
-        openVerification(response.customer);
+        this.openingTest = true;
+        window.location.assign('04-verify-customer.html?' + query);
       },
-      showSearch: !pausedTest && !st.retakeCustomer, showResume: !!pausedTest, showResumeError: !!st.resumeError,
-      showRetake: !!st.retakeCustomer,
-      retakeMessage: st.retakeDate ? 'This customer failed a ' + (type === 'nc' ? 'Non-commercial road test' : 'road test') + ' on ' + st.retakeDate.replace(/^(\d{4})-(\d{2})-(\d{2})$/, '$2/$3/$1') + '.' : '',
-      continueRetake: () => st.retakeCustomer && openVerification(st.retakeCustomer),
-      pausedMessage: pausedTest ? 'Paused test found, started ' + formatDateTime(pausedTest.startedAt, false).replace(' ', ' at ') + '.' : '',
+      pausedMessage: pausedTest ? 'Paused test found, started ' + formatDateTime(pausedTest.startedAt ?? pausedTest.createdAt ?? pausedTest.pausedAt, false).replace(' ', ' at ') + '.' : '',
       resumeTest: () => {
-        if (!pausedTest || !st.pausedCustomer) return;
+        if (!showResume || this.openingTest) return;
         const resumedTimestamp = formatDateTime(Date.now(), true);
+        const query = pausedTest.verificationQuery || verificationParams(matchedCustomer, { testId: pausedTest.testId }).toString();
         try {
-          window.sessionStorage.setItem('dtiTestInstance:' + pausedTest.testId, JSON.stringify({ ...pausedTest, status: 'In Progress', resumedTimestamp }));
+          lookup.resume(pausedTest, resumedTimestamp, query);
         } catch (error) {
           this.setState({ resumeError: true });
           return;
         }
-        openVerification(st.pausedCustomer, { testId: pausedTest.testId });
+        this.openingTest = true;
+        window.location.assign('04-verify-customer.html?' + query);
       },
-      dismissConnectionError: () => this.setState({ showConnectionError: false }),
-      dlTabStyle: tab(method === 'dl'), ssnTabStyle: tab(method === 'ssn'),
-      useDl: () => update({ method: 'dl' }),
-      useSsn: () => update({ method: 'ssn' }),
-      summary: typeMissing ? 'Select a test type before finding a customer' : pausedTest ? 'Resume the paused test to continue' : st.retakeCustomer ? 'Continue to start the retake' : !hasLookupInput ? 'Enter the required MAX lookup information' : eligibilityMessages.length ? 'This customer can\'t start a new test' : 'Search to open customer verification'
+      dismissToast: () => this.setState({ toastMessage: '' }),
+      summary: typeMissing ? 'Select a test type before finding a customer' : !hasLookupInput ? 'Enter the required MAX lookup information' : showResume ? 'Resume the paused test to continue' : !createDisabled ? 'Create a test to continue to verification' : 'Find an eligible customer before creating a test'
     };
   }
 }

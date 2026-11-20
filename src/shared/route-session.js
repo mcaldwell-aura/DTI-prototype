@@ -15,15 +15,26 @@
     { id: 'commercial-loop', name: 'Commercial Practice Loop', minutes: 30, miles: 8.2, testType: 'commercial', siteId: 'west-phoenix', enabled: true, variant: 'a' }
   ];
   const eligibleRoutes = routes.filter((route) => route.enabled && route.testType === context.testType && route.siteId === context.siteId);
-  const testScope = JSON.stringify([
-    params.get('testId') || 'DTI-1042',
-    params.get('customerId') || params.get('dlId') || [params.get('firstName'), params.get('middleName'), params.get('lastName'), params.get('dob')],
-    context.testType, context.siteId, params.get('appointmentDate')
-  ]);
+  const scopeFor = (query) => {
+    const site = query.get('siteId') || query.get('location') || 'west-phoenix';
+    return JSON.stringify([
+      query.get('testId') || 'DTI-1042',
+      query.get('customerId') || query.get('dlId') || [query.get('firstName'), query.get('middleName'), query.get('lastName'), query.get('dob')],
+      query.get('testType') || 'nc', site === 'West Phoenix MVD' ? 'west-phoenix' : site, query.get('appointmentDate')
+    ]);
+  };
+  const testScope = scopeFor(params);
   const storageKey = 'dtiTestRoute:' + testScope;
+  const checksKey = 'dtiPreTestChecks:' + testScope;
+  const fieldsKey = (screen) => 'dtiPreExamFields:' + testScope + ':' + screen;
   window.DTIRouteSession = {
     context,
     eligibleRoutes,
+    scopeFor,
+    instanceKey: params.has('testId') ? 'dtiTestInstance:' + params.get('testId') : null,
+    statusKey: 'dtiTestStatus:' + testScope,
+    checksKey, fieldsKey,
+    clearPreExam: () => [checksKey, fieldsKey('Customer Information'), fieldsKey('Acknowledge')].forEach((key) => window.sessionStorage.removeItem(key)),
     roadTestStorageKey: 'dtiRoadTest:' + testScope,
     clear: () => window.sessionStorage.removeItem(storageKey),
     cameraConnected: params.get('cameraConnected') !== 'false',

@@ -3,24 +3,35 @@ const assert = require('node:assert/strict');
 const { readFileSync } = require('node:fs');
 const { join } = require('node:path');
 const vm = require('node:vm');
+const { randomUUID } = require('node:crypto');
 
-function harness(search = '') {
+function harness(search = '', storage = new Map()) {
   const navigations = [];
   class Logic {
     constructor() { this.state = {}; }
     setState(patch) { this.state = { ...this.state, ...patch }; }
   }
-  const storage = new Map();
   const window = {
     location: { search, assign: (url) => navigations.push(url) },
-    sessionStorage: { getItem: (key) => storage.get(key) ?? null, setItem: (key, value) => storage.set(key, value) }
+    crypto: { randomUUID },
+    sessionStorage: {
+      get length() { return storage.size; },
+      key: (i) => [...storage.keys()][i],
+      getItem: (key) => storage.get(key) ?? null,
+      setItem: (key, value) => storage.set(key, value)
+    }
   };
   const context = vm.createContext({ window, URLSearchParams, Date, DCLogic: Logic });
-  vm.runInContext(readFileSync(join(__dirname, 'customer-lookup.js'), 'utf8'), context);
-  const html = readFileSync(join(__dirname, '..', '03-start-walk-in-test.html'), 'utf8');
-  const code = html.match(/<script type="text\/x-dc"[^>]*>([\s\S]*?)<\/script>/)[1];
-  const Component = vm.runInContext('(function () {' + code + '; return Component; })()', context);
-  return { component: new Component(), lookup: window.DTICustomerLookup, navigations, storage };
+  for (const script of ['route-session.js', 'test-actions.js', 'customer-lookup.js']) {
+    vm.runInContext(readFileSync(join(__dirname, script), 'utf8'), context);
+  }
+  const load = (file) => {
+    const html = readFileSync(join(__dirname, '..', file), 'utf8');
+    const code = html.match(/<script type="text\/x-dc"[^>]*>([\s\S]*?)<\/script>/)[1];
+    const Component = vm.runInContext('(function () {' + code + '; return Component; })()', context);
+    return new Component();
+  };
+  return { component: load('03-start-walk-in-test.html'), load, window, lookup: window.DTICustomerLookup, navigations, storage };
 }
 const change = (component, action, value) => component.renderVals()[action]({ currentTarget: { value } });
 const type = (component, action, value) => {
@@ -34,16 +45,27 @@ function fill(component) {
   change(component, 'updateDob', '03/14/2007');
 }
 
-test('eligible lookup navigates directly to verification with the matched customer and test context', () => {
+test('eligible lookup finds the customer without navigating until Create test is selected', () => {
   const h = harness('?testId=demo-test&siteId=east-demo&appointmentDate=2026-11-16&cameraConnected=false');
   const c = h.component;
   assert.equal(c.renderVals().searchDisabled, true);
   c.renderVals().searchMax();
   assert.equal(h.navigations.length, 0);
+  assert.equal(c.renderVals().createDisabled, true);
   fill(c);
   assert.equal(c.renderVals().searchDisabled, false);
   change(c, 'updateDl', ' d87654321 ');
+  c.renderVals().createTest();
+  assert.equal(h.navigations.length, 0);
   c.renderVals().searchMax();
+  const found = c.renderVals();
+  assert.equal(h.navigations.length, 0);
+  assert.equal(h.storage.size, 0);
+  assert.equal(found.matchedName, 'Jordan M. Reyes Jr.');
+  assert.equal(found.createDisabled, false);
+  assert.equal(found.showResume, false);
+  assert.equal(found.searchDisabled, false);
+  found.createTest();
   assert.equal(h.navigations.length, 1);
   const next = new URL(h.navigations[0], 'http://localhost');
   assert.equal(next.pathname, '/04-verify-customer.html');
@@ -51,7 +73,13 @@ test('eligible lookup navigates directly to verification with the matched custom
   assert.equal(next.searchParams.get('middleName'), 'Morgan');
   assert.equal(next.searchParams.get('dlId'), 'D87654321');
   assert.equal(next.searchParams.get('testType'), 'nc');
-  assert.equal(next.searchParams.get('testId'), 'demo-test');
+  const testId = next.searchParams.get('testId');
+  assert.notEqual(testId, 'demo-test');
+  const record = JSON.parse(h.storage.get('dtiTestInstance:' + testId));
+  assert.equal(record.customerId, 'DTI-C-20482');
+  assert.equal(record.status, 'New');
+  assert.equal(record.testType, 'nc');
+  assert.match(next.searchParams.get('customerImage'), /^data:image\/svg\+xml,/);
   assert.equal(next.searchParams.get('siteId'), 'east-demo');
   assert.equal(next.searchParams.get('appointmentDate'), '2026-11-16');
   assert.equal(next.searchParams.get('cameraConnected'), 'false');
@@ -60,11 +88,12 @@ test('eligible lookup navigates directly to verification with the matched custom
 test('SSN lookup finds one customer but never puts the search SSN into the customer response or navigation URL', () => {
   const h = harness();
   fill(h.component);
-  h.component.renderVals().useSsn();
+  change(h.component, 'changeMethod', 'ssn');
   change(h.component, 'updateSsn', '90000123');
   assert.equal(h.component.renderVals().searchDisabled, true);
   change(h.component, 'updateSsn', '900001234');
   h.component.renderVals().searchMax();
+  h.component.renderVals().createTest();
   assert.equal(h.navigations.length, 1);
   assert.equal(h.navigations[0].includes('900001234'), false);
   assert.equal(h.navigations[0].toLowerCase().includes('ssn'), false);
@@ -80,7 +109,9 @@ test('no match and connection errors stay on lookup, are distinct, and can be co
   change(c, 'updateDl', 'D00000000');
   c.renderVals().searchMax();
   assert.equal(c.renderVals().showNoRecord, true);
-  assert.equal(c.renderVals().showConnectionError, false);
+  assert.equal(c.renderVals().showToast, false);
+  assert.equal(c.renderVals().createDisabled, true);
+  assert.equal(c.renderVals().showResume, false);
   assert.equal(h.navigations.length, 0);
   change(c, 'updateDl', 'D12345678');
   assert.equal(c.renderVals().showNoRecord, false);
@@ -90,21 +121,24 @@ test('no match and connection errors stay on lookup, are distinct, and can be co
   change(c, 'updateDob', '03/14/2007');
   change(c, 'changeScenario', 'connection-error');
   c.renderVals().searchMax();
-  assert.equal(c.renderVals().showConnectionError, true);
+  assert.equal(c.renderVals().toastMessage, 'Connection error occurred. Please check the connection status and try again.');
   assert.equal(c.renderVals().showNoRecord, false);
+  assert.equal(c.renderVals().createDisabled, true);
+  assert.equal(c.renderVals().showResume, false);
   assert.equal(h.navigations.length, 0);
-  c.renderVals().dismissConnectionError();
-  assert.equal(c.renderVals().showConnectionError, false);
+  c.renderVals().dismissToast();
+  assert.equal(c.renderVals().showToast, false);
   change(c, 'changeScenario', 'no-record');
   c.renderVals().searchMax();
   assert.equal(c.renderVals().showNoRecord, true);
   change(c, 'changeScenario', 'eligible');
   c.renderVals().searchMax();
-  assert.equal(h.navigations.length, 1);
+  assert.equal(c.renderVals().createDisabled, false);
+  assert.equal(h.navigations.length, 0);
 });
 
-test('New, In Progress, or failed-today tests disable Search with a message until the lookup changes', () => {
-  for (const scenario of ['new', 'in-progress', 'failed-today']) {
+test('New, In Progress, or same-day completed tests show a message, keep Create disabled, and do not offer Resume', () => {
+  for (const scenario of ['new', 'in-progress', 'failed-today', 'passed-today']) {
     const h = harness();
     const c = h.component;
     fill(c);
@@ -112,39 +146,56 @@ test('New, In Progress, or failed-today tests disable Search with a message unti
     c.renderVals().searchMax();
     const view = c.renderVals();
     assert.equal(h.navigations.length, 0, scenario);
-    assert.equal(view.searchDisabled, true, scenario);
-    assert.equal(view.showSearch, true, scenario);
+    assert.equal(view.searchDisabled, false, scenario);
+    assert.equal(view.showCreate, true, scenario);
+    assert.equal(view.createDisabled, true, scenario);
+    assert.equal(view.showResume, false, scenario);
+    const completedToday = scenario.endsWith('-today');
     assert.equal(view.eligibilityMessages.length, 1);
-    assert.equal(view.eligibilityMessages[0].text, scenario === 'failed-today'
+    assert.equal(view.eligibilityMessages[0].text, completedToday
       ? 'Customer has completed this test today and cannot retake.'
       : 'A Non-commercial road test already exists for this customer.');
+    view.createTest();
+    view.resumeTest();
+    assert.equal(h.navigations.length, 0);
     change(c, 'updateDob', '03/14/2007');
     assert.equal(c.renderVals().eligibilityMessages.length, 0);
     assert.equal(c.renderVals().searchDisabled, false);
-    change(c, 'changeScenario', 'failed-earlier');
-    c.renderVals().searchMax();
-    let retake = c.renderVals();
-    assert.equal(h.navigations.length, 0, 'A previous-day failure shows the retake note first');
-    assert.equal(retake.showSearch, false);
-    assert.match(retake.retakeMessage, /^This customer failed a Non-commercial road test on \d{2}\/\d{2}\/\d{4}\.$/);
-    retake.continueRetake();
-    assert.equal(h.navigations.length, 1, 'A previous-day failure does not block a retake');
   }
 });
 
-test('a Paused test replaces Search with Resume test, which saves In Progress with a resumed timestamp and opens verification', () => {
+test('a previous-day failure shows the retake notice and allows Create test', () => {
+  const h = harness();
+  const c = h.component;
+  fill(c);
+  change(c, 'changeScenario', 'failed-earlier');
+  c.renderVals().searchMax();
+  const retake = c.renderVals();
+  assert.equal(h.navigations.length, 0);
+  assert.equal(retake.showRetake, true);
+  assert.equal(retake.createDisabled, false);
+  assert.match(retake.retakeMessage, /^This customer failed a Non-commercial road test on \d{2}\/\d{2}\/\d{4}\.$/);
+  retake.createTest();
+  assert.equal(h.navigations.length, 1);
+});
+
+test('a Paused lookup shows Resume instead of Create and only saves and navigates upon resume', () => {
   const h = harness('?testId=new-demo-test');
   const c = h.component;
   fill(c);
   change(c, 'changeScenario', 'paused');
   c.renderVals().searchMax();
-  let view = c.renderVals();
+  const view = c.renderVals();
   assert.equal(h.navigations.length, 0);
-  assert.equal(view.showSearch, false);
+  assert.equal(h.storage.size, 0);
+  assert.equal(view.searchDisabled, false);
+  assert.equal(view.showCreate, false);
   assert.equal(view.showResume, true);
   assert.match(view.pausedMessage, /^Paused test found, started \d{2}\/\d{2}\/\d{4} at 9:12 AM\.$/);
   change(c, 'updateDob', '03/14/2007');
-  assert.equal(c.renderVals().showSearch, true, 'Changing the lookup returns to Search');
+  assert.equal(c.renderVals().showResume, false, 'Changing the lookup clears the result');
+  c.renderVals().resumeTest();
+  assert.equal(h.navigations.length, 0);
   c.renderVals().searchMax();
   c.renderVals().resumeTest();
   const saved = JSON.parse(h.storage.get('dtiTestInstance:DTI-0987'));
@@ -154,6 +205,28 @@ test('a Paused test replaces Search with Resume test, which saves In Progress wi
   assert.equal(next.pathname, '/04-verify-customer.html');
   assert.equal(next.searchParams.get('testId'), 'DTI-0987');
   assert.equal(next.searchParams.get('customerId'), 'DTI-C-20481');
+});
+
+test('changing any lookup input invalidates the previously matched customer', () => {
+  for (const edit of [
+    (c) => change(c, 'updateDl', 'D87654321'),
+    (c) => change(c, 'updateDob', '03/15/2007'),
+    (c) => change(c, 'changeScenario', 'paused'),
+    (c) => change(c, 'changeType', ''),
+    (c) => change(c, 'changeMethod', 'ssn')
+  ]) {
+    const h = harness();
+    const c = h.component;
+    fill(c);
+    c.renderVals().searchMax();
+    assert.equal(c.renderVals().createDisabled, false);
+    edit(c);
+    const view = c.renderVals();
+    assert.equal(view.showCustomerMatch, false);
+    assert.equal(view.createDisabled, true);
+    view.createTest();
+    assert.equal(h.navigations.length, 0);
+  }
 });
 
 test('lookup fields require a 9-character DL ID, add DOB slashes, and mask SSN digits with dashes', () => {
@@ -170,7 +243,7 @@ test('lookup fields require a 9-character DL ID, add DOB slashes, and mask SSN d
   assert.equal(c.renderVals().searchDisabled, false);
   type(c, 'updateDl', 'D1234567');
   assert.equal(c.renderVals().searchDisabled, true);
-  c.renderVals().useSsn();
+  change(c, 'changeMethod', 'ssn');
   let shown = '';
   for (const digit of '900001234') shown = type(c, 'updateSsn', shown + digit);
   assert.equal(shown, '***-**-****');
@@ -181,7 +254,7 @@ test('lookup fields require a 9-character DL ID, add DOB slashes, and mask SSN d
   assert.equal(c.state.ssnValue, '90000123');
   assert.equal(type(c, 'updateSsn', shown + '4'), '***-**-****');
   c.renderVals().searchMax();
-  assert.equal(h.navigations.length, 1);
+  assert.equal(c.renderVals().createDisabled, false);
 });
 
 test('eligibility matches customer and test type, uses the local completed date, ignores site, and reports both blockers', () => {
@@ -200,11 +273,73 @@ test('eligibility matches customer and test type, uses the local completed date,
   const nonBlocking = [
     { ...base, customerId: 'another-customer', status: 'New' },
     { ...base, testType: 'other-test', status: 'In Progress' },
-    { ...base, status: 'Pass', completedDate: '2026-11-16' },
+    { ...base, status: 'Pass', completedDate: '2026-11-15' },
     { ...base, status: 'Fail', completedDate: '2026-11-15' },
     { ...base, status: 'Fail', completedDate: '2026-11-17' }
   ];
   assert.equal(lookup.blockers(base.customerId, 'nc', nonBlocking, today).length, 0);
   assert.equal(lookup.blockers(base.customerId, 'nc', [{ ...base, status: 'Fail', completedDate: '2026-11-16' }], new Date(2026, 10, 16, 23, 59)).length, 1);
   assert.equal(lookup.blockers(base.customerId, 'nc', [{ ...base, status: 'Fail', completedDate: '2026-11-16' }], new Date(2026, 10, 17, 0, 0)).length, 0);
+});
+
+test('Search validates dates and reports a missing test type only after a valid lookup is submitted', () => {
+  const h = harness();
+  const c = h.component;
+  assert.equal(h.lookup.validDob('11/16/2026', new Date(2026, 10, 16)), true);
+  assert.equal(h.lookup.validDob('11/17/2026', new Date(2026, 10, 16)), false);
+  assert.equal(h.lookup.validDob('02/29/2024'), true);
+  assert.equal(h.lookup.validDob('02/29/2025'), false);
+  change(c, 'updateDl', 'D12345678');
+  change(c, 'updateDob', '12/31/9999');
+  assert.equal(c.renderVals().searchDisabled, true);
+  assert.equal(c.renderVals().invalidDob, true);
+  change(c, 'updateDob', '03/14/2007');
+  assert.equal(c.renderVals().searchDisabled, false);
+  c.renderVals().searchMax();
+  const view = c.renderVals();
+  assert.equal(view.showTypeError, true);
+  assert.equal(view.showCustomerMatch, false);
+  assert.equal(view.createDisabled, true);
+});
+
+test('creation failure shows the red toast without saving or navigating', () => {
+  const { component: c, navigations, storage } = harness();
+  fill(c);
+  change(c, 'changeScenario', 'creation-error');
+  c.renderVals().searchMax();
+  c.renderVals().createTest();
+  const view = c.renderVals();
+  assert.equal(view.toastMessage, 'An error occurred while creating the test. Please restart the app and try again.');
+  assert.equal(storage.size, 0);
+  assert.equal(navigations.length, 0);
+});
+
+test('a locally created and paused test is found across sites and restores verification under its original context', () => {
+  const walkIn = harness('?siteId=west-phoenix&appointmentDate=2026-11-16');
+  fill(walkIn.component);
+  walkIn.component.renderVals().searchMax();
+  walkIn.component.renderVals().createTest();
+  const query = walkIn.navigations[0].split('?')[1];
+  const duplicate = harness('?siteId=east-demo', walkIn.storage);
+  fill(duplicate.component);
+  duplicate.component.renderVals().searchMax();
+  assert.equal(duplicate.component.renderVals().createDisabled, true);
+  assert.equal(duplicate.component.renderVals().eligibilityMessages.length, 1);
+  const verification = harness('?' + query, walkIn.storage);
+  const page = verification.load('04-verify-customer.html');
+  page.renderVals().toggleVerification();
+  page.renderVals().takePicture();
+  page.renderVals();
+  assert.equal(verification.window.DTITestActions.pauseTest('Taking a break'), null);
+  const otherSite = harness('?siteId=east-demo', walkIn.storage);
+  fill(otherSite.component);
+  otherSite.component.renderVals().searchMax();
+  assert.equal(otherSite.component.renderVals().showResume, true);
+  otherSite.component.renderVals().resumeTest();
+  assert.equal(otherSite.navigations[0].split('?')[1], query);
+  const resumed = harness('?' + query, walkIn.storage);
+  const saved = JSON.parse(resumed.storage.get(resumed.window.DTIRouteSession.statusKey));
+  assert.equal(saved.status, 'In Progress');
+  assert.match(saved.resumedTimestamp, /^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}:\d{2} (AM|PM)$/);
+  assert.equal(resumed.load('04-verify-customer.html').renderVals().canContinue, true);
 });

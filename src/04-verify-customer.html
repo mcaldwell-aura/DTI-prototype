@@ -110,8 +110,10 @@
     <footer style="height: 84px; flex: 0 0 84px; display: flex; align-items: center; justify-content: flex-end; gap: var(--space-14); padding: 0 36px; border-top: 1px solid var(--color-line)">
       <button type="button" class="test-action-trigger" data-test-action="cancel">Cancel</button>
       <button type="button" class="test-action-trigger" data-test-action="pause" style="margin-right: auto">Pause</button>
+      <sc-if value="{{showSaveError}}"><span role="alert" style="color: var(--color-red)">Unable to save customer verification. Please try again.</span></sc-if>
+      <sc-if value="{{showVerificationLoadError}}"><span role="alert" style="color: var(--color-red)">Unable to restore verification. Please verify the customer again.</span></sc-if>
       <sc-if value="{{canContinue}}" hint-placeholder-val="{{ false }}">
-        <a id="acknowledgement-link" href="{{acknowledgementUrl}}" style="min-width: 272px; height: 56px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; gap: var(--space-8); border-radius: 10px; background: var(--color-indigo); color: var(--color-white); text-decoration: none; font-size: 16px; font-weight: 700">Next
+        <a id="acknowledgement-link" href="{{acknowledgementUrl}}" sc-camel-on-click="{{saveVerification}}" style="min-width: 272px; height: 56px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; gap: var(--space-8); border-radius: 10px; background: var(--color-indigo); color: var(--color-white); text-decoration: none; font-size: 16px; font-weight: 700">Next
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>
         </a>
       </sc-if>
@@ -127,6 +129,16 @@
 class Component extends DCLogic {
   renderVals() {
     const state = this.state || {};
+    const actions = window.DTITestActions;
+    const screen = 'Customer Information';
+    if (!this.verificationLoaded) {
+      this.verificationLoaded = true;
+      try {
+        this.savedVerification = actions.readFields(screen);
+      } catch (error) {
+        this.verificationLoadError = true;
+      }
+    }
     const params = new URLSearchParams(window.location.search);
     const firstName = params.get('firstName') || '';
     const middleName = params.get('middleName') || '';
@@ -145,13 +157,15 @@ class Component extends DCLogic {
       lastName.trim(),
       suffix.trim()
     ].filter(Boolean).join(' ');
-    const hasPhoto = !!state.photoSaved;
-    const verified = !!state.verified;
+    const hasPhoto = state.photoSaved ?? (this.savedVerification?.photoCaptured === true);
+    const verified = state.verified ?? (this.savedVerification?.customerInformationVerified === true);
     const showPhotoMenu = !!state.showPhotoMenu;
     const recordAvailable = !!firstName.trim() && !!lastName.trim();
     const credential = permitNumber + (permitStatus ? ' - ' + permitStatus : '');
     const canContinue = recordAvailable && verified && hasPhoto;
-    window.DTITestActions.configure({ screen: 'Customer Information', saveFields: () => ({ customerInformationVerified: verified, photoCaptured: hasPhoto }) });
+    const saveFields = () => ({ customerInformationVerified: verified, photoCaptured: hasPhoto });
+    const persistFields = (fields) => actions.saveFields(screen, fields);
+    actions.configure({ screen, saveFields, persistFields });
     const photoCardBase = 'position: relative; display: flex; flex-direction: column; gap: var(--space-16); padding: var(--space-18); border-radius: 14px; background: var(--color-white); ';
     return {
       customerName,
@@ -176,6 +190,16 @@ class Component extends DCLogic {
       photoFrameStyle: 'position: relative; width: 100%; height: 300px; border-radius: 10px; overflow: hidden; display: flex; align-items: center; justify-content: center; ' + (hasPhoto ? 'background: var(--color-charcoal);' : 'background: var(--color-off-white-alt); border: 1px dashed var(--color-line-dark); box-sizing: border-box;'),
       canContinue,
       cannotContinue: !canContinue,
+      showSaveError: !!state.saveError,
+      showVerificationLoadError: !!this.verificationLoadError && !state.saveError && !canContinue,
+      saveVerification: (event) => {
+        try {
+          persistFields(saveFields());
+        } catch (error) {
+          event.preventDefault();
+          this.setState({ saveError: true });
+        }
+      },
       toggleVerification: () => this.setState({ verified: !verified }),
       togglePhotoMenu: () => this.setState({ showPhotoMenu: !showPhotoMenu }),
       takePicture: () => this.setState({ photoSaved: true, showPhotoMenu: false }),

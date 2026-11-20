@@ -163,9 +163,12 @@
   const signedBy = document.getElementById('signed-by');
   const signedAt = document.getElementById('signed-at');
   const toast = document.getElementById('save-toast');
+  const actions = window.DTITestActions;
+  const screen = 'Acknowledge';
   let hasSignature = false;
   let isDrawing = false;
   let signatureTimestamp = '';
+  let editedSignature = false;
 
   function resizeCanvas() {
     const ratio = window.devicePixelRatio || 1;
@@ -208,6 +211,7 @@
 
   canvas.addEventListener('pointerdown', (event) => {
     event.preventDefault();
+    editedSignature = true;
     isDrawing = true;
     canvas.setPointerCapture(event.pointerId);
     const point = pointFromEvent(event);
@@ -239,6 +243,7 @@
   instructionsCheckbox.addEventListener('change', updateContinue);
 
   document.getElementById('clear-signature').addEventListener('click', () => {
+    editedSignature = true;
     context.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
     context.fillStyle = '#FFFFFF';
     context.fillRect(0, 0, canvas.clientWidth, canvas.clientHeight);
@@ -250,29 +255,22 @@
     canvas.focus();
   });
 
-  window.DTITestActions.configure({
-    screen: 'Acknowledge',
-    saveFields: () => ({
+  const saveFields = () => ({
       acknowledgementProvided: instructionsCheckbox.checked,
       recordingOptIn: optInCheckbox.checked,
       signature: hasSignature ? canvas.toDataURL('image/png') : null,
       signedBy: hasSignature ? applicantName : null,
       timestamp: signatureTimestamp || null
-    })
   });
+  const persistFields = (fields) => actions.saveFields(screen, fields);
+  actions.configure({ screen, saveFields, persistFields });
 
   continueButton.addEventListener('click', () => {
     if (continueButton.disabled) return;
-    const savedFields = {
-      acknowledgementProvided: instructionsCheckbox.checked,
-      recordingOptIn: optInCheckbox.checked,
-      signature: canvas.toDataURL('image/png'),
-      signedBy: applicantName,
-      timestamp: signatureTimestamp
-    };
     try {
-      window.sessionStorage.setItem('dtiCurrentTestAcknowledgement', JSON.stringify(savedFields));
+      persistFields(saveFields());
     } catch (error) {
+      toast.textContent = 'An error occurred while saving, please try again.';
       toast.hidden = false;
       return;
     }
@@ -280,6 +278,33 @@
   });
 
   resizeCanvas();
+  const showRestoreError = () => {
+    toast.textContent = 'Unable to restore the saved acknowledgement. Please confirm and sign again.';
+    toast.hidden = false;
+  };
+  try {
+    const saved = actions.readFields(screen);
+    if (saved) {
+      instructionsCheckbox.checked = saved.acknowledgementProvided === true;
+      optInCheckbox.checked = saved.recordingOptIn === true;
+      if (saved.signature) {
+        const image = new Image();
+        image.onload = () => {
+          if (editedSignature) return;
+          context.drawImage(image, 0, 0, canvas.clientWidth, canvas.clientHeight);
+          hasSignature = true;
+          signatureTimestamp = saved.timestamp || '';
+          signedBy.textContent = 'Signed by ' + (saved.signedBy || applicantName);
+          signedAt.textContent = signatureTimestamp;
+          updateContinue();
+        };
+        image.onerror = showRestoreError;
+        image.src = saved.signature;
+      }
+    }
+  } catch (error) {
+    showRestoreError();
+  }
   updateContinue();
 })();
 </script>

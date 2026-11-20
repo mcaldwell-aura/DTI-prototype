@@ -222,6 +222,11 @@
   function discard() {
     session.clear();
     window.sessionStorage.removeItem(identity.testKey);
+    if (session.instanceKey && window.sessionStorage.getItem(session.instanceKey)) {
+      session.clearPreExam();
+      window.sessionStorage.removeItem(session.statusKey);
+      window.sessionStorage.removeItem(session.instanceKey);
+    }
   }
   window.DTIRoadTest = {
     rubric, elements, safetyLabels, identity, manualFailureReasons, stopFailureReason,

@@ -1,7 +1,6 @@
 (() => {
   const session = window.DTIRouteSession;
-  const scope = session.roadTestStorageKey.slice('dtiRoadTest:'.length);
-  const statusKey = 'dtiTestStatus:' + scope;
+  const statusKey = session.statusKey;
   const maxLength = 2000;
   const actions = {
     cancel: {
@@ -21,10 +20,12 @@
   };
   let screen = '';
   let saveFields = () => ({});
+  let persistFields;
 
   function configure(options) {
     screen = options.screen;
-    if (options.saveFields) saveFields = options.saveFields;
+    saveFields = options.saveFields || (() => ({}));
+    persistFields = options.persistFields;
   }
 
   // Returns an error message, or null after saving the test status and navigating home.
@@ -33,9 +34,12 @@
     const reason = String(comments || '').trim().slice(0, maxLength);
     if (!reason) return 'Description required.';
     try {
-      window.sessionStorage.setItem(statusKey, JSON.stringify({ ...action.record(screen, reason), savedFields: saveFields() || {} }));
+      const savedFields = saveFields();
+      if (type === 'pause' && persistFields) persistFields(savedFields);
+      window.sessionStorage.setItem(statusKey, JSON.stringify({ ...action.record(screen, reason), savedFields }));
       if (action.clearWorkingData) {
-        ['dtiPreTestChecks:' + scope, session.roadTestStorageKey, 'dtiCurrentTestAcknowledgement'].forEach((key) => window.sessionStorage.removeItem(key));
+        session.clearPreExam();
+        window.sessionStorage.removeItem(session.roadTestStorageKey);
         session.clear();
       }
     } catch (error) {
@@ -47,6 +51,8 @@
 
   window.DTITestActions = {
     configure, statusKey, maxLength,
+    readFields: (screen) => JSON.parse(window.sessionStorage.getItem(session.fieldsKey(screen)) || 'null'),
+    saveFields: (screen, fields) => window.sessionStorage.setItem(session.fieldsKey(screen), JSON.stringify(fields)),
     cancelTest: (comments) => submit('cancel', comments),
     pauseTest: (comments) => submit('pause', comments)
   };

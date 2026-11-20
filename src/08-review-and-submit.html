@@ -67,7 +67,6 @@
   .timeline-card .timeline-caption { margin: var(--space-8) 0 0; color: var(--color-slate); font-size: 12px; }
   .simulated-label { display: inline-block; margin-left: var(--space-6); color: var(--color-slate); font-size: 11px; font-weight: 400; }
   .review-message { padding: var(--space-32); font-size: 17px; }
-  .error-row-actions { display: flex; flex-direction: column; align-items: flex-end; gap: var(--space-6); }
   .details-button { min-width: 100px; min-height: 44px; padding: var(--space-8) var(--space-12); border: 1px solid var(--color-line-dark); border-radius: 8px; background: var(--color-white); color: var(--color-indigo); font: 600 13px var(--font-sans); cursor: pointer; }
   .details-button:hover { background: var(--color-indigo-pale); }
   .error-details-overlay { position: absolute; z-index: 50; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(20,24,29,0.6); }
@@ -158,10 +157,7 @@
                   <div class="evidence-label"><strong>{{entry.label}}</strong></div>
                   <div class="evidence-metadata">{{entry.locationLabel}}</div>
                 </div>
-                <div class="error-row-actions">
-                  <time class="entry-time">{{entry.timestamp}}</time>
-                  <button type="button" class="details-button" id="{{entry.triggerId}}" aria-label="{{entry.detailsLabel}}" aria-haspopup="dialog" sc-camel-on-click="{{entry.openDetails}}">View details</button>
-                </div>
+                <time class="entry-time">{{entry.timestamp}}</time>
               </div>
             </sc-for>
           </div>
@@ -252,18 +248,18 @@ class Component extends DCLogic {
       location: selectedError.location ? selectedError.loc + ' (simulated GPS)' : 'Not captured',
       note: selectedError.note || 'No note recorded.'
     } : {};
-    const detailsAction = (entry, prefix) => entry.kind === 'error' ? {
-      triggerId: prefix + entry.id,
+    const detailsAction = (entry) => entry.kind === 'error' ? {
+      triggerId: 'error-marker-' + entry.id,
       detailsLabel: 'View error details: ' + entry.label + ' at ' + model.formatTime(entry.savedAt),
       openDetails: () => this.setState({ selectedErrorId: entry.id })
     } : {};
     const iconClass = (entry) => 'point-icon' + (entry.kind === 'skipped' ? ' skipped' : '');
     // The list shows examiner-recorded errors only; simulated evaluation points stay on the timeline.
     const rows = data.rows.filter((entry) => entry.kind === 'error').map((entry) => ({
-      ...entry, ...detailsAction(entry, 'error-row-'), timestamp: model.formatTime(entry.savedAt)
+      ...entry, timestamp: model.formatTime(entry.savedAt)
     }));
     const markers = data.markers.map((entry) => ({
-      ...entry, ...detailsAction(entry, 'error-marker-'), isError: entry.kind === 'error', isEvaluation: entry.kind !== 'error', iconClass: iconClass(entry),
+      ...entry, ...detailsAction(entry), isError: entry.kind === 'error', isEvaluation: entry.kind !== 'error', iconClass: iconClass(entry),
       style: 'left:' + entry.position + '%;top:' + entry.top + 'px',
       connectorStyle: 'left:' + entry.position + '%;top:' + Math.min(data.lineY, entry.top) + 'px;height:' + Math.abs(data.lineY - entry.top) + 'px',
       description: (entry.kind === 'error' ? 'Error' : 'Simulated evaluation point ' + entry.number + ' (' + entry.kind + ')') + ': ' + entry.label + ' at ' + entry.elapsed

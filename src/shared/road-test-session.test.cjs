@@ -171,6 +171,22 @@ test('Continue to Route enables once every item is answered, goes straight to Ro
   assert.match(h.navigations.pop(), /^06-select-route\.html/);
 });
 
+test('pausing Pre-test Checks saves incomplete checks and document selections for the return visit', () => {
+  const h = harness();
+  const checks = h.component('05-pre-test-checks.html');
+  checks.renderVals().documents[0].toggle();
+  checks.renderVals().sections[1].select();
+  checks.renderVals().items[0].pass();
+  checks.renderVals();
+  assert.equal(h.window.DTITestActions.pauseTest('Taking a break'), null);
+  const reopened = h.component('05-pre-test-checks.html');
+  assert.equal(reopened.renderVals().documents[0].checked, true);
+  assert.equal(reopened.renderVals().documents[1].checked, false);
+  reopened.renderVals().sections[1].select();
+  assert.equal(reopened.renderVals().items[0].passed, true);
+  assert.equal(reopened.renderVals().cannotContinue, true);
+});
+
 test('Continue to Route with a failed item shows the requirements modal; close keeps the test, Cancel Test marks it Canceled', () => {
   const h = harness();
   const c = h.component('05-pre-test-checks.html');
@@ -229,7 +245,8 @@ test('Pause requires a description, saves the screen, reason, and completed fiel
   assert.equal(saved.pauseScreen, 'Route');
   assert.equal(saved.pausedReason, 'Customer needs to move their car.');
   assert.equal(saved.savedFields.routeId, 'west-loop-b');
-  assert.equal(h.session.load().routeId, 'west-loop-a', 'Pausing keeps the test data for resuming');
+  assert.equal(h.session.load().routeId, 'west-loop-b', 'Pausing saves the current selection for resuming');
+  assert.equal(h.component('06-select-route.html').renderVals().selectedName, 'West Loop B');
   assert.deepEqual(h.navigations, ['02-start-a-test.html?paused=examiner']);
 });
 
@@ -504,7 +521,7 @@ test('previously submitted or ended demos can be cleared from Review or restarte
   assert.equal(h.component('07-road-test.html').renderVals().hasEnded, false);
 });
 
-test('Review opens the exact error occurrence from timeline or list without changing saved evidence', () => {
+test('Review lists errors without a View action and opens the exact occurrence from the timeline', () => {
   const h = harness();
   let record = h.model.write(h.model.create());
   h.advance(90000);
@@ -517,6 +534,7 @@ test('Review opens the exact error occurrence from timeline or list without chan
   let view = c.renderVals();
   const before = h.storage.get(record.testKey);
   assert.equal(view.showErrorDetails, false);
+  assert.ok(view.rows.every((row) => row.openDetails === undefined));
   assert.equal(view.markers.find((marker) => marker.kind === 'scored').openDetails, undefined);
   view.markers.find((marker) => marker.id === first[0].id).openDetails();
   view = c.renderVals();
@@ -529,7 +547,7 @@ test('Review opens the exact error occurrence from timeline or list without chan
   assert.match(view.errorDetails.timestamp, /\d{2}\/\d{2}\/\d{4} · \d{2}:\d{2}:\d{2} [AP]M/);
   view.closeErrorDetails();
   assert.equal(c.renderVals().showErrorDetails, false);
-  c.renderVals().rows.find((row) => row.id === second[0].id).openDetails();
+  c.renderVals().markers.find((marker) => marker.id === second[0].id).openDetails();
   assert.equal(c.renderVals().errorDetails.note, 'Second occurrence note');
   assert.equal(c.renderVals().errorDetails.elapsed, '01:32');
   c.renderVals().closeErrorDetails();
@@ -540,7 +558,7 @@ test('Review opens the exact error occurrence from timeline or list without chan
   assert.equal(h.model.read(), null, 'Expanding errors must preserve discard-on-submit behavior');
 });
 
-test('error details show absent legacy metadata and notes explicitly instead of fabricating details', () => {
+test('Review still lists legacy errors that lack GPS and cannot appear on the timeline', () => {
   const h = harness();
   const record = h.model.create();
   const error = {
@@ -548,12 +566,9 @@ test('error details show absent legacy metadata and notes explicitly instead of 
     legacy: true, savedAt: null, points: null, location: null
   };
   h.model.write(h.model.end({ ...record, saved: [error] }));
-  const c = h.component('08-review-and-submit.html');
-  c.renderVals().rows[0].openDetails();
-  const details = c.renderVals().errorDetails;
-  assert.equal(details.points, 'Not captured');
-  assert.equal(details.elapsed, 'Not captured');
-  assert.equal(details.timestamp, 'Not captured');
-  assert.equal(details.location, 'Not captured');
-  assert.equal(details.note, 'No note recorded.');
+  const view = h.component('08-review-and-submit.html').renderVals();
+  assert.equal(view.rows.length, 1);
+  assert.equal(view.rows[0].locationLabel, 'GPS not captured');
+  assert.equal(view.rows[0].openDetails, undefined);
+  assert.equal(view.unplottedCount, 1);
 });

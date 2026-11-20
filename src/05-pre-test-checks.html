@@ -160,8 +160,7 @@
 class Component extends DCLogic {
   renderVals() {
     const session = window.DTIRouteSession;
-    const scope = session.roadTestStorageKey.slice('dtiRoadTest:'.length);
-    const preTestKey = 'dtiPreTestChecks:' + scope;
+    const preTestKey = session.checksKey;
     if (!this.savedLoaded) {
       this.savedLoaded = true;
       this.saved = {};
@@ -237,9 +236,11 @@ class Component extends DCLogic {
     const showFailed = checklists.some((section) => section.items.some(([id]) => status[id] === 'fail'));
     const checklistsAnswered = checklists.every((section) => section.items.every(([id]) => status[id] === 'pass' || status[id] === 'fail'));
     const canContinue = checklistsAnswered && documents.every((document) => document.checked);
+    const saveFields = () => ({ status, registration: !!state.registration, insurance: !!state.insurance });
+    const persistFields = (fields) => window.sessionStorage.setItem(preTestKey, JSON.stringify({ ...fields, savedAt: Date.now() }));
     const saveAndNavigate = (destination) => {
       try {
-        window.sessionStorage.setItem(preTestKey, JSON.stringify({ status, registration: !!state.registration, insurance: !!state.insurance, savedAt: Date.now() }));
+        persistFields(saveFields());
       } catch (error) {
         this.setState({ errorMessage: 'An error occurred while saving, please try again.' });
         return;
@@ -247,7 +248,7 @@ class Component extends DCLogic {
       window.location.assign(session.url(destination));
     };
     const errorMessage = state.errorMessage || this.loadError || '';
-    window.DTITestActions.configure({ screen: 'Pre-test Checks', saveFields: () => ({ status, registration: !!state.registration, insurance: !!state.insurance }) });
+    window.DTITestActions.configure({ screen: 'Pre-test Checks', saveFields, persistFields });
     return {
       sections, documents,
       selectedTitle: selectedId === 'vehicle' ? 'Vehicle Information' : selected.label,
@@ -273,8 +274,9 @@ class Component extends DCLogic {
       closeDialog: () => this.setState({ showRequirementsDialog: false }),
       cancelTest: () => {
         try {
-          window.sessionStorage.setItem('dtiTestStatus:' + scope, JSON.stringify({ status: 'Canceled', reason: 'Pre-test requirements not met', canceledAt: Date.now() }));
-          [preTestKey, session.roadTestStorageKey, 'dtiCurrentTestAcknowledgement'].forEach((key) => window.sessionStorage.removeItem(key));
+          window.sessionStorage.setItem(session.statusKey, JSON.stringify({ status: 'Canceled', reason: 'Pre-test requirements not met', canceledAt: Date.now() }));
+          session.clearPreExam();
+          window.sessionStorage.removeItem(session.roadTestStorageKey);
           session.clear();
         } catch (error) {
           this.setState({ errorMessage: 'An error occurred while canceling the test, please try again.' });
