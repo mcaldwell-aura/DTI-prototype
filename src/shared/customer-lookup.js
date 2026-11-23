@@ -19,10 +19,10 @@
     const messages = [];
     if (matching.some((test) => ['New', 'In Progress'].includes(test.status))) {
       const label = testType === 'nc' ? 'Non-commercial road test' : testType;
-      messages.push({ text: 'A ' + label + ' already exists for this customer.' });
+      messages.push({ kind: 'existing', text: 'A ' + label + ' already exists for this customer.' });
     }
     if (matching.some((test) => ['Fail', 'Pass'].includes(test.status) && test.completedDate === dateKey(today))) {
-      messages.push({ text: 'Customer has completed this test today and cannot retake.' });
+      messages.push({ kind: 'completed', text: 'Customer has completed this test today and cannot retake.' });
     }
     return messages;
   }
@@ -53,13 +53,17 @@
   }
   function resume(test, resumedTimestamp, verificationQuery) {
     const update = { status: 'In Progress', resumedTimestamp };
+    const statusKeyForQuery = statusKey(new URLSearchParams(verificationQuery));
+    const existingStatus = JSON.parse(window.sessionStorage.getItem(statusKeyForQuery) || 'null');
+    window.sessionStorage.setItem(statusKeyForQuery, JSON.stringify({ ...(existingStatus || {}), ...update }));
     if (test.verificationQuery) {
       const key = statusKey(test.verificationQuery);
       const saved = JSON.parse(window.sessionStorage.getItem(key));
       window.sessionStorage.setItem(key, JSON.stringify({ ...saved, ...update }));
-    } else {
-      window.sessionStorage.setItem(instancePrefix + test.testId, JSON.stringify({ ...test, ...update, verificationQuery }));
     }
+    const instanceKey = instancePrefix + test.testId;
+    const savedInstance = JSON.parse(window.sessionStorage.getItem(instanceKey) || 'null');
+    window.sessionStorage.setItem(instanceKey, JSON.stringify({ ...(savedInstance || test), ...update, verificationQuery }));
   }
   function search({ method, identifier, dob, testType, scenario }, today = new Date()) {
     if (!scenarios.includes(scenario) || !['dl', 'ssn'].includes(method)) throw new Error('Invalid demo lookup request.');

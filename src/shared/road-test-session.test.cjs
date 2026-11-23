@@ -56,11 +56,16 @@ function select(component, id) {
 test('every rubric element saves its weight and separate, shared-batch evidence; repeat occurrences remain separate', () => {
   const h = harness();
   const model = h.model;
+  assert.deepEqual(Array.from(model.rubric, (group) => group.name), [
+    'Severe - 10 Points Each',
+    'Moderate - 4 Points Each',
+    'Minor - 2 Points Each'
+  ]);
   let record = model.write(model.create());
   h.advance(1000);
   const lines = model.makeLines(record, model.elements, '');
   record = model.write({ ...record, saved: lines });
-  assert.deepEqual(Array.from(lines, (line) => line.points), [4, 2, 2, 10, 2, 2, 10, 10, 10, 10, 2, 10, 4, 4, 4, 2, 4, 4, 4, 4, 2]);
+  assert.deepEqual(Array.from(lines, (line) => line.points), [10, 10, 10, 10, 10, 10, 4, 4, 4, 4, 4, 4, 4, 4, 2, 2, 2, 2, 2, 2, 2]);
   assert.equal(record.totalErrorPoints, 106);
   assert.equal(new Set(lines.map((line) => line.id)).size, 21);
   assert.equal(new Set(lines.map((line) => line.batchId)).size, 1);
@@ -68,7 +73,7 @@ test('every rubric element saves its weight and separate, shared-batch evidence;
   assert.equal(new Set(lines.map((line) => JSON.stringify(line.location))).size, 1);
   assert.ok(lines.every((line) => line.testKey === record.testKey && line.location.simulated && line.note === ''));
   h.advance(2000);
-  const repeated = model.makeLines(record, [model.elements[0]], 'Second observation');
+  const repeated = model.makeLines(record, [model.elements.find((element) => element.id === 'brakes')], 'Second observation');
   record = model.write({ ...record, saved: record.saved.concat(repeated) });
   assert.equal(record.saved.length, 22);
   assert.equal(record.totalErrorPoints, 110);
@@ -107,6 +112,26 @@ test('notes edit only the chosen occurrence and preserve evidence timestamps, po
   assert.equal('totalErrorPoints' in view, false);
   assert.equal('safetyPoints' in view, false);
   assert.equal('savedSafetyPoints' in view, false);
+});
+
+test('Road Test opens on Basic Safety and exposes the three ordered sections with severity groups', () => {
+  const h = harness();
+  const c = h.component('07-road-test.html');
+  const view = c.renderVals();
+  assert.equal(view.isSafety, true);
+  assert.equal(view.isRecord, false);
+  assert.equal(view.isList, false);
+  assert.deepEqual(Array.from(view.groups, (group) => group.name), [
+    'Severe - 10 Points Each',
+    'Moderate - 4 Points Each',
+    'Minor - 2 Points Each'
+  ]);
+  view.showRecord();
+  assert.equal(c.renderVals().isRecord, true);
+  c.renderVals().showList();
+  assert.equal(c.renderVals().isList, true);
+  c.renderVals().showSafety();
+  assert.equal(c.renderVals().isSafety, true);
 });
 
 test('Basic Safety records optional errors once each, with no pass/fail answers required', () => {
@@ -358,9 +383,12 @@ test('Review projects chronological errors and explicitly simulated evaluation p
   const h = harness();
   let record = h.model.write(h.model.create());
   h.advance(120000);
-  const first = h.model.makeLines(record, [h.model.elements[0]], 'First note');
+  const first = h.model.makeLines(record, [h.model.elements.find((element) => element.id === 'brakes')], 'First note');
   h.advance(240000);
-  const batch = h.model.makeLines(record, [h.model.elements[1], h.model.elements[2]], '');
+  const batch = h.model.makeLines(record, [
+    h.model.elements.find((element) => element.id === 'operation'),
+    h.model.elements.find((element) => element.id === 'steering')
+  ], '');
   record = h.model.write({ ...record, saved: batch.concat(first) });
   h.advance(490000);
   h.model.write(h.model.end(record));
@@ -418,7 +446,7 @@ test('unknown normal scoring persists as pending at low and high point totals; r
   assert.equal(ended.result.outcome, 'pending');
   assert.equal(ended.result.errorPoints, 0);
   assert.equal(ended.result.score, null);
-  const saved = h.model.makeLines(record, Array(30).fill(h.model.elements[0]), '');
+  const saved = h.model.makeLines(record, Array(30).fill(h.model.elements.find((element) => element.id === 'brakes')), '');
   record = h.model.write({ ...record, saved });
   ended = h.model.write(h.model.end(record));
   assert.equal(ended.result.outcome, 'pending');
@@ -525,9 +553,9 @@ test('Review lists errors without a View action and opens the exact occurrence f
   const h = harness();
   let record = h.model.write(h.model.create());
   h.advance(90000);
-  const first = h.model.makeLines(record, [h.model.elements[0]], 'First occurrence note');
+  const first = h.model.makeLines(record, [h.model.elements.find((element) => element.id === 'brakes')], 'First occurrence note');
   h.advance(2000);
-  const second = h.model.makeLines(record, [h.model.elements[0]], 'Second occurrence note');
+  const second = h.model.makeLines(record, [h.model.elements.find((element) => element.id === 'brakes')], 'Second occurrence note');
   record = h.model.write({ ...record, saved: first.concat(second) });
   h.model.write(h.model.end(record));
   const c = h.component('08-review-and-submit.html');

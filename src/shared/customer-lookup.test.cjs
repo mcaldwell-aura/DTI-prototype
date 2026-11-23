@@ -154,7 +154,7 @@ test('New, In Progress, or same-day completed tests show a message, keep Create 
     assert.equal(view.eligibilityMessages.length, 1);
     assert.equal(view.eligibilityMessages[0].text, completedToday
       ? 'Customer has completed this test today and cannot retake.'
-      : 'A Non-commercial road test already exists for this customer.');
+      : 'Customer found: Jordan A. Reyes. A Non-commercial road test already exists for this customer.');
     view.createTest();
     view.resumeTest();
     assert.equal(h.navigations.length, 0);
@@ -164,7 +164,7 @@ test('New, In Progress, or same-day completed tests show a message, keep Create 
   }
 });
 
-test('a previous-day failure shows the retake notice and allows Create test', () => {
+test('a previous-day failure allows Create test and shows the green customer result', () => {
   const h = harness();
   const c = h.component;
   fill(c);
@@ -172,9 +172,9 @@ test('a previous-day failure shows the retake notice and allows Create test', ()
   c.renderVals().searchMax();
   const retake = c.renderVals();
   assert.equal(h.navigations.length, 0);
-  assert.equal(retake.showRetake, true);
+  assert.equal(retake.showCustomerMatch, true);
   assert.equal(retake.createDisabled, false);
-  assert.match(retake.retakeMessage, /^This customer failed a Non-commercial road test on \d{2}\/\d{2}\/\d{4}\.$/);
+  assert.equal(retake.matchedName, 'Jordan A. Reyes');
   retake.createTest();
   assert.equal(h.navigations.length, 1);
 });
@@ -191,7 +191,7 @@ test('a Paused lookup shows Resume instead of Create and only saves and navigate
   assert.equal(view.searchDisabled, false);
   assert.equal(view.showCreate, false);
   assert.equal(view.showResume, true);
-  assert.match(view.pausedMessage, /^Paused test found, started \d{2}\/\d{2}\/\d{4} at 9:12 AM\.$/);
+  assert.equal(view.pausedMessage, 'Customer found: Jordan A. Reyes. A paused Non-commercial road test exists for this customer. Resume to continue.');
   change(c, 'updateDob', '03/14/2007');
   assert.equal(c.renderVals().showResume, false, 'Changing the lookup clears the result');
   c.renderVals().resumeTest();

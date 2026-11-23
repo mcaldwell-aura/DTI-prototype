@@ -12,39 +12,31 @@
     'When active emergency vehicles approach you, what side of the road must you yield to?'
   ];
   const rubric = [
-    { name: 'Vehicle Control', items: [
-      { id: 'brakes', label: 'Improper use of brakes', points: 4 },
-      { id: 'operation', label: 'Operation of motor vehicle', points: 2 },
-      { id: 'steering', label: 'Steering', points: 2 }
-    ] },
-    { name: 'Stopping', items: [
-      { id: 'full-stop', label: 'Fails to make a full stop at a sign/light; two failures = automatic fail', points: 10 },
-      { id: 'stop-position', label: 'Position after stopping', points: 2 },
-      { id: 'waits', label: 'Waits too long', points: 2 }
-    ] },
-    { name: 'Yielding & Following', items: [
+    { name: 'Severe - 10 Points Each', items: [
+      { id: 'full-stop', label: 'Fails to make full stop at sign/light', points: 10 },
       { id: 'yield', label: 'Fails to yield', points: 10 },
-      { id: 'following', label: 'Following distance', points: 10 }
-    ] },
-    { name: 'Speed & Traffic Flow', items: [
-      { id: 'impeding', label: 'Impeding the flow of traffic', points: 10 },
-      { id: 'speeding', label: 'Speeding 5–9 mph', points: 10 },
-      { id: 'slow', label: 'Too slow', points: 2 }
-    ] },
-    { name: 'Lane Positioning & Changes', items: [
+      { id: 'following', label: 'Following distance', points: 10 },
       { id: 'center-line', label: 'Crowding center line', points: 10 },
+      { id: 'impeding', label: 'Impeding the flow of traffic', points: 10 },
+      { id: 'speeding', label: 'Speeding (5-9) mph', points: 10 }
+    ] },
+    { name: 'Moderate - 4 Points Each', items: [
+      { id: 'seat-belt', label: 'Not wearing a seat belt', points: 4 },
       { id: 'signaling', label: 'Signaling', points: 4 },
+      { id: 'brakes', label: 'Improper use of brakes', points: 4 },
       { id: 'lane-choice', label: 'Choice of proper lane', points: 4 },
       { id: 'lane-change', label: 'Improper lane change', points: 4 },
-      { id: 'turn', label: 'Improper turn', points: 2 }
-    ] },
-    { name: 'Seat-Belt Use', items: [
-      { id: 'seat-belt', label: 'Not wearing a seat belt', points: 4 }
-    ] },
-    { name: 'Parking', items: [
       { id: 'curb-hit', label: 'Jump or hit curb', points: 4 },
-      { id: 'curb-distance', label: 'Parking too far from curb', points: 4 },
-      { id: 'parking-space', label: 'Vehicle outside parking space', points: 4 },
+      { id: 'curb-distance', label: 'Parking too far from the curb', points: 4 },
+      { id: 'parking-space', label: 'Vehicle outside of parking space', points: 4 }
+    ] },
+    { name: 'Minor - 2 Points Each', items: [
+      { id: 'operation', label: 'Operation of motor vehicle', points: 2 },
+      { id: 'stop-position', label: 'Position after stopping', points: 2 },
+      { id: 'waits', label: 'Waits too long', points: 2 },
+      { id: 'slow', label: 'Too slow', points: 2 },
+      { id: 'steering', label: 'Steering', points: 2 },
+      { id: 'turn', label: 'Improper turn', points: 2 },
       { id: 'parallel', label: 'Vehicle not parallel with curb', points: 2 }
     ] }
   ];

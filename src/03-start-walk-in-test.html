@@ -21,9 +21,9 @@
   .lookup-demo label { display: block; margin-bottom: var(--space-8); font-size: 13px; font-weight: 700; }
   .lookup-demo select { box-sizing: border-box; width: 100%; min-height: 44px; padding: 0 var(--space-8); border: 1px solid var(--color-line-dark); border-radius: 8px; background: var(--color-white); font: 13px var(--font-sans); }
   .lookup-help { margin: var(--space-12) 0 0; font-size: 13px; line-height: 1.5; color: var(--color-slate); }
-  .lookup-paused { display: flex; align-items: center; gap: var(--space-10); padding: var(--space-12); border: 1px solid var(--color-indigo-light); border-radius: 10px; background: var(--color-indigo-pale); color: var(--color-indigo-dark); font-size: 14px; font-weight: 600; line-height: 1.4; }
+  .lookup-paused { display: flex; align-items: center; gap: var(--space-10); padding: var(--space-12); border: 1px solid var(--color-amber-border); border-radius: 10px; background: var(--color-amber-light); color: var(--color-amber-dark); font-size: 14px; font-weight: 700; line-height: 1.4; }
   .lookup-paused svg { flex: 0 0 22px; }
-  .lookup-no-record { margin: 0; color: var(--color-red); font-size: 14px; font-weight: 700; text-align: left; }
+  .lookup-no-record { margin: 0; padding: var(--space-12); border: 1px solid #EBB8B2; border-radius: 10px; background: #FCEDEB; color: var(--color-red); font-size: 14px; font-weight: 700; text-align: left; }
   .lookup-match { display: flex; align-items: center; gap: var(--space-8); margin: 0; padding: var(--space-12); border-radius: 10px; background: var(--color-green-light); color: var(--color-green); font-size: 14px; }
   .lookup-button { min-height: 52px; padding: 0 var(--space-22); border: 1px solid var(--color-indigo); border-radius: 10px; background: var(--color-indigo); color: var(--color-white); font: 700 15px var(--font-sans); cursor: pointer; }
   .lookup-button:disabled { opacity: 0.55; cursor: not-allowed; }
@@ -168,7 +168,7 @@
               <sc-if value="{{invalidDob}}"><p class="lookup-no-record" role="alert">Enter a valid date of birth that is not in the future.</p></sc-if>
             </div>
             <button type="button" id="search-max" class="lookup-button lookup-find" sc-camel-on-click="{{searchMax}}" disabled="{{searchDisabled}}">
-              <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-4-4"></path></svg>Search MAX</button>
+              <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-4-4"></path></svg>Find Customer in MAX</button>
             <sc-if value="{{showTypeError}}"><p class="lookup-no-record" role="alert">Please select a test type.</p></sc-if>
             <sc-if value="{{showNoRecord}}"><p class="lookup-no-record" role="alert">No customer record found.</p></sc-if>
             <sc-if value="{{showCustomerMatch}}" hint-placeholder-val="{{ false }}">
@@ -180,14 +180,8 @@
             <sc-for list="{{eligibilityMessages}}" as="message"><p class="lookup-no-record" role="alert">{{message.text}}</p></sc-for>
             <sc-if value="{{showResume}}" hint-placeholder-val="{{ false }}">
               <div class="lookup-paused" role="status">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M10 9v6M14 9v6"></path></svg>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 2l10 18H2L12 2z" fill="currentColor" stroke="currentColor"></path><path d="M12 8v5M12 16h.01" stroke="#FFFFFF"></path></svg>
                 <span>{{pausedMessage}}</span>
-              </div>
-            </sc-if>
-            <sc-if value="{{showRetake}}" hint-placeholder-val="{{ false }}">
-              <div class="lookup-paused" role="status">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5M12 8h.01"></path></svg>
-                <span><strong>Retake.</strong> {{retakeMessage}}</span>
               </div>
             </sc-if>
           </fieldset>
@@ -201,7 +195,7 @@
       <a href="02-start-a-test.html" style="height: 52px; padding: 0 var(--space-22); border-radius: 10px; border: 1px solid var(--color-line-dark); display: flex; align-items: center; color: var(--color-charcoal); font-weight: 600; font-size: 15px; text-decoration: none">Cancel</a>
       <div class="lookup-final-action">
         <sc-if value="{{showCreate}}" hint-placeholder-val="{{ true }}">
-          <button type="button" id="create-test" class="lookup-button lookup-create" disabled="{{createDisabled}}" sc-camel-on-click="{{createTest}}">Create test and check-in
+          <button type="button" id="create-test" class="lookup-button lookup-create" disabled="{{createDisabled}}" sc-camel-on-click="{{createTest}}">Create test and check in
             <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>
           </button>
         </sc-if>
@@ -231,7 +225,7 @@ class Component extends DCLogic {
     const dobValue = st.dobValue || '';
     const scenario = st.scenario || 'eligible';
     const eligibilityMessages = st.eligibilityMessages || [];
-    const resetFeedback = { showNoRecord: false, showTypeError: false, toastMessage: '', eligibilityMessages: [], matchedCustomer: null, pausedTest: null, resumeError: false, retakeDate: null };
+    const resetFeedback = { showNoRecord: false, showTypeError: false, toastMessage: '', eligibilityMessages: [], matchedCustomer: null, pausedTest: null, resumeError: false };
     const update = (patch) => this.setState({ ...resetFeedback, ...patch });
     const typeMissing = type !== 'nc';
     const lookup = window.DTICustomerLookup;
@@ -250,6 +244,13 @@ class Component extends DCLogic {
       const hours = date.getHours();
       return pad(date.getMonth() + 1) + '/' + pad(date.getDate()) + '/' + date.getFullYear() + ' ' + (withSeconds ? pad(hours % 12 || 12) : hours % 12 || 12) + ':' + pad(date.getMinutes()) + (withSeconds ? ':' + pad(date.getSeconds()) : '') + ' ' + (hours >= 12 ? 'PM' : 'AM');
     };
+    const matchedName = (customer) => customer ? [
+      customer.firstName,
+      customer.middleName && customer.middleName.charAt(0).toUpperCase() + '.',
+      customer.lastName,
+      customer.suffix
+    ].filter(Boolean).join(' ') : '';
+    const testTypeLabel = type === 'nc' ? 'Non-commercial road test' : 'road test';
     const verificationParams = (customer, extra = {}) => {
       const current = new URLSearchParams(window.location.search);
       const next = new URLSearchParams({ ...customer, testType: type, siteId: current.get('siteId') || 'west-phoenix', ...extra });
@@ -323,7 +324,16 @@ class Component extends DCLogic {
         const matchedCustomer = response.customer;
         const messages = lookup.blockers(matchedCustomer.customerId, type, response.tests);
         if (messages.length) {
-          update({ matchedCustomer, eligibilityMessages: messages });
+          const name = matchedName(matchedCustomer);
+          update({
+            matchedCustomer,
+            eligibilityMessages: messages.map((message) => ({
+              kind: message.kind,
+              text: message.kind === 'existing'
+                ? 'Customer found: ' + name + '. A ' + testTypeLabel + ' already exists for this customer.'
+                : message.text
+            }))
+          });
           return;
         }
         const paused = lookup.pausedTest(matchedCustomer.customerId, type, response.tests);
@@ -331,16 +341,11 @@ class Component extends DCLogic {
           update({ matchedCustomer, pausedTest: paused });
           return;
         }
-        const previousFail = response.tests
-          .filter((test) => test.customerId === matchedCustomer.customerId && test.testType === type && test.status === 'Fail' && test.completedDate)
-          .map((test) => test.completedDate).sort().pop();
-        update({ matchedCustomer, retakeDate: previousFail || null });
+        update({ matchedCustomer });
       },
-      showCustomerMatch: !!matchedCustomer,
-      matchedName: matchedCustomer ? [matchedCustomer.firstName, matchedCustomer.middleName && matchedCustomer.middleName[0].toUpperCase() + '.', matchedCustomer.lastName, matchedCustomer.suffix].filter(Boolean).join(' ') : '',
+      showCustomerMatch: !!matchedCustomer && !showResume && eligibilityMessages.length === 0,
+      matchedName: matchedName(matchedCustomer),
       showCreate: !showResume, createDisabled, showResume, showResumeError: !!st.resumeError,
-      showRetake: !!st.retakeDate,
-      retakeMessage: st.retakeDate ? 'This customer failed a ' + (type === 'nc' ? 'Non-commercial road test' : 'road test') + ' on ' + st.retakeDate.replace(/^(\d{4})-(\d{2})-(\d{2})$/, '$2/$3/$1') + '.' : '',
       createTest: () => {
         if (createDisabled || this.openingTest) return;
         let query;
@@ -353,7 +358,7 @@ class Component extends DCLogic {
         this.openingTest = true;
         window.location.assign('04-verify-customer.html?' + query);
       },
-      pausedMessage: pausedTest ? 'Paused test found, started ' + formatDateTime(pausedTest.startedAt ?? pausedTest.createdAt ?? pausedTest.pausedAt, false).replace(' ', ' at ') + '.' : '',
+      pausedMessage: pausedTest ? 'Customer found: ' + matchedName(matchedCustomer) + '. A paused ' + testTypeLabel + ' exists for this customer. Resume to continue.' : '',
       resumeTest: () => {
         if (!showResume || this.openingTest) return;
         const resumedTimestamp = formatDateTime(Date.now(), true);
